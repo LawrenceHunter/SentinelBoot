@@ -1,0 +1,37 @@
+[package]
+name = "bootloader"
+version = "0.1.0"
+edition = "2021"
+
+[profile.release]
+lto = true
+panic = "abort"
+
+[features]
+default = ["tock-registers"]
+bsp_vsv = ["tock-registers"]
+
+[[bin]]
+name = "kernel"
+path = "src/main.rs"
+linker_script = "kernel.ld"
+
+[dependencies]
+tock-registers = { version = "0.8.x", default-features = false, features = ["register_types"], optional = true }
+riscv = "0.10.1"
+
+[toolchain]
+channel = "nightly"
+
+[build]
+target = "riscv64gc-unknown-none-elf"
+
+[target.riscv64gc-unknown-none-elf]
+linker = "riscv64-unknown-elf-gcc"
+rustflags = [
+    "-Clink-args=-fuse-ld=lld",
+    "-Clink-args=--ld-path=riscv64-unknown-elf-gcc",
+    "-C", "target-feature=+crt-static",
+    "-C", "link-arg=-v",
+    "-C", "link-arg=-Wl,--verbose",
+]
