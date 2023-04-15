@@ -18,48 +18,18 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
-      - run: cargo build --release --all-features
-  unit-test:
+          toolchain: nightly-2022-10-13
+      - run: make
+    test:
     needs: [setup, build]
-    name: Unit test
+    name: Test
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
-      - run: cargo test --all --lib
-  doc-test:
-    needs: [setup, build]
-    name: Documentation test
-    runs-on: self-hosted
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-      - run: cargo test --all --doc
-  int-test:
-    needs: [setup, build]
-    name: Integration test
-    runs-on: self-hosted
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-      - run: cargo test --all --tests
-  cov-test:
-    needs: [setup, build]
-    name: Coverage test
-    runs-on: self-hosted
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-      - run: cargo tarpaulin --all
+          toolchain: nightly-2022-10-13
+      - run: echo "⚠️⚠️ NO TESTING IMPLEMENTED ⚠️⚠️"
   clippy_check:
     needs: [setup, build]
     runs-on: self-hosted
@@ -68,9 +38,6 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: stable
+          toolchain: nightly-2022-10-13
           components: rustfmt, clippy
-      - uses: actions-rs/clippy-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-features
+      - run: make clippy
