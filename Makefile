@@ -141,14 +141,14 @@ clean:
 ##------------------------------------------------------------------------------
 readelf: $(KERNEL_ELF)
 	$(call color_header, "Launching readelf")
-	@$(DOCKER_TOOLS) $(READELF_BINARY) --headers $(KERNEL_ELF)
+	$(READELF_BINARY) --headers $(KERNEL_ELF)
 
 ##------------------------------------------------------------------------------
 ## Run objdump
 ##------------------------------------------------------------------------------
 objdump: $(KERNEL_ELF)
 	$(call color_header, "Launching objdump")
-	@$(DOCKER_TOOLS) $(OBJDUMP_BINARY) --disassemble --demangle \
+	$(OBJDUMP_BINARY) --disassemble --demangle \
                 --section .text     \
                 --section .rodata   \
                 $(KERNEL_ELF) | rustfilt
@@ -158,4 +158,4 @@ objdump: $(KERNEL_ELF)
 ##------------------------------------------------------------------------------
 nm: $(KERNEL_ELF)
 	$(call color_header, "Launching nm")
-	@$(DOCKER_TOOLS) $(NM_BINARY) --demangle --print-size $(KERNEL_ELF) | sort | rustfilt
+	$(NM_BINARY) --demangle --print-size $(KERNEL_ELF) | sort | rustfilt

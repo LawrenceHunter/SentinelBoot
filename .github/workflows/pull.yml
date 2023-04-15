@@ -18,7 +18,8 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2022-10-13
+          toolchain: nightly-2023-04-09
+          components: cargo-binutils
       - run: make
     test:
     needs: [setup, build]
@@ -28,8 +29,8 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2022-10-13
-          components: rustobj-copy
+          toolchain: nightly-2023-04-09
+          components: cargo-binutils
       - run: echo "⚠️⚠️ NO TESTING IMPLEMENTED ⚠️⚠️"
   clippy_check:
     needs: [setup, build]
