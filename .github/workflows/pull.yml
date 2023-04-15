@@ -30,7 +30,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: echo "⚠️⚠️ NO TESTING IMPLEMENTED ⚠️⚠️"
-  clippy_check:
+  Clippy:
     needs: [setup, build]
     runs-on: self-hosted
     steps:
