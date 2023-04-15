@@ -9,37 +9,29 @@ jobs:
     name: Setup environment
     runs-on: self-hosted
     steps:
-      - run: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+      - run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          rustup toolchain install nightly-2023-04-09
+          rustup target add riscv64gc-unknown-none-elf
+          cargo install cargo-binutils
+          export TERM=xterm
   build:
     needs: setup
     name: Build project
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly-2023-04-09
-          components: cargo-binutils
       - run: make
-    test:
+  test:
     needs: [setup, build]
     name: Test
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly-2023-04-09
-          components: cargo-binutils
       - run: echo "⚠️⚠️ NO TESTING IMPLEMENTED ⚠️⚠️"
   clippy_check:
     needs: [setup, build]
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: nightly-2022-10-13
-          components: rustfmt, clippy
       - run: make clippy
