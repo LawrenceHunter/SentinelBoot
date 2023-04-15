@@ -29,6 +29,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly-2022-10-13
+          components: rustobj-copy
       - run: echo "⚠️⚠️ NO TESTING IMPLEMENTED ⚠️⚠️"
   clippy_check:
     needs: [setup, build]
