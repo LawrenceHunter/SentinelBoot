@@ -11,6 +11,7 @@ jobs:
     steps:
       - run: |
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          source "$HOME/.cargo/env"
           rustup toolchain install nightly-2023-04-09
           rustup target add riscv64gc-unknown-none-elf
           cargo install cargo-binutils
