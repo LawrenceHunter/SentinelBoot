@@ -1,4 +1,11 @@
 //! Architectural processor code.
+//!
+//! # Orientation
+//!
+//! Since arch modules are imported into generic modules using the path attribute, the path of this
+//! file is:
+//!
+//! crate::cpu::riscv64_cpu
 
 use riscv::asm;
 
