@@ -11,7 +11,7 @@ default = []
 bsp_vsv = ["tock-registers"]
 
 [[bin]]
-name = "kernel"
+name = "bootloader"
 path = "src/main.rs"
 
 ##--------------------------------------------------------------------------------------------------
@@ -19,9 +19,5 @@ path = "src/main.rs"
 ##--------------------------------------------------------------------------------------------------
 
 [dependencies]
-
-# Optional dependencies
 tock-registers = { version = "0.8.x", default-features = false, features = ["register_types"], optional = true }
-
-[target.'cfg(target_arch = "riscv64")'.dependencies]
 riscv = "0.10.1"
