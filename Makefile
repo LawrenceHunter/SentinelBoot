@@ -4,6 +4,7 @@
 
 BSP ?= vsv
 CLEAR ?= y
+TOOLCHAIN ?= riscv64-unknown-elf-
 
 # Default to a serial device name that is common in Linux.
 DEV_SERIAL ?= /dev/ttyUSB0
@@ -19,9 +20,9 @@ ifeq ($(BSP),vsv)
     QEMU_BINARY       = qemu-system-riscv64
     QEMU_MACHINE_TYPE = sifive_u
     QEMU_RELEASE_ARGS = -serial stdio -display none
-    OBJDUMP_BINARY    = riscv64-unknown-elf-objdump
-    NM_BINARY         = riscv64-unknown-elf-nm
-    READELF_BINARY    = riscv64-unknown-elf-readelf
+    OBJDUMP_BINARY    = $(TOOLCHAIN)objdump
+    NM_BINARY         = $(TOOLCHAIN)nm
+    READELF_BINARY    = $(TOOLCHAIN)readelf
     LD_SCRIPT_PATH    = $(shell pwd)/src/bsp/visionfive
 	RUSTC_MISC_ARGS   = -C target-cpu=sifive-u74
 endif
