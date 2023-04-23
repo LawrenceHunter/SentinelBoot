@@ -7,6 +7,9 @@ use core::panic::PanicInfo;
 // Private Code
 //--------------------------------------------------------------------------------------------------
 
+#[no_mangle]
+extern "C" fn eh_personality() {}
+
 fn panic_prevent_reenter() {
     use core::sync::atomic::{AtomicBool, Ordering};
 
@@ -43,4 +46,10 @@ fn panic(info: &PanicInfo) -> ! {
     );
 
     cpu::wait_forever()
+}
+
+#[no_mangle]
+extern "C"
+fn abort() {
+    cpu::wait_forever();
 }

@@ -39,14 +39,14 @@ register_bitfields! {
         BUSY OFFSET(3) NUMBITS(1) []
     ],
 
-    // Integer Baud Rate Divisor
-    IBRD [
-        BAUD_DIVINT OFFSET(0) NUMBITS(16) []
+    // Baud Rate Divisor Upper
+    UBRD [
+        BAUD_DIVUPPER OFFSET(0) NUMBITS(8) []
     ],
 
-    // Fractional Baud Rate Divisor
-    FBRD [
-        BAUD_DIVFRAC OFFSET(0) NUMBITS(6) []
+    // Baud Rate Divisor Lower
+    LBRD [
+        BAUD_DIVLOWER OFFSET(0) NUMBITS(8) []
     ],
 
     // Line control register
@@ -101,8 +101,8 @@ register_structs! {
         (0x04 => _reserved1),
         (0x18 => FR: ReadOnly<u32, FR::Register>),
         (0x1c => _reserved2),
-        (0x24 => IBRD: WriteOnly<u32, IBRD::Register>),
-        (0x28 => FBRD: WriteOnly<u32, FBRD::Register>),
+        (0x24 => UBRD: WriteOnly<u32, UBRD::Register>),
+        (0x28 => LBRD: WriteOnly<u32, LBRD::Register>),
         (0x2c => LCR_H: WriteOnly<u32, LCR_H::Register>),
         (0x30 => CR: WriteOnly<u32, CR::Register>),
         (0x34 => _reserved3),
@@ -160,8 +160,8 @@ impl PL011UartInner {
         self.registers.ICR.write(ICR::ALL::CLEAR);
 
         // Set baudrate, 8N1 and FIFO enable
-        self.registers.IBRD.write(IBRD::BAUD_DIVINT.val(3));
-        self.registers.FBRD.write(FBRD::BAUD_DIVFRAC.val(16));
+        self.registers.UBRD.write(UBRD::BAUD_DIVUPPER.val(0x02));
+        self.registers.LBRD.write(LBRD::BAUD_DIVLOWER.val(0x50));
         self.registers.LCR_H.write(
             LCR_H::WLEN::EightBit + LCR_H::FEN::FifosEnabled
         );

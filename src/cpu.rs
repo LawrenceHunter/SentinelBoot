@@ -9,7 +9,4 @@ mod boot;
 //--------------------------------------------------------------------------------------------------
 // Architectural Public Reexports
 //--------------------------------------------------------------------------------------------------
-pub use riscv64_cpu::{nop, wait_forever};
-
-#[cfg(feature = "bsp_vsv")]
-pub use riscv64_cpu::spin_for_cycles;
+pub use riscv64_cpu::{nop, wait_forever, spin_for_cycles};

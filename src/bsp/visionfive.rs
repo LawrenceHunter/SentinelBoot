@@ -1,6 +1,4 @@
 //! Top-level BSP file for the VisionFive.
-
-pub mod cpu;
 pub mod driver;
 pub mod memory;
 
