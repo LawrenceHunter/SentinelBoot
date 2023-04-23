@@ -3,9 +3,6 @@ name = "bootloader"
 version = "0.1.0"
 edition = "2021"
 
-[profile.release]
-lto = true
-
 [features]
 default = []
 bsp_vsv = ["tock-registers"]

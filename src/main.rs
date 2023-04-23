@@ -25,7 +25,7 @@ mod synchronisation;
 /// # Safety
 ///
 /// - Only a single hart must be active and running this function.
-unsafe fn loader_init(_hartid: usize, _dtb_pa: usize) -> ! {
+unsafe fn loader_init() -> ! {
     // Initialise BSP driver subsystem
     if let Err(x) = bsp::driver::init() {
         panic!("Error intialising BSP driver subsystem: {}", x);

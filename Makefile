@@ -16,10 +16,10 @@ QEMU_MISSING_STRING = "This board is not yet supported for QEMU."
 
 ifeq ($(BSP),vsv)
     TARGET            = riscv64gc-unknown-none-elf
-    LOADER_BIN        = bootloader.img
+    LOADER_BIN        = bootloader
     QEMU_BINARY       = qemu-system-riscv64
     QEMU_MACHINE_TYPE = sifive_u
-    QEMU_RELEASE_ARGS = -serial stdio -display none
+    QEMU_RELEASE_ARGS = -cpu rv64 -smp 4 -m 128M
     OBJDUMP_BINARY    = $(TOOLCHAIN)objdump
     NM_BINARY         = $(TOOLCHAIN)nm
     READELF_BINARY    = $(TOOLCHAIN)readelf
@@ -61,9 +61,7 @@ COMPILER_ARGS = --target=$(TARGET) \
 RUSTC_CMD   = cargo rustc $(COMPILER_ARGS)
 DOC_CMD     = cargo doc $(COMPILER_ARGS)
 CLIPPY_CMD  = cargo clippy $(COMPILER_ARGS)
-OBJCOPY_CMD = rust-objcopy \
-    --strip-all            \
-    -O binary
+OBJCOPY_CMD = rust-objcopy -O binary
 
 EXEC_QEMU = $(QEMU_BINARY) -M $(QEMU_MACHINE_TYPE)
 
@@ -122,7 +120,8 @@ else # QEMU is supported.
 
 qemu: $(LOADER_BIN)
 	$(call color_header, "Launching QEMU")
-	$(EXEC_QEMU) $(QEMU_RELEASE_ARGS) -bios $(LOADER_BIN)
+	$(EXEC_QEMU) $(QEMU_RELEASE_ARGS) -nographic -serial mon:stdio -bios none \
+	-kernel $(LOADER_BIN) -s
 endif
 
 ##------------------------------------------------------------------------------
