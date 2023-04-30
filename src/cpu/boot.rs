@@ -1,5 +1,5 @@
 //! Boot code.
 
 #[cfg(target_arch = "riscv64")]
-#[path = "../_arch/riscv64/cpu/boot.rs"]
+#[path = "../../riscv64/src/cpu/boot.rs"]
 mod arch_boot;

@@ -2,7 +2,7 @@
 ## Optional, user-provided configuration values
 ##--------------------------------------------------------------------------------------------------
 
-BSP ?= vsv
+BSP ?= visionfive
 CLEAR ?= y
 TOOLCHAIN ?= riscv64-unknown-elf-
 
@@ -14,7 +14,7 @@ DEV_SERIAL ?= /dev/ttyUSB0
 ##--------------------------------------------------------------------------------------------------
 QEMU_MISSING_STRING = "This board is not yet supported for QEMU."
 
-ifeq ($(BSP),vsv)
+ifeq ($(BSP),visionfive)
     TARGET            = riscv64gc-unknown-none-elf
     LOADER_BIN        = bootloader
     QEMU_BINARY       = qemu-system-riscv64
@@ -23,7 +23,7 @@ ifeq ($(BSP),vsv)
     OBJDUMP_BINARY    = $(TOOLCHAIN)objdump
     NM_BINARY         = $(TOOLCHAIN)nm
     READELF_BINARY    = $(TOOLCHAIN)readelf
-    LD_SCRIPT_PATH    = $(shell pwd)/src/bsp/visionfive
+    LD_SCRIPT_PATH    = $(shell pwd)/bsp/src/visionfive
 	RUSTC_MISC_ARGS   = -C target-cpu=sifive-u74
 endif
 
@@ -53,7 +53,7 @@ RUSTFLAGS_PEDANTIC = $(RUSTFLAGS) \
     -D warnings                   \
     -D missing_docs
 
-FEATURES      = --features bsp_$(BSP)
+FEATURES      = --features $(BSP)
 COMPILER_ARGS = --target=$(TARGET) \
     $(FEATURES)                    \
     --release
@@ -68,7 +68,7 @@ EXEC_QEMU = $(QEMU_BINARY) -M $(QEMU_MACHINE_TYPE)
 ##--------------------------------------------------------------------------------------------------
 ## Targets
 ##--------------------------------------------------------------------------------------------------
-.PHONY: all doc qemu clippy clean readelf objdump nm
+.PHONY: all doc qemu qemu_halted clippy clean readelf objdump nm
 
 all: $(LOADER_BIN)
 
@@ -120,8 +120,23 @@ else # QEMU is supported.
 
 qemu: $(LOADER_BIN)
 	$(call color_header, "Launching QEMU")
-	$(EXEC_QEMU) $(QEMU_RELEASE_ARGS) -nographic -serial mon:stdio -bios none \
+	$(EXEC_QEMU) $(QEMU_RELEASE_ARGS) -semihosting --semihosting-config \
+	enable=on,target=native -nographic -serial mon:stdio -bios none \
 	-kernel $(LOADER_BIN) -s
+endif
+
+ifeq ($(QEMU_MACHINE_TYPE),) # QEMU is not supported for the board.
+
+qemu_halted:
+	$(call color_header, "$(QEMU_MISSING_STRING)")
+
+else # QEMU is supported.
+
+qemu_halted: $(LOADER_BIN)
+	$(call color_header, "Launching QEMU")
+	$(EXEC_QEMU) $(QEMU_RELEASE_ARGS) -semihosting --semihosting-config \
+	enable=on,target=native -nographic -serial mon:stdio -bios none \
+	-kernel $(LOADER_BIN) -s -S
 endif
 
 ##------------------------------------------------------------------------------

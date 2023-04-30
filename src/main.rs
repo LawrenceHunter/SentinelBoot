@@ -6,33 +6,35 @@
 
 #![allow(clippy::upper_case_acronyms)]
 #![feature(naked_functions, asm_const, type_ascription)]
-#![feature(format_args_nl)]
 #![feature(panic_info_message)]
 #![feature(trait_alias)]
+#![feature(format_args_nl)]
 #![no_main]
 #![no_std]
 
-mod bsp;
-mod console;
+use console::println;
 mod cpu;
-mod driver;
 mod panic_wait;
-mod print;
-mod synchronisation;
+use driver;
+use bsp;
+use core::arch::asm;
 
 /// Early init code.
 ///
 /// # Safety
 ///
 /// - Only a single hart must be active and running this function.
-unsafe fn loader_init() -> ! {
+extern "C"
+fn loader_init() {
     // Initialise BSP driver subsystem
-    if let Err(x) = bsp::driver::init() {
+    if let Err(x) = unsafe{ bsp::device_driver::init() } {
         panic!("Error intialising BSP driver subsystem: {}", x);
     }
 
     // Initialise all device drivers
-    driver::driver_manager().init_drivers();
+    unsafe {
+        driver::driver_manager().init_drivers();
+    };
     // println! usable from here
 
     // Transition from unsafe to safe
@@ -56,6 +58,12 @@ fn loader_main() -> ! {
     println!("[3] Chars written: {}", console().chars_written());
 
     println!("[4] Echoing input now.");
+
+    unsafe {
+        asm!(
+            "lui a0, 0x1"
+        );
+    }
 
     console().clear_rx();
     loop {

@@ -1,6 +1,7 @@
 //! A panic handler that infinitely waits.
 
-use crate::{cpu, println};
+use crate::cpu;
+use console::println;
 use core::panic::PanicInfo;
 
 //--------------------------------------------------------------------------------------------------

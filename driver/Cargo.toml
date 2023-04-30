@@ -1,0 +1,15 @@
+[package]
+name = "driver"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+default = []
+visionfive = []
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[dependencies]
+tock-registers = { version = "0.8.x", default-features = false, features = ["register_types"] }
+synchronisation = { path = "../synchronisation", version = "*"  }
+console = { path = "../console", version = "*"  }
+mmio = { path = "../mmio", version = "*"  }

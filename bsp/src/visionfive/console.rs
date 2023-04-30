@@ -1,11 +1,12 @@
-//! Processor code.
+//! BSP console facilities.
 
-#[cfg(target_arch = "riscv64")]
-pub use riscv64;
-
-mod boot;
+use crate::console;
 
 //--------------------------------------------------------------------------------------------------
-// Architectural Public Reexports
+// Public Code
 //--------------------------------------------------------------------------------------------------
-pub use ::riscv64::{nop, wait_forever, spin_for_cycles};
+
+/// Return a reference to the console.
+pub fn console() -> &'static dyn console::interface::All {
+    self::NS16550AUart
+}
