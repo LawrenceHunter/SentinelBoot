@@ -3,10 +3,6 @@ name = "bootloader"
 version = "0.1.0"
 edition = "2021"
 
-[features]
-default = []
-bsp_vsv = ["tock-registers"]
-
 [[bin]]
 name = "bootloader"
 path = "src/main.rs"
@@ -16,5 +12,23 @@ path = "src/main.rs"
 ##--------------------------------------------------------------------------------------------------
 
 [dependencies]
-tock-registers = { version = "0.8.x", default-features = false, features = ["register_types"], optional = true }
-riscv = "0.10.1"
+bsp = { path = "bsp", version = "*" }
+riscv64 = { path = "riscv64", version = "*"  }
+synchronisation = { path = "synchronisation", version = "*"  }
+console = { path = "console", version = "*"  }
+driver = { path = "driver", version = "*"  }
+
+##--------------------------------------------------------------------------------------------------
+## Workspace
+##--------------------------------------------------------------------------------------------------
+
+[workspace]
+members = ["bsp", "riscv64", "synchronisation", "console", "driver"]
+
+##--------------------------------------------------------------------------------------------------
+## Features
+##--------------------------------------------------------------------------------------------------
+
+[features]
+default = []
+visionfive = ["bsp/visionfive", "driver/visionfive"]

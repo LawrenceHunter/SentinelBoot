@@ -1,11 +1,9 @@
-//! Processor code.
-
-#[cfg(target_arch = "riscv64")]
-pub use riscv64;
-
-mod boot;
+//! BSP Processor code.
 
 //--------------------------------------------------------------------------------------------------
-// Architectural Public Reexports
+// Public Definitions
 //--------------------------------------------------------------------------------------------------
-pub use ::riscv64::{nop, wait_forever, spin_for_cycles};
+
+#[no_mangle]
+#[link_section = ".text._start_arguments"]
+pub static BOOT_CORE_ID: u64 = 0;
