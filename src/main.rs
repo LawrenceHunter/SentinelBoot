@@ -12,12 +12,12 @@
 #![no_main]
 #![no_std]
 
-use console::println;
 mod cpu;
+mod print;
 mod panic_wait;
 use driver;
 use bsp;
-use core::arch::asm;
+use console::console;
 
 /// Early init code.
 ///
@@ -43,29 +43,56 @@ fn loader_init() {
 
 // Main function running after early init
 fn loader_main() -> ! {
-    use console::console;
+    unsafe {
+        core::arch::asm!(
+          "lui a1, 0"
+        );
+    }
     println!(
         "[0] {} version {}",
         env!("CARGO_PKG_NAME"),
         env!("CARGO_PKG_VERSION")
     );
+    unsafe {
+        core::arch::asm!(
+          "lui a1, 1"
+        );
+    }
 
     println!("[1] Booting on: {}", bsp::board_name());
+    unsafe {
+        core::arch::asm!(
+          "lui a1, 2"
+        );
+    }
 
     println!("[2] Drivers loaded:");
-    driver::driver_manager().enumerate();
+    unsafe {
+        core::arch::asm!(
+          "lui a1, 3"
+        );
+    }
 
     println!("[3] Chars written: {}", console().chars_written());
+    unsafe {
+        core::arch::asm!(
+          "lui a1, 4"
+        );
+    }
 
     println!("[4] Echoing input now.");
-
     unsafe {
-        asm!(
-            "lui a0, 0x1"
+        core::arch::asm!(
+          "lui a1, 5"
         );
     }
 
     console().clear_rx();
+    unsafe {
+        core::arch::asm!(
+          "lui a1, 6"
+        );
+    }
     loop {
         let c = console().read_char();
         console().write_char(c);

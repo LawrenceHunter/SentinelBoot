@@ -16,7 +16,7 @@ use mmio;
 
 // NS16550A
 register_bitfields! {
-    u8,
+    u32,
 
     // Receiver Buffer Register
     RB_RH_R [
@@ -125,15 +125,15 @@ register_structs! {
     #[allow(non_snake_case)]
     /// TODO
     pub RegisterBlock {
-        (0x00 => RB_RH_R: ReadWrite<u8, RB_RH_R::Register>),
-        (0x01 => IER: ReadWrite<u8, IER::Register>),
-        (0x02 => FCR: WriteOnly<u8, FCR::Register>),
-        (0x03 => LCR: ReadWrite<u8, LCR::Register>),
-        (0x04 => _reserved1),
-        (0x05 => LSR: ReadWrite<u8, LSR::Register>),
-        (0x06 => _reserved2),
-        (0x07 => _reserved3),
-        (0x08 => @END),
+        (0x00 => RB_RH_R: ReadWrite<u32, RB_RH_R::Register>),
+        (0x04 => IER: ReadWrite<u32, IER::Register>),
+        (0x08 => FCR: WriteOnly<u32, FCR::Register>),
+        (0x0c => LCR: ReadWrite<u32, LCR::Register>),
+        (0x10 => _reserved1),
+        (0x14 => LSR: ReadWrite<u32, LSR::Register>),
+        (0x18 => _reserved2),
+        (0x1c => _reserved3),
+        (0x20 => @END),
     }
 }
 
@@ -188,7 +188,6 @@ impl NS16550AUartInner {
         // Enable receiver buffer interrupts
         self.registers.IER.write(IER::ERBFI::Enabled);
 
-
 		let divisor: u16 = 592;
 		let divisor_least: u8 = (divisor & 0xff).try_into().unwrap();
 		let divisor_most:  u8 = (divisor >> 8).try_into().unwrap();
@@ -206,7 +205,17 @@ impl NS16550AUartInner {
 
     /// Send a char
     fn write_char(&mut self, c: char) {
-        self.registers.RB_RH_R.set(c as u8);
+        unsafe {
+            core::arch::asm!(
+                "lui a1, 12"
+            );
+        }
+        self.registers.RB_RH_R.set(c as u32);
+        unsafe {
+            core::arch::asm!(
+                "lui a1, 21"
+            );
+        }
         self.chars_written += 1;
     }
 
@@ -216,13 +225,13 @@ impl NS16550AUartInner {
 
     /// Receive char
     fn read_char_converting(&mut self, _blocking_mode: BlockingMode) -> Option<char> {
-        let mut ret = self.registers.RB_RH_R.get() as char;
+        let mut ret = char::from_u32(self.registers.RB_RH_R.get());
         // Convert \r -> \n
-        if ret == '\r' {
-            ret = '\n'
+        if ret ==Some('\r') {
+            ret = Some('\n')
         }
         self.chars_read += 1;
-        Some(ret)
+        ret
     }
 }
 
@@ -230,6 +239,11 @@ impl NS16550AUartInner {
 impl fmt::Write for NS16550AUartInner {
     /// TODO
     fn write_str(&mut self, s: &str) -> fmt::Result {
+        unsafe {
+            core::arch::asm!(
+                "lui a1, 44"
+            );
+        }
         for c in s.chars() {
             self.write_char(c);
         }

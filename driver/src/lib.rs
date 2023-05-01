@@ -1,5 +1,6 @@
 //! Device driver.
 #![no_std]
+#![feature(format_args_nl)]
 
 #[cfg(feature = "visionfive")]
 mod ns16550_a_uart;
@@ -8,7 +9,6 @@ mod ns16550_a_uart;
 pub use ns16550_a_uart::*;
 
 use synchronisation::{interface::Mutex, NullLock};
-use console::println;
 
 //--------------------------------------------------------------------------------------------------
 // Private Definitions
@@ -130,7 +130,6 @@ impl DriverManager {
                     descriptor.device_driver.compatible(), x
                 );
             }
-
             // Call corresponding post init callback
             if let Some(callback) = &descriptor.post_init_callback {
                 if let Err(x) = callback() {
@@ -140,15 +139,6 @@ impl DriverManager {
                     );
                 }
             }
-        });
-    }
-
-    /// Enumerate all registered device drivers
-    pub fn enumerate(&self) {
-        let mut i: usize = 1;
-        self.for_each_descriptor(|descriptor| {
-            println!("   {}. {}", i, descriptor.device_driver.compatible());
-            i += 1;
         });
     }
 }
