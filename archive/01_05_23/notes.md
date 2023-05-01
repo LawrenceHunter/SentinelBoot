@@ -62,4 +62,37 @@ Adding a fake instruction to mmio deref to see if we get that far. This does occ
 
 Adding a fake instruction to device driver init to see if we get that far. This does occur.
 
-Adding a fake instruction to the end our code to see if we get that far. This does not occur. There is a problem between driver instantiation and the end of main.
+Adding a fake instruction to the start of our code to see if we get that far. This does not occur. There is a problem between driver instantiation and the start of main.
+
+Start of loader init is ran.
+
+Error occurs in `driver::driver_manager().init_drivers();`
+
+Error occurs in:
+
+```rust
+if let Err(x) = descriptor.device_driver.init() {
+      panic!(
+         "Error initialising driver: {}: {}",
+         descriptor.device_driver.compatible(), x
+      );
+}
+```
+
+Error found: `self.registers.LCR.write(LCR::DLAB::Disabled);`
+Seems the addressing of the register locations was incorrect and needs to be offset by word i.e. +4 not +1.
+We can now finish `driver::driver_manager().init_drivers();`
+We now reach `loader_main()`
+
+```rust
+    println!(
+        "[0] {} version {}",
+        env!("CARGO_PKG_NAME"),
+        env!("CARGO_PKG_VERSION")
+    );
+```
+Seems to fail.
+
+It appears we don't reach "fn write_char(&mut self, c: char)"
+Error occurs in `console::console().write_fmt(args).unwrap();`
+My current understanding of the error is that the overwriting of the console implementation by the driver implementing the trait does not occur properly it seems we reach the print function but the call to format_args fails very quickly. Narrowing down where we end up it is `asm_trap_vector`.

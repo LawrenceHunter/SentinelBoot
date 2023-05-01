@@ -74,24 +74,3 @@ pub fn register_console(new_console: &'static (dyn interface::All + Sync)) {
 pub fn console() -> &'static dyn interface::All {
     CUR_CONSOLE.lock(|con| *con)
 }
-
-//------------------------------------------------------------------------------
-// Programmer Interface Code
-//------------------------------------------------------------------------------
-#[doc(hidden)]
-pub fn _print(args: core::fmt::Arguments) {
-    console().write_fmt(args).unwrap();
-}
-
-/// Prints without a newline.
-#[macro_export]
-macro_rules! print {
-    ($($arg:tt)*) => ($crate::print::_print(format_args!($($arg)*)));
-}
-
-/// Prints with a newline.
-#[macro_export]
-macro_rules! println {
-    () => ($crate::print!("\n"));
-    ($($arg:tt)*) => (console::_print(format_args!($($arg)*)));
-}
