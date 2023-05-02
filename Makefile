@@ -16,7 +16,7 @@ QEMU_MISSING_STRING = "This board is not yet supported for QEMU."
 
 ifeq ($(BSP),visionfive)
     TARGET            = riscv64gc-unknown-none-elf
-    LOADER_BIN        = bootloader
+    LOADER_BIN        = bootloader.img
     QEMU_BINARY       = qemu-system-riscv64
     QEMU_MACHINE_TYPE = sifive_u
     QEMU_RELEASE_ARGS = -cpu rv64 -smp 4 -m 128M
