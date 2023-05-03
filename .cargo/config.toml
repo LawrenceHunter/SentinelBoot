@@ -1,0 +1,6 @@
+
+[build]
+target = "riscv64gc-unknown-none-elf"
+
+[target.riscv64gc-unknown-none-elf]
+rustflags = ["-C", "link-arg=--script=bootloader.ld", "-D", "warnings", "-D", "missing_docs", "-C", "link-arg=--library-path=./"]
