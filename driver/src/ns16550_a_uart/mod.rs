@@ -1,14 +1,11 @@
-
 //! NS16550A UART driver.
 use core::fmt;
+use synchronisation::interface::Mutex;
 use tock_registers::{
     interfaces::{Readable, Writeable},
     register_bitfields, register_structs,
     registers::{ReadWrite, WriteOnly},
 };
-use console;
-use synchronisation::interface::Mutex;
-use mmio;
 
 //--------------------------------------------------------------------------------------------------
 // Private Definitions
@@ -188,16 +185,20 @@ impl NS16550AUartInner {
         // Enable receiver buffer interrupts
         self.registers.IER.write(IER::ERBFI::Enabled);
 
-		let divisor: u16 = 592;
-		let divisor_least: u8 = (divisor & 0xff).try_into().unwrap();
-		let divisor_most:  u8 = (divisor >> 8).try_into().unwrap();
+        let divisor: u16 = 592;
+        let divisor_least: u8 = (divisor & 0xff).try_into().unwrap();
+        let divisor_most: u8 = (divisor >> 8).try_into().unwrap();
 
         // Set Divisor Latch Access Bit
         self.registers.LCR.write(LCR::DLAB::Enabled);
 
         // Write DLL and DLM
-        self.registers.RB_RH_R.write(RB_RH_R::DATA.val(divisor_least.into()));
-        self.registers.IER.write(IER::DIVISOR_LATCH_MS.val(divisor_most.into()));
+        self.registers
+            .RB_RH_R
+            .write(RB_RH_R::DATA.val(divisor_least.into()));
+        self.registers
+            .IER
+            .write(IER::DIVISOR_LATCH_MS.val(divisor_most.into()));
 
         // Unset Divisor Latch Access Bit
         self.registers.LCR.write(LCR::DLAB::Disabled);
@@ -206,28 +207,23 @@ impl NS16550AUartInner {
     /// Send a char
     fn write_char(&mut self, c: char) {
         unsafe {
-            core::arch::asm!(
-                "lui a1, 12"
-            );
+            core::arch::asm!("lui a1, 12");
         }
         self.registers.RB_RH_R.set(c as u32);
         unsafe {
-            core::arch::asm!(
-                "lui a1, 21"
-            );
+            core::arch::asm!("lui a1, 21");
         }
         self.chars_written += 1;
     }
 
     /// TODO
-    fn flush(&self) {
-    }
+    fn flush(&self) {}
 
     /// Receive char
     fn read_char_converting(&mut self, _blocking_mode: BlockingMode) -> Option<char> {
         let mut ret = char::from_u32(self.registers.RB_RH_R.get());
         // Convert \r -> \n
-        if ret ==Some('\r') {
+        if ret == Some('\r') {
             ret = Some('\n')
         }
         self.chars_read += 1;
@@ -240,9 +236,7 @@ impl fmt::Write for NS16550AUartInner {
     /// TODO
     fn write_str(&mut self, s: &str) -> fmt::Result {
         unsafe {
-            core::arch::asm!(
-                "lui a1, 44"
-            );
+            core::arch::asm!("lui a1, 44");
         }
         for c in s.chars() {
             self.write_char(c);
@@ -260,6 +254,8 @@ impl NS16550AUart {
     /// TODO
     pub const COMPATIBLE: &'static str = "NS16550A UART";
 
+    /// TODO
+    /// # Safety
     /// TODO
     pub const unsafe fn new(mmio_start_addr: usize) -> Self {
         Self {
@@ -307,16 +303,16 @@ impl console::interface::Write for NS16550AUart {
 impl console::interface::Read for NS16550AUart {
     /// TODO
     fn read_char(&self) -> char {
-        self.inner.lock(
-            |inner| inner.read_char_converting(BlockingMode::Blocking).unwrap()
-        )
+        self.inner
+            .lock(|inner| inner.read_char_converting(BlockingMode::Blocking).unwrap())
     }
 
     /// TODO
     fn clear_rx(&self) {
-        while self.inner.lock(
-            |inner| inner.read_char_converting(BlockingMode::NonBlocking)
-        ).is_some()
+        while self
+            .inner
+            .lock(|inner| inner.read_char_converting(BlockingMode::NonBlocking))
+            .is_some()
         {}
     }
 }
