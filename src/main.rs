@@ -13,10 +13,8 @@
 #![no_std]
 
 mod cpu;
-mod print;
 mod panic_wait;
-use driver;
-use bsp;
+mod print;
 use console::console;
 
 /// Early init code.
@@ -24,10 +22,9 @@ use console::console;
 /// # Safety
 ///
 /// - Only a single hart must be active and running this function.
-extern "C"
-fn loader_init() {
+extern "C" fn loader_init() {
     // Initialise BSP driver subsystem
-    if let Err(x) = unsafe{ bsp::device_driver::init() } {
+    if let Err(x) = unsafe { bsp::device_driver::init() } {
         panic!("Error intialising BSP driver subsystem: {}", x);
     }
 
@@ -44,9 +41,7 @@ fn loader_init() {
 // Main function running after early init
 fn loader_main() -> ! {
     unsafe {
-        core::arch::asm!(
-          "lui a1, 0"
-        );
+        core::arch::asm!("lui a1, 0");
     }
     println!(
         "[0] {} version {}",
@@ -54,44 +49,32 @@ fn loader_main() -> ! {
         env!("CARGO_PKG_VERSION")
     );
     unsafe {
-        core::arch::asm!(
-          "lui a1, 1"
-        );
+        core::arch::asm!("lui a1, 1");
     }
 
     println!("[1] Booting on: {}", bsp::board_name());
     unsafe {
-        core::arch::asm!(
-          "lui a1, 2"
-        );
+        core::arch::asm!("lui a1, 2");
     }
 
     println!("[2] Drivers loaded:");
     unsafe {
-        core::arch::asm!(
-          "lui a1, 3"
-        );
+        core::arch::asm!("lui a1, 3");
     }
 
     println!("[3] Chars written: {}", console().chars_written());
     unsafe {
-        core::arch::asm!(
-          "lui a1, 4"
-        );
+        core::arch::asm!("lui a1, 4");
     }
 
     println!("[4] Echoing input now.");
     unsafe {
-        core::arch::asm!(
-          "lui a1, 5"
-        );
+        core::arch::asm!("lui a1, 5");
     }
 
     console().clear_rx();
     unsafe {
-        core::arch::asm!(
-          "lui a1, 6"
-        );
+        core::arch::asm!("lui a1, 6");
     }
     loop {
         let c = console().read_char();

@@ -2,16 +2,14 @@
 
 use super::memory::map::mmio;
 use core::sync::atomic::{AtomicBool, Ordering};
-use driver::{DeviceDriverDescriptor, driver_manager, NS16550AUart};
+use driver::{driver_manager, DeviceDriverDescriptor, NS16550AUart};
 
 //--------------------------------------------------------------------------------------------------
 // Global instances
 //--------------------------------------------------------------------------------------------------
 
 /// TODO
-static NS16550A_UART: NS16550AUart = unsafe {
-    NS16550AUart::new(mmio::NS16550A_UART_START)
-};
+static NS16550A_UART: NS16550AUart = unsafe { NS16550AUart::new(mmio::NS16550A_UART_START) };
 
 //--------------------------------------------------------------------------------------------------
 // Private Code
@@ -25,8 +23,7 @@ fn post_init_uart() -> Result<(), &'static str> {
 
 /// TODO
 fn driver_uart() -> Result<(), &'static str> {
-    let uart_descriptor =
-        DeviceDriverDescriptor::new(&NS16550A_UART, Some(post_init_uart));
+    let uart_descriptor = DeviceDriverDescriptor::new(&NS16550A_UART, Some(post_init_uart));
     driver_manager().register_driver(uart_descriptor);
     Ok(())
 }
@@ -35,6 +32,8 @@ fn driver_uart() -> Result<(), &'static str> {
 // Public Code
 //--------------------------------------------------------------------------------------------------
 
+/// TODO
+/// # Safety
 /// TODO
 pub unsafe fn init() -> Result<(), &'static str> {
     static INIT_DONE: AtomicBool = AtomicBool::new(false);

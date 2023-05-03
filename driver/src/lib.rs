@@ -33,12 +33,16 @@ pub mod interface {
         fn compatible(&self) -> &'static str;
 
         /// TODO
+        /// # Safety
+        /// TODO
         unsafe fn init(&self) -> Result<(), &'static str> {
             Ok(())
         }
     }
 }
 
+/// TODO
+/// # Safety
 /// TODO
 pub type DeviceDriverPostInitCallback = unsafe fn() -> Result<(), &'static str>;
 
@@ -116,10 +120,16 @@ impl DriverManager {
     /// TODO
     fn for_each_descriptor<'a>(&'a self, f: impl FnMut(&'a DeviceDriverDescriptor)) {
         self.inner.lock(|inner| {
-            inner.descriptors.iter().filter_map(|x| x.as_ref()).for_each(f)
+            inner
+                .descriptors
+                .iter()
+                .filter_map(|x| x.as_ref())
+                .for_each(f)
         })
     }
 
+    /// TODO
+    /// # Safety
     /// TODO
     pub unsafe fn init_drivers(&self) {
         self.for_each_descriptor(|descriptor| {
@@ -127,7 +137,8 @@ impl DriverManager {
             if let Err(x) = descriptor.device_driver.init() {
                 panic!(
                     "Error initialising driver: {}: {}",
-                    descriptor.device_driver.compatible(), x
+                    descriptor.device_driver.compatible(),
+                    x
                 );
             }
             // Call corresponding post init callback
@@ -135,7 +146,8 @@ impl DriverManager {
                 if let Err(x) = callback() {
                     panic!(
                         "Error during dirver post-init callback: {}: {}",
-                        descriptor.device_driver.compatible(), x
+                        descriptor.device_driver.compatible(),
+                        x
                     );
                 }
             }
