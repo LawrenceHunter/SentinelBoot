@@ -5,6 +5,7 @@
 BSP ?= visionfive
 CLEAR ?= y
 TOOLCHAIN ?= riscv64-unknown-elf-
+DOCKER ?= y
 
 # Default to a serial device name that is common in Linux.
 DEV_SERIAL ?= /dev/ttyUSB0
@@ -12,10 +13,8 @@ DEV_SERIAL ?= /dev/ttyUSB0
 ##--------------------------------------------------------------------------------------------------
 ## BSP-specific configuration values
 ##--------------------------------------------------------------------------------------------------
-QEMU_MISSING_STRING = "This board is not yet supported for QEMU."
 
 ifeq ($(BSP),visionfive)
-    TARGET            = riscv64gc-unknown-none-elf
     LOADER_BIN        = bootloader.img
     QEMU_BINARY       = qemu-system-riscv64
     QEMU_MACHINE_TYPE = sifive_u
@@ -23,8 +22,6 @@ ifeq ($(BSP),visionfive)
     OBJDUMP_BINARY    = $(TOOLCHAIN)objdump
     NM_BINARY         = $(TOOLCHAIN)nm
     READELF_BINARY    = $(TOOLCHAIN)readelf
-    LD_SCRIPT_PATH    = $(shell pwd)/bsp/src/visionfive
-	RUSTC_MISC_ARGS   = -C target-cpu=sifive-u74
 endif
 
 # Export for build.rs.
@@ -34,10 +31,9 @@ export LD_SCRIPT_PATH
 ## Targets and Prerequisites
 ##--------------------------------------------------------------------------------------------------
 LOADER_MANIFEST      = Cargo.toml
-LOADER_LINKER_SCRIPT = bootloader.ld
 LAST_BUILD_CONFIG    = target/$(BSP).build_config
 
-LOADER_ELF      = target/$(TARGET)/release/bootloader
+LOADER_ELF      = target/riscv64gc-unknown-none-elf/release/bootloader
 # This parses cargo's dep-info file.
 # https://doc.rust-lang.org/cargo/guide/build-cache.html#dep-info-files
 LOADER_ELF_DEPS = $(filter-out %: ,$(file < $(LOADER_ELF).d)) $(LOADER_MANIFEST) $(LAST_BUILD_CONFIG)
@@ -45,30 +41,21 @@ LOADER_ELF_DEPS = $(filter-out %: ,$(file < $(LOADER_ELF).d)) $(LOADER_MANIFEST)
 ##--------------------------------------------------------------------------------------------------
 ## Command building blocks
 ##--------------------------------------------------------------------------------------------------
-RUSTFLAGS = $(RUSTC_MISC_ARGS)                   \
-	-C link-arg=--library-path=$(LD_SCRIPT_PATH) \
-    -C link-arg=--script=$(LOADER_LINKER_SCRIPT)
-
-RUSTFLAGS_PEDANTIC = $(RUSTFLAGS) \
-    -D warnings                   \
-    -D missing_docs
-
 FEATURES      = --features $(BSP)
-COMPILER_ARGS = --target=$(TARGET) \
-    $(FEATURES)                    \
-    --release
+COMPILER_ARGS = $(FEATURES) --release
 
 RUSTC_CMD   = cargo rustc $(COMPILER_ARGS)
 DOC_CMD     = cargo doc $(COMPILER_ARGS)
 CLIPPY_CMD  = cargo clippy $(COMPILER_ARGS)
 OBJCOPY_CMD = rust-objcopy -O binary
-
-EXEC_QEMU = $(QEMU_BINARY) -M $(QEMU_MACHINE_TYPE)
+EXEC_QEMU   = $(QEMU_BINARY) -M $(QEMU_MACHINE_TYPE)
+DOCKER_CMD  = docker build --tag bootloader --file Dockerfile . && \
+				docker run -v $(shell pwd):$(shell pwd) -w $(shell pwd) bootloader:latest
 
 ##--------------------------------------------------------------------------------------------------
 ## Targets
 ##--------------------------------------------------------------------------------------------------
-.PHONY: all doc qemu qemu_halted clippy clean readelf objdump nm
+.PHONY: all doc qemu qemu_halted clippy clean readelf objdump nm test
 
 all: $(LOADER_BIN)
 
@@ -84,72 +71,82 @@ $(LAST_BUILD_CONFIG):
 ## Compile the bootloader ELF
 ##------------------------------------------------------------------------------
 $(LOADER_ELF): $(LOADER_ELF_DEPS)
+ifeq ($(DOCKER),y)
 	$(call color_header, "Compiling bootloader ELF - $(BSP)")
-ifeq ($(CLEAR),y)
-	clear
+	$(DOCKER_CMD) $(RUSTC_CMD)
+else
+	$(call color_header, "Compiling bootloader ELF - $(BSP)")
+	$(RUSTC_CMD)
 endif
-	@RUSTFLAGS="$(RUSTFLAGS_PEDANTIC)" $(RUSTC_CMD)
-
 ##------------------------------------------------------------------------------
 ## Generate the stripped bootloader binary
 ##------------------------------------------------------------------------------
 $(LOADER_BIN): $(LOADER_ELF)
+ifeq ($(DOCKER),y)
+	$(call color_header, "Generating stripped binary")
+	$(DOCKER_CMD) $(OBJCOPY_CMD) $(LOADER_ELF) $(LOADER_BIN)
+	$(call color_progress_prefix, "Name")
+	$(DOCKER_CMD) echo $(LOADER_BIN)
+	$(call color_progress_prefix, "Size")
+	$(call disk_usage_KiB, $(LOADER_BIN))
+else
 	$(call color_header, "Generating stripped binary")
 	@$(OBJCOPY_CMD) $(LOADER_ELF) $(LOADER_BIN)
 	$(call color_progress_prefix, "Name")
 	@echo $(LOADER_BIN)
 	$(call color_progress_prefix, "Size")
 	$(call disk_usage_KiB, $(LOADER_BIN))
+endif
 
 ##------------------------------------------------------------------------------
 ## Generate the documentation
 ##------------------------------------------------------------------------------
 doc:
+ifeq ($(DOCKER),y)
 	$(call color_header, "Generating docs")
-	@$(DOC_CMD) --document-private-items --open
+	$(DOCKER_CMD) $(DOC_CMD) --document-private-items
+else
+	$(call color_header, "Generating docs")
+	$(DOC_CMD) --document-private-items
+endif
 
 ##------------------------------------------------------------------------------
 ## Run the bootloader in QEMU
 ##------------------------------------------------------------------------------
-ifeq ($(QEMU_MACHINE_TYPE),) # QEMU is not supported for the board.
-
-qemu:
-	$(call color_header, "$(QEMU_MISSING_STRING)")
-
-else # QEMU is supported.
-
 qemu: $(LOADER_BIN)
+ifeq ($(DOCKER),y)
 	$(call color_header, "Launching QEMU")
-	$(EXEC_QEMU) $(QEMU_RELEASE_ARGS) -semihosting --semihosting-config \
-	enable=on,target=native -nographic -serial mon:stdio -bios none \
-	-kernel $(LOADER_BIN) -s
+	$(DOCKER_CMD) $(EXEC_QEMU) $(QEMU_RELEASE_ARGS)  -nographic -serial mon:stdio \
+	-bios none -kernel $(LOADER_BIN) -s
+else
+	$(call color_header, "Launching QEMU")
+	$(EXEC_QEMU) $(QEMU_RELEASE_ARGS)  -nographic -serial mon:stdio \
+	-bios none -kernel $(LOADER_BIN) -s
 endif
-
-ifeq ($(QEMU_MACHINE_TYPE),) # QEMU is not supported for the board.
-
-qemu_halted:
-	$(call color_header, "$(QEMU_MISSING_STRING)")
-
-else # QEMU is supported.
 
 qemu_halted: $(LOADER_BIN)
 	$(call color_header, "Launching QEMU")
-	$(EXEC_QEMU) $(QEMU_RELEASE_ARGS) -semihosting --semihosting-config \
-	enable=on,target=native -nographic -serial mon:stdio -bios none \
-	-kernel $(LOADER_BIN) -s -S
-endif
-
+	$(EXEC_QEMU) $(QEMU_RELEASE_ARGS)  -nographic -serial mon:stdio \
+	-bios none -kernel $(LOADER_BIN) -s -S
 ##------------------------------------------------------------------------------
 ## Run clippy
 ##------------------------------------------------------------------------------
 clippy:
-	@RUSTFLAGS="$(RUSTFLAGS_PEDANTIC)" $(CLIPPY_CMD)
+ifeq ($(DOCKER),y)
+	$(DOCKER_CMD) $(CLIPPY_CMD)
+else
+	$(CLIPPY_CMD)
+endif
 
 ##------------------------------------------------------------------------------
 ## Clean
 ##------------------------------------------------------------------------------
 clean:
+ifeq ($(DOCKER),y)
+	$(DOCKER_CMD) rm -rf target $(LOADER_BIN)
+else
 	rm -rf target $(LOADER_BIN)
+endif
 
 ##------------------------------------------------------------------------------
 ## Run readelf
@@ -174,3 +171,13 @@ objdump: $(LOADER_ELF)
 nm: $(LOADER_ELF)
 	$(call color_header, "Launching nm")
 	$(NM_BINARY) --demangle --print-size $(LOADER_ELF) | sort | rustfilt
+
+##------------------------------------------------------------------------------
+## Run tests
+##------------------------------------------------------------------------------
+test:
+ifeq ($(DOCKER),y)
+	$(DOCKER_CMD) echo "No tests..."
+else
+	echo "No tests..."
+endif
