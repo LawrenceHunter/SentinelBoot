@@ -8,5 +8,5 @@ use crate::console;
 
 /// Return a reference to the console.
 pub fn console() -> &'static dyn console::interface::All {
-    self::NS16550AUart
+    &self::NS16550AUart
 }

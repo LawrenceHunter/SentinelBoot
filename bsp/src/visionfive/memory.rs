@@ -5,7 +5,7 @@
 //--------------------------------------------------------------------------------------------------
 
 #[rustfmt::skip]
-pub(super) mod map {
+pub(crate) mod map {
     // Physical devices
     #[cfg(feature = "visionfive")]
     pub mod mmio {

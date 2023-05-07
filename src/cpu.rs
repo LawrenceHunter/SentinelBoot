@@ -8,4 +8,4 @@ mod boot;
 //--------------------------------------------------------------------------------------------------
 // Architectural Public Reexports
 //--------------------------------------------------------------------------------------------------
-pub use ::riscv64::{nop, wait_forever, spin_for_cycles};
+pub use ::riscv64::{nop, spin_for_cycles, wait_forever};

@@ -4,7 +4,7 @@ use synchronisation::interface::Mutex;
 use tock_registers::{
     interfaces::{Readable, Writeable},
     register_bitfields, register_structs,
-    registers::{ReadWrite, WriteOnly},
+    registers::{Aliased, ReadWrite},
 };
 
 //--------------------------------------------------------------------------------------------------
@@ -13,7 +13,7 @@ use tock_registers::{
 
 // NS16550A
 register_bitfields! {
-    u32,
+    u8,
 
     // Receiver Buffer Register
     RB_RH_R [
@@ -119,18 +119,16 @@ register_bitfields! {
 
 // TODO
 register_structs! {
-    #[allow(non_snake_case)]
     /// TODO
+    #[allow(non_snake_case)]
     pub RegisterBlock {
-        (0x00 => RB_RH_R: ReadWrite<u32, RB_RH_R::Register>),
-        (0x04 => IER: ReadWrite<u32, IER::Register>),
-        (0x08 => FCR: WriteOnly<u32, FCR::Register>),
-        (0x0c => LCR: ReadWrite<u32, LCR::Register>),
-        (0x10 => _reserved1),
-        (0x14 => LSR: ReadWrite<u32, LSR::Register>),
-        (0x18 => _reserved2),
-        (0x1c => _reserved3),
-        (0x20 => @END),
+        (0x00 => RB_RH_R: Aliased<u8, RB_RH_R::Register>),
+        (0x01 => IER: ReadWrite<u8, IER::Register>),
+        (0x02 => FCR: Aliased<u8, FCR::Register>),
+        (0x03 => LCR: ReadWrite<u8, LCR::Register>),
+        (0x04 => _reserved0),
+        (0x05 => LSR: ReadWrite<u8, LSR::Register>),
+        (0x06 => @END),
     }
 }
 
@@ -173,46 +171,36 @@ impl NS16550AUartInner {
 
     // Setup baudrate and characteristics
     pub fn init(&mut self) {
-        // Unset Divisor Latch Access Bit
-        self.registers.LCR.write(LCR::DLAB::Disabled);
+        // Enable receiver buffer interrupts
+        self.registers.IER.set(0);
 
         // Set line control register (LCR) word length to 8 bit
         self.registers.LCR.write(LCR::WLEN::EightBit);
 
         // Enable FIFO
-        self.registers.FCR.write(FCR::FEN::FifosEnabled);
+        self.registers.FCR.set(FCR::FEN::FifosEnabled.value);
 
         // Enable receiver buffer interrupts
         self.registers.IER.write(IER::ERBFI::Enabled);
 
-        let divisor: u16 = 592;
-        let divisor_least: u8 = (divisor & 0xff).try_into().unwrap();
-        let divisor_most: u8 = (divisor >> 8).try_into().unwrap();
-
         // Set Divisor Latch Access Bit
-        self.registers.LCR.write(LCR::DLAB::Enabled);
+        self.registers
+            .LCR
+            .write(LCR::WLEN::EightBit + LCR::DLAB::Enabled);
 
         // Write DLL and DLM
-        self.registers
-            .RB_RH_R
-            .write(RB_RH_R::DATA.val(divisor_least.into()));
-        self.registers
-            .IER
-            .write(IER::DIVISOR_LATCH_MS.val(divisor_most.into()));
+        self.registers.RB_RH_R.set(0x03);
+        self.registers.IER.write(IER::DIVISOR_LATCH_MS.val(0x00));
 
         // Unset Divisor Latch Access Bit
-        self.registers.LCR.write(LCR::DLAB::Disabled);
+        self.registers
+            .LCR
+            .write(LCR::WLEN::EightBit + LCR::DLAB::Disabled);
     }
 
     /// Send a char
     fn write_char(&mut self, c: char) {
-        unsafe {
-            core::arch::asm!("lui a1, 12");
-        }
-        self.registers.RB_RH_R.set(c as u32);
-        unsafe {
-            core::arch::asm!("lui a1, 21");
-        }
+        self.registers.RB_RH_R.set(c as u8);
         self.chars_written += 1;
     }
 
@@ -221,13 +209,13 @@ impl NS16550AUartInner {
 
     /// Receive char
     fn read_char_converting(&mut self, _blocking_mode: BlockingMode) -> Option<char> {
-        let mut ret = char::from_u32(self.registers.RB_RH_R.get());
+        let mut ret = self.registers.RB_RH_R.get() as char;
         // Convert \r -> \n
-        if ret == Some('\r') {
-            ret = Some('\n')
+        if ret == '\r' {
+            ret = '\n'
         }
         self.chars_read += 1;
-        ret
+        Some(ret)
     }
 }
 
@@ -235,9 +223,6 @@ impl NS16550AUartInner {
 impl fmt::Write for NS16550AUartInner {
     /// TODO
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        unsafe {
-            core::arch::asm!("lui a1, 44");
-        }
         for c in s.chars() {
             self.write_char(c);
         }

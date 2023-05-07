@@ -59,7 +59,6 @@ pub mod interface {
 static CUR_CONSOLE: NullLock<&'static (dyn interface::All + Sync)> =
     NullLock::new(&null_console::NULL_CONSOLE);
 
-
 //--------------------------------------------------------------------------------------------------
 // Public Code
 //--------------------------------------------------------------------------------------------------
@@ -73,4 +72,26 @@ pub fn register_console(new_console: &'static (dyn interface::All + Sync)) {
 /// Return a reference to the currently registered console.
 pub fn console() -> &'static dyn interface::All {
     CUR_CONSOLE.lock(|con| *con)
+}
+
+use core::fmt;
+
+#[doc(hidden)]
+pub fn _print(args: fmt::Arguments) {
+    console().write_fmt(args).unwrap();
+}
+
+/// Prints without a newline.
+#[macro_export]
+macro_rules! print {
+    ($($arg:tt)*) => ($crate::_print(format_args!($($arg)*)));
+}
+
+/// Prints with a newline.
+#[macro_export]
+macro_rules! println {
+    () => ($crate::print!("\n"));
+    ($($arg:tt)*) => ({
+        $crate::_print(format_args_nl!($($arg)*));
+    })
 }

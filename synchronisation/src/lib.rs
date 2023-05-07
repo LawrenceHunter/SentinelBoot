@@ -56,9 +56,7 @@ impl<T> interface::Mutex for NullLock<T> {
     type Data = T;
 
     fn lock<'a, R>(&'a self, f: impl FnOnce(&'a mut Self::Data) -> R) -> R {
-        let data = unsafe {
-            &mut *self.data.get()
-        };
+        let data = unsafe { &mut *self.data.get() };
         f(data)
     }
 }

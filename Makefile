@@ -1,60 +1,56 @@
-##--------------------------------------------------------------------------------------------------
+##-----------------------------------------------------------------------------
 ## Optional, user-provided configuration values
-##--------------------------------------------------------------------------------------------------
+##-----------------------------------------------------------------------------
 
 BSP ?= visionfive
-CLEAR ?= y
 TOOLCHAIN ?= riscv64-unknown-elf-
 DOCKER ?= y
 
-# Default to a serial device name that is common in Linux.
-DEV_SERIAL ?= /dev/ttyUSB0
-
-##--------------------------------------------------------------------------------------------------
+##-----------------------------------------------------------------------------
 ## BSP-specific configuration values
-##--------------------------------------------------------------------------------------------------
+##-----------------------------------------------------------------------------
 
 ifeq ($(BSP),visionfive)
     LOADER_BIN        = bootloader.img
     QEMU_BINARY       = qemu-system-riscv64
-    QEMU_MACHINE_TYPE = sifive_u
+    QEMU_MACHINE_TYPE = virt
     QEMU_RELEASE_ARGS = -cpu rv64 -smp 4 -m 128M
     OBJDUMP_BINARY    = $(TOOLCHAIN)objdump
     NM_BINARY         = $(TOOLCHAIN)nm
     READELF_BINARY    = $(TOOLCHAIN)readelf
 endif
 
-# Export for build.rs.
-export LD_SCRIPT_PATH
-
-##--------------------------------------------------------------------------------------------------
+##-----------------------------------------------------------------------------
 ## Targets and Prerequisites
-##--------------------------------------------------------------------------------------------------
+##-----------------------------------------------------------------------------
 LOADER_MANIFEST      = Cargo.toml
 LAST_BUILD_CONFIG    = target/$(BSP).build_config
 
 LOADER_ELF      = target/riscv64gc-unknown-none-elf/release/bootloader
 # This parses cargo's dep-info file.
 # https://doc.rust-lang.org/cargo/guide/build-cache.html#dep-info-files
-LOADER_ELF_DEPS = $(filter-out %: ,$(file < $(LOADER_ELF).d)) $(LOADER_MANIFEST) $(LAST_BUILD_CONFIG)
+LOADER_ELF_DEPS = $(filter-out %: ,$(file < $(LOADER_ELF).d)) \
+					$(LOADER_MANIFEST) $(LAST_BUILD_CONFIG)
 
-##--------------------------------------------------------------------------------------------------
+##-----------------------------------------------------------------------------
 ## Command building blocks
-##--------------------------------------------------------------------------------------------------
+##-----------------------------------------------------------------------------
 FEATURES      = --features $(BSP)
 COMPILER_ARGS = $(FEATURES) --release
 
 RUSTC_CMD   = cargo rustc $(COMPILER_ARGS)
 DOC_CMD     = cargo doc $(COMPILER_ARGS)
-CLIPPY_CMD  = cargo clippy $(COMPILER_ARGS)
+CLIPPY_CMD  = cargo clippy $(COMPILER_ARGS) -- -A clippy::modulo_one
 OBJCOPY_CMD = rust-objcopy -O binary
 EXEC_QEMU   = $(QEMU_BINARY) -M $(QEMU_MACHINE_TYPE)
 DOCKER_CMD  = docker build --tag bootloader --file Dockerfile . && \
-				docker run -v $(shell pwd):$(shell pwd) -w $(shell pwd) bootloader:latest
-
-##--------------------------------------------------------------------------------------------------
+				docker run -v $(shell pwd):$(shell pwd) \
+				-w $(shell pwd) bootloader:latest
+QEMU_ARGS   = $(QEMU_RELEASE_ARGS) -nographic -display none -serial mon:stdio \
+				-bios none -kernel $(LOADER_BIN) -s
+##-----------------------------------------------------------------------------
 ## Targets
-##--------------------------------------------------------------------------------------------------
+##-----------------------------------------------------------------------------
 .PHONY: all doc qemu qemu_halted clippy clean readelf objdump nm test
 
 all: $(LOADER_BIN)
@@ -116,18 +112,15 @@ endif
 qemu: $(LOADER_BIN)
 ifeq ($(DOCKER),y)
 	$(call color_header, "Launching QEMU")
-	$(DOCKER_CMD) $(EXEC_QEMU) $(QEMU_RELEASE_ARGS)  -nographic -serial mon:stdio \
-	-bios none -kernel $(LOADER_BIN) -s
+	$(DOCKER_CMD) $(EXEC_QEMU) $(QEMU_ARGS)
 else
 	$(call color_header, "Launching QEMU")
-	$(EXEC_QEMU) $(QEMU_RELEASE_ARGS)  -nographic -serial mon:stdio \
-	-bios none -kernel $(LOADER_BIN) -s
+	$(EXEC_QEMU) $(QEMU_ARGS)
 endif
 
 qemu_halted: $(LOADER_BIN)
 	$(call color_header, "Launching QEMU")
-	$(EXEC_QEMU) $(QEMU_RELEASE_ARGS)  -nographic -serial mon:stdio \
-	-bios none -kernel $(LOADER_BIN) -s -S
+	$(EXEC_QEMU) $(QEMU_ARGS) -S
 ##------------------------------------------------------------------------------
 ## Run clippy
 ##------------------------------------------------------------------------------

@@ -9,19 +9,14 @@
 
 use core::arch::global_asm;
 // Assembly counterpart to this file.
-global_asm!(
-    include_str!("boot.s")
-);
-global_asm!(
-    include_str!("trap.s")
-);
+global_asm!(include_str!("boot.s"));
+global_asm!(include_str!("trap.s"));
 
 //--------------------------------------------------------------------------------------------------
 // Public Code
 //--------------------------------------------------------------------------------------------------
 
 #[no_mangle]
-extern "C"
-fn main() {
+extern "C" fn main() {
     crate::loader_init()
 }
