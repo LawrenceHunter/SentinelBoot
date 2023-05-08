@@ -12,3 +12,4 @@ Cargo.lock
 .vscode
 *.img
 *.DS_Store
+*.tar.gz

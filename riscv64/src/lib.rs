@@ -4,8 +4,8 @@
 //!
 //! # Orientation
 //!
-//! Since arch modules are imported into generic modules using the path attribute, the path of this
-//! file is:
+//! Since arch modules are imported into generic modules using the path
+//! attribute, the path of this file is:
 //!
 //! crate::cpu::riscv64_cpu
 
@@ -15,27 +15,34 @@
 
 use core::arch::asm;
 
-/// TODO
+/// Performs a `nop` operation for input cycles
+/// ```
+/// let x: usize = 10;
+/// spin_for_cycles(x);
+/// ```
+
 pub fn spin_for_cycles(n: usize) {
     for _ in 0..n {
-        unsafe {
-            asm!("nop");
-        }
+        nop();
     }
 }
 
-/// TODO
+/// Performs a `nop` operation forerver
+/// ```
+/// wait_forever();
+/// ```
+pub fn wait_forever() -> ! {
+    loop {
+        nop();
+    }
+}
+
+/// Performs a `nop` operation
+/// ```
+/// nop();
+/// ```
 pub fn nop() {
     unsafe {
         asm!("nop");
-    }
-}
-
-/// TODO
-pub fn wait_forever() -> ! {
-    loop {
-        unsafe {
-            asm!("nop");
-        }
     }
 }

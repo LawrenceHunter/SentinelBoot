@@ -1,4 +1,4 @@
-//! Device driver.
+//! BSP wrapper for re-exporting based on enabled features
 #![no_std]
 #![feature(format_args_nl)]
 

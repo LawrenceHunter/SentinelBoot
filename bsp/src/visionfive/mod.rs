@@ -6,7 +6,7 @@ pub mod memory;
 // Public Code
 //--------------------------------------------------------------------------------------------------
 
-/// TODO
+/// Returns the board name based on enabled features
 pub fn board_name() -> &'static str {
     #[cfg(feature = "visionfive")]
     {

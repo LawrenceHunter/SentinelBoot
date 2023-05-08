@@ -7,7 +7,7 @@ use core::{marker::PhantomData, ops};
 // Public Definitions
 //--------------------------------------------------------------------------------------------------
 
-/// TODO
+/// Deref wrapper for address and phantom data
 pub struct MMIODerefWrapper<T> {
     start_addr: usize,
     phantom: PhantomData<fn() -> T>,
@@ -17,11 +17,11 @@ pub struct MMIODerefWrapper<T> {
 // Public Code
 //--------------------------------------------------------------------------------------------------
 
-/// TODO
+/// Generic implementation
 impl<T> MMIODerefWrapper<T> {
-    /// TODO
+    /// Instantiates wrapper for a given MMIO address
     /// # Safety
-    /// TODO
+    /// Caller must ensure address is a valid MMIO address for the target hardware
     pub const unsafe fn new(start_addr: usize) -> Self {
         Self {
             start_addr,
@@ -30,7 +30,7 @@ impl<T> MMIODerefWrapper<T> {
     }
 }
 
-/// TODO
+/// Returns the data stored at the MMIO address
 impl<T> ops::Deref for MMIODerefWrapper<T> {
     type Target = T;
 

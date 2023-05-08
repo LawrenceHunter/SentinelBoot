@@ -13,18 +13,18 @@ use core::cell::UnsafeCell;
 // Public Definitions
 //--------------------------------------------------------------------------------------------------
 
-/// TODO
+/// Unifying module for mutex trait
 pub mod interface {
-    /// TODO
+    /// Allows mutual exclusion lock on a sized data cell
     pub trait Mutex {
-        /// TODO
+        /// Data to obtain lock on
         type Data;
-        /// TODO
+        /// Can only be called once until result is out of scope ergo generating a mutex lock
         fn lock<'a, R>(&'a self, f: impl FnOnce(&'a mut Self::Data) -> R) -> R;
     }
 }
 
-/// TODO
+/// Sized generic data cell
 pub struct NullLock<T>
 where
     T: ?Sized,
@@ -40,7 +40,7 @@ unsafe impl<T> Send for NullLock<T> where T: ?Sized + Send {}
 unsafe impl<T> Sync for NullLock<T> where T: ?Sized + Send {}
 
 impl<T> NullLock<T> {
-    /// TODO
+    /// Instantiate new UnsafeCell lock
     pub const fn new(data: T) -> Self {
         Self {
             data: UnsafeCell::new(data),

@@ -16,5 +16,7 @@ fn main() {
                 false
             }
         })
-        .for_each(|f| println!("cargo:rerun-if-changed={}", f.path().display()));
+        .for_each(|f| {
+            println!("cargo:rerun-if-changed={}", f.path().display())
+        });
 }
