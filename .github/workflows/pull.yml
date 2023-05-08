@@ -19,6 +19,10 @@ jobs:
             newgrp docker
           fi
           make clean && make
+      - uses: actions/upload-artifact@v3
+        with:
+          name: bootloader.img
+          path: ./bootloader.img
   test:
     needs: build
     name: Test
