@@ -21,7 +21,8 @@ pub struct MMIODerefWrapper<T> {
 impl<T> MMIODerefWrapper<T> {
     /// Instantiates wrapper for a given MMIO address
     /// # Safety
-    /// Caller must ensure address is a valid MMIO address for the target hardware
+    /// Caller must ensure address is a valid MMIO address for the target
+    /// hardware
     pub const unsafe fn new(start_addr: usize) -> Self {
         Self {
             start_addr,

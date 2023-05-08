@@ -19,7 +19,8 @@ pub mod interface {
     pub trait Mutex {
         /// Data to obtain lock on
         type Data;
-        /// Can only be called once until result is out of scope ergo generating a mutex lock
+        /// Can only be called once until result is out of scope ergo generating
+        /// a mutex lock
         fn lock<'a, R>(&'a self, f: impl FnOnce(&'a mut Self::Data) -> R) -> R;
     }
 }

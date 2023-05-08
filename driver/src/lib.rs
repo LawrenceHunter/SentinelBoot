@@ -34,7 +34,8 @@ pub mod interface {
 
         /// Instantiates empty device driver
         /// # Safety
-        /// Caller must ensure implementation is valid for target driver on target hardware
+        /// Caller must ensure implementation is valid for target driver on
+        /// target hardware
         unsafe fn init(&self) -> Result<(), &'static str> {
             Ok(())
         }
@@ -43,7 +44,8 @@ pub mod interface {
 
 /// Function pointer for post initialisation
 /// # Safety
-/// Caller must ensure the function pointed to is valid for the target driver on the targeted hardware
+/// Caller must ensure the function pointed to is valid for the target driver on
+/// the targeted hardware
 pub type DeviceDriverPostInitCallback = unsafe fn() -> Result<(), &'static str>;
 
 #[derive(Copy, Clone)]
@@ -109,7 +111,8 @@ impl DriverManager {
         }
     }
 
-    /// Adds the `DeviceDriverDescriptor` to the DriverManagers internal descriptors array
+    /// Adds the `DeviceDriverDescriptor` to the DriverManagers internal
+    /// descriptors array
     pub fn register_driver(&self, descriptor: DeviceDriverDescriptor) {
         self.inner.lock(|inner| {
             inner.descriptors[inner.next_index] = Some(descriptor);
@@ -133,7 +136,8 @@ impl DriverManager {
 
     /// Initialises all registered device drivers for the target hardware
     /// # Safety
-    /// Caller must ensure `DeviceDriverDescriptor` is valid for the target hardware
+    /// Caller must ensure `DeviceDriverDescriptor` is valid for the target
+    /// hardware
     pub unsafe fn init_drivers(&self) {
         self.for_each_descriptor(|descriptor| {
             // Initialise driver
@@ -161,11 +165,7 @@ impl DriverManager {
     pub fn enumerate(&self) {
         let mut i: usize = 1;
         self.for_each_descriptor(|descriptor| {
-            console::println!(
-                "   {}. {}",
-                i,
-                descriptor.device_driver.name()
-            );
+            console::println!("   {}. {}", i, descriptor.device_driver.name());
             i += 1;
         });
     }

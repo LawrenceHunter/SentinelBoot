@@ -190,8 +190,8 @@ impl NS16550AUartInner {
             .write(LCR::WLEN::EightBit + LCR::DLAB::Enabled);
 
         // Write DLL and DLM
-        self.registers.RB_RH_R.set(0x03);
-        self.registers.IER.write(IER::DIVISOR_LATCH_MS.val(0x00));
+        self.registers.RB_RH_R.set(0x50);
+        self.registers.IER.write(IER::DIVISOR_LATCH_MS.val(0x02));
 
         // Unset Divisor Latch Access Bit
         self.registers
