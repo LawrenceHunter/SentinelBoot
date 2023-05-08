@@ -3,7 +3,8 @@ use core::fmt;
 use synchronisation::interface::Mutex;
 use tock_registers::{
     interfaces::{Readable, Writeable},
-    register_bitfields, register_structs,
+    register_bitfields,
+    register_structs,
     registers::{Aliased, ReadWrite},
 };
 
@@ -117,9 +118,9 @@ register_bitfields! {
     // ],
 }
 
-// TODO
+// Generates dscriptor block of register types, addresses, and names
 register_structs! {
-    /// TODO
+    /// Descriptor block of register types, addresses, and names
     #[allow(non_snake_case)]
     pub RegisterBlock {
         (0x00 => RB_RH_R: Aliased<u8, RB_RH_R::Register>),
@@ -204,11 +205,16 @@ impl NS16550AUartInner {
         self.chars_written += 1;
     }
 
-    /// TODO
-    fn flush(&self) {}
+    /// Writes all buffered chars
+    fn flush(&self) {
+        todo!()
+    }
 
     /// Receive char
-    fn read_char_converting(&mut self, _blocking_mode: BlockingMode) -> Option<char> {
+    fn read_char_converting(
+        &mut self,
+        _blocking_mode: BlockingMode,
+    ) -> Option<char> {
         let mut ret = self.registers.RB_RH_R.get() as char;
         // Convert \r -> \n
         if ret == '\r' {
@@ -219,9 +225,9 @@ impl NS16550AUartInner {
     }
 }
 
-/// TODO
+/// Allows writing formatted strings to UART
 impl fmt::Write for NS16550AUartInner {
-    /// TODO
+    /// Writes each char in string to UART
     fn write_str(&mut self, s: &str) -> fmt::Result {
         for c in s.chars() {
             self.write_char(c);
@@ -234,17 +240,19 @@ impl fmt::Write for NS16550AUartInner {
 // Public Code
 //--------------------------------------------------------------------------------------------------
 
-/// TODO
+/// Implemenets struct for UART
 impl NS16550AUart {
-    /// TODO
-    pub const COMPATIBLE: &'static str = "NS16550A UART";
+    /// Driver firendly name
+    pub const NAME: &'static str = "NS16550A UART";
 
-    /// TODO
+    /// Instantiates new UART driver with given address
     /// # Safety
-    /// TODO
+    /// Caller must ensure mmio start address is valid for the target hardware
     pub const unsafe fn new(mmio_start_addr: usize) -> Self {
         Self {
-            inner: synchronisation::NullLock::new(NS16550AUartInner::new(mmio_start_addr)),
+            inner: synchronisation::NullLock::new(NS16550AUartInner::new(
+                mmio_start_addr,
+            )),
         }
     }
 }
@@ -253,14 +261,14 @@ impl NS16550AUart {
 // OS Interface Code
 //------------------------------------------------------------------------------
 
-/// TODO
+/// Implementes DeviceDriver trait for UART
 impl super::interface::DeviceDriver for NS16550AUart {
-    /// TODO
-    fn compatible(&self) -> &'static str {
-        Self::COMPATIBLE
+    /// Returns a reference to the driver's friednly name
+    fn name(&self) -> &'static str {
+        Self::NAME
     }
 
-    /// TODO
+    /// Instantiates a mutex reference to UART driver
     unsafe fn init(&self) -> Result<(), &'static str> {
         self.inner.lock(|inner| inner.init());
         Ok(())
@@ -274,25 +282,26 @@ impl console::interface::Write for NS16550AUart {
         self.inner.lock(|inner| inner.write_char(c));
     }
 
-    /// TODO
+    /// Writes formatted string to UART guarded by mutex
     fn write_fmt(&self, args: core::fmt::Arguments) -> fmt::Result {
         self.inner.lock(|inner| fmt::Write::write_fmt(inner, args))
     }
 
-    /// TODO
+    /// Calls internal flush logic guarded by mutex
     fn flush(&self) {
         self.inner.lock(|inner| inner.flush());
     }
 }
 
 impl console::interface::Read for NS16550AUart {
-    /// TODO
+    /// Blocking reads char from UART guarded by mutex
     fn read_char(&self) -> char {
-        self.inner
-            .lock(|inner| inner.read_char_converting(BlockingMode::Blocking).unwrap())
+        self.inner.lock(|inner| {
+            inner.read_char_converting(BlockingMode::Blocking).unwrap()
+        })
     }
 
-    /// TODO
+    /// Busy loops until UART is no longer blocked guarded by mutex
     fn clear_rx(&self) {
         while self
             .inner
@@ -303,12 +312,12 @@ impl console::interface::Read for NS16550AUart {
 }
 
 impl console::interface::Statistics for NS16550AUart {
-    /// TODO
+    /// Returns the characters written statistic guarded by mutex
     fn chars_written(&self) -> usize {
         self.inner.lock(|inner| inner.chars_written)
     }
 
-    /// TODO
+    /// Returns the characters read statistic guarded by mutex
     fn chars_read(&self) -> usize {
         self.inner.lock(|inner| inner.chars_read)
     }

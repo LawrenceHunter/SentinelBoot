@@ -25,35 +25,35 @@ struct DriverManagerInner {
 // Public Definitions
 //--------------------------------------------------------------------------------------------------
 
-/// TODO
+/// Wrapper for DeviceDriver trait
 pub mod interface {
-    /// TODO
+    /// Wrapper for name and initialisation of driver
     pub trait DeviceDriver {
-        /// TODO
-        fn compatible(&self) -> &'static str;
+        /// Returns a reference to the driver's friendly name
+        fn name(&self) -> &'static str;
 
-        /// TODO
+        /// Instantiates empty device driver
         /// # Safety
-        /// TODO
+        /// Caller must ensure implementation is valid for target driver on target hardware
         unsafe fn init(&self) -> Result<(), &'static str> {
             Ok(())
         }
     }
 }
 
-/// TODO
+/// Function pointer for post initialisation
 /// # Safety
-/// TODO
+/// Caller must ensure the function pointed to is valid for the target driver on the targeted hardware
 pub type DeviceDriverPostInitCallback = unsafe fn() -> Result<(), &'static str>;
 
 #[derive(Copy, Clone)]
-/// TODO
+/// Wrapper for driver and callback function
 pub struct DeviceDriverDescriptor {
     device_driver: &'static (dyn interface::DeviceDriver + Sync),
     post_init_callback: Option<DeviceDriverPostInitCallback>,
 }
 
-/// TODO
+/// Wrapper for inner mutex
 pub struct DriverManager {
     inner: NullLock<DriverManagerInner>,
 }
@@ -69,7 +69,7 @@ static DRIVER_MANAGER: DriverManager = DriverManager::new();
 //--------------------------------------------------------------------------------------------------
 
 impl DriverManagerInner {
-    /// TODO
+    /// Instantiates a default manager inner
     pub const fn new() -> Self {
         Self {
             next_index: 0,
@@ -82,9 +82,9 @@ impl DriverManagerInner {
 // Public Code
 //--------------------------------------------------------------------------------------------------
 
-/// TODO
+/// Implements descriptor trait for driver
 impl DeviceDriverDescriptor {
-    /// TODO
+    /// Instantiates a new descriptor
     pub fn new(
         device_driver: &'static (dyn interface::DeviceDriver + Sync),
         post_init_callback: Option<DeviceDriverPostInitCallback>,
@@ -96,20 +96,20 @@ impl DeviceDriverDescriptor {
     }
 }
 
-/// TODO
+/// Returns a reference to the driver manager
 pub fn driver_manager() -> &'static DriverManager {
     &DRIVER_MANAGER
 }
 
 impl DriverManager {
-    /// TODO
+    /// Instantiates an empty manager with mutex
     pub const fn new() -> Self {
         Self {
             inner: NullLock::new(DriverManagerInner::new()),
         }
     }
 
-    /// TODO
+    /// Adds the `DeviceDriverDescriptor` to the DriverManagers internal descriptors array
     pub fn register_driver(&self, descriptor: DeviceDriverDescriptor) {
         self.inner.lock(|inner| {
             inner.descriptors[inner.next_index] = Some(descriptor);
@@ -117,8 +117,11 @@ impl DriverManager {
         })
     }
 
-    /// TODO
-    fn for_each_descriptor<'a>(&'a self, f: impl FnMut(&'a DeviceDriverDescriptor)) {
+    /// Implements for each allowing easier iteration through driver descriptors
+    fn for_each_descriptor<'a>(
+        &'a self,
+        f: impl FnMut(&'a DeviceDriverDescriptor),
+    ) {
         self.inner.lock(|inner| {
             inner
                 .descriptors
@@ -128,16 +131,16 @@ impl DriverManager {
         })
     }
 
-    /// TODO
+    /// Initialises all registered device drivers for the target hardware
     /// # Safety
-    /// TODO
+    /// Caller must ensure `DeviceDriverDescriptor` is valid for the target hardware
     pub unsafe fn init_drivers(&self) {
         self.for_each_descriptor(|descriptor| {
             // Initialise driver
             if let Err(x) = descriptor.device_driver.init() {
                 panic!(
                     "Error initialising driver: {}: {}",
-                    descriptor.device_driver.compatible(),
+                    descriptor.device_driver.name(),
                     x
                 );
             }
@@ -146,7 +149,7 @@ impl DriverManager {
                 if let Err(x) = callback() {
                     panic!(
                         "Error during dirver post-init callback: {}: {}",
-                        descriptor.device_driver.compatible(),
+                        descriptor.device_driver.name(),
                         x
                     );
                 }
@@ -158,7 +161,11 @@ impl DriverManager {
     pub fn enumerate(&self) {
         let mut i: usize = 1;
         self.for_each_descriptor(|descriptor| {
-            console::println!("   {}. {}", i, descriptor.device_driver.compatible());
+            console::println!(
+                "   {}. {}",
+                i,
+                descriptor.device_driver.name()
+            );
             i += 1;
         });
     }

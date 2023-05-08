@@ -10,9 +10,9 @@ use synchronisation::{self, NullLock};
 // Public Definitions
 //--------------------------------------------------------------------------------------------------
 
-/// TODO
+/// Traits required for console operation
 pub mod interface {
-    /// TODO
+    /// Trait required to allow printing
     pub trait Write {
         /// Write single char
         fn write_char(&self, c: char);
@@ -24,7 +24,7 @@ pub mod interface {
         fn flush(&self);
     }
 
-    /// TODO
+    /// Trait required to allow input
     pub trait Read {
         /// Read a single char
         fn read_char(&self) -> char {
@@ -35,20 +35,20 @@ pub mod interface {
         fn clear_rx(&self);
     }
 
-    /// TODO
+    /// Useful trait to aid debugging
     pub trait Statistics {
-        /// TODO
+        /// Initialise to 0 before writing anything
         fn chars_written(&self) -> usize {
             0
         }
 
-        /// TODO
+        /// Initialise to 0 before reading anything
         fn chars_read(&self) -> usize {
             0
         }
     }
 
-    /// TODO
+    /// Groups traits for easier programmer interface
     pub trait All: Write + Read + Statistics {}
 }
 

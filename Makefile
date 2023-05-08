@@ -39,7 +39,8 @@ FEATURES      = --features $(BSP)
 COMPILER_ARGS = $(FEATURES) --release
 
 RUSTC_CMD   = cargo rustc $(COMPILER_ARGS)
-DOC_CMD     = cargo doc $(COMPILER_ARGS)
+DOC_CMD     = cargo doc $(COMPILER_ARGS) --all-features \
+				--document-private-items --workspace
 CLIPPY_CMD  = cargo clippy $(COMPILER_ARGS) -- -A clippy::modulo_one
 OBJCOPY_CMD = rust-objcopy -O binary
 EXEC_QEMU   = $(QEMU_BINARY) -M $(QEMU_MACHINE_TYPE)
@@ -100,10 +101,10 @@ endif
 doc:
 ifeq ($(DOCKER),y)
 	$(call color_header, "Generating docs")
-	$(DOCKER_CMD) $(DOC_CMD) --document-private-items
+	$(DOCKER_CMD) $(DOC_CMD)
 else
 	$(call color_header, "Generating docs")
-	$(DOC_CMD) --document-private-items
+	$(DOC_CMD)
 endif
 
 ##------------------------------------------------------------------------------
