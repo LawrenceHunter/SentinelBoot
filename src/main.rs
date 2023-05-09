@@ -39,6 +39,12 @@ extern "C" fn loader_init() {
     loader_main()
 }
 
+#[no_mangle]
+extern "C" fn main_hart(_hartid: usize) {
+    // We aren't going to do anything here until we get SMP going.
+    // All non-0 harts initialize here.
+}
+
 // Main function running after early init
 fn loader_main() -> ! {
     println!(

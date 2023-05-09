@@ -172,9 +172,6 @@ impl NS16550AUartInner {
 
     // Setup baudrate and characteristics
     pub fn init(&mut self) {
-        // Enable receiver buffer interrupts
-        self.registers.IER.set(0);
-
         // Set line control register (LCR) word length to 8 bit
         self.registers.LCR.write(LCR::WLEN::EightBit);
 
