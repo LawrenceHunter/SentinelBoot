@@ -40,8 +40,9 @@ jobs:
           if ! [ -x "$(command -v qemu-system-riscv64)" ]; then
             apt install -y qemu-system
           fi
-          make test
-  Clippy:
+          echo "# Test summary\n"
+          make test >> $GITHUB_STEP_SUMMARY
+  clippy:
     needs: build
     runs-on: self-hosted
     steps:
@@ -54,7 +55,7 @@ jobs:
             usermod -aG docker $USER
             newgrp docker
           fi
-          make clippy
+          make clippy >> $GITHUB_STEP_SUMMARY
   Doc:
     needs: build
     runs-on: self-hosted
