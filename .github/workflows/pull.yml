@@ -2,7 +2,7 @@ on:
   pull_request:
     branches: [ "main" ]
 
-name: CI
+name: Pull CI
 
 jobs:
   build:
