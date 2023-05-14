@@ -1,0 +1,77 @@
+on:
+  push:
+    branches: [ "main" ]
+    tags: *
+
+name: Create release
+
+jobs:
+  build:
+    name: Build project
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          if ! [ -x "$(command -v docker)" ]; then
+            curl -fsSL https://get.docker.com -o get-docker.sh
+            sh get-docker.sh
+            groupadd docker || true
+            usermod -aG docker $USER
+            newgrp docker
+          fi
+          make clean && make
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+          asset_path: ./bootloader.img
+          asset_name: bootloader.img
+          asset_content_type: application/octet-stream
+  Doc:
+    needs: build
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          if ! [ -x "$(command -v docker)" ]; then
+            curl -fsSL https://get.docker.com -o get-docker.sh
+            sh get-docker.sh
+            groupadd docker || true
+            usermod -aG docker $USER
+            newgrp docker
+          fi
+          make doc
+          tar -zcvf doc.tar.gz target/riscv64gc-unknown-none-elf/doc/
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+          asset_path: ./doc.tar.gz
+          asset_name: docs
+          asset_content_type: application/x-tar
