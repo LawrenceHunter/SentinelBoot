@@ -52,7 +52,7 @@ QEMU_ARGS   = $(QEMU_RELEASE_ARGS) -nographic -display none -serial mon:stdio \
 ##-----------------------------------------------------------------------------
 ## Targets
 ##-----------------------------------------------------------------------------
-.PHONY: all doc qemu qemu_halted clippy clean readelf objdump nm test
+.PHONY: all doc qemu qemu_halted clippy clean readelf objdump nm test call_stack
 
 all: $(LOADER_BIN)
 
@@ -171,3 +171,16 @@ nm: $(LOADER_ELF)
 ##------------------------------------------------------------------------------
 test:
 	timeout 5m .github/workflows/qemu_test.sh
+
+##------------------------------------------------------------------------------
+## Generate call stack graph
+##------------------------------------------------------------------------------
+call_stack:
+ifeq ($(DOCKER),y)
+	$(DOCKER_CMD) cargo +nightly call-stack --bin bootloader --features \
+	visionfive --target riscv64gc-unknown-none-elf > cg.dot ; \
+	dot -Tsvg cg.dot > cg.svg && rm cg.dot
+else
+	cargo +nightly call-stack --bin bootloader --features visionfive --target \
+	riscv64gc-unknown-none-elf > cg.dot ; dot -Tsvg cg.dot > cg.svg && rm cg.dot
+endif
