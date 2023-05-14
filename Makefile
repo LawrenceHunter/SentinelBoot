@@ -170,8 +170,4 @@ nm: $(LOADER_ELF)
 ## Run tests
 ##------------------------------------------------------------------------------
 test:
-ifeq ($(DOCKER),y)
-	$(DOCKER_CMD) echo "No tests..."
-else
-	echo "No tests..."
-endif
+	timeout 5m .github/workflows/qemu_test.sh
