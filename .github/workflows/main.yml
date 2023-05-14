@@ -37,6 +37,9 @@ jobs:
             usermod -aG docker $USER
             newgrp docker
           fi
+          if ! [ -x "$(command -v qemu-system-riscv64)" ]; then
+            apt install -y qemu-system
+          fi
           make test
   Clippy:
     needs: build
