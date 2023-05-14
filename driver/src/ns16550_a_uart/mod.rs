@@ -203,22 +203,23 @@ impl NS16550AUartInner {
     }
 
     /// Writes all buffered chars
-    fn flush(&self) {
-        todo!()
-    }
+    fn flush(&self) {}
 
     /// Receive char
     fn read_char_converting(
         &mut self,
         _blocking_mode: BlockingMode,
     ) -> Option<char> {
-        let mut ret = self.registers.RB_RH_R.get() as char;
-        // Convert \r -> \n
-        if ret == '\r' {
-            ret = '\n'
+        if self.registers.LSR.is_set(LSR::DR) {
+            let mut ret = self.registers.RB_RH_R.get() as char;
+            // Convert \r -> \n
+            if ret == '\r' {
+                ret = '\n'
+            }
+            self.chars_read += 1;
+            return Some(ret);
         }
-        self.chars_read += 1;
-        Some(ret)
+        None
     }
 }
 
