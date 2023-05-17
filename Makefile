@@ -52,7 +52,8 @@ QEMU_ARGS   = $(QEMU_RELEASE_ARGS) -nographic -display none -serial mon:stdio \
 ##-----------------------------------------------------------------------------
 ## Targets
 ##-----------------------------------------------------------------------------
-.PHONY: all doc qemu qemu_halted clippy clean readelf objdump nm test call_stack
+.PHONY: all doc qemu qemu_halted clippy clean readelf objdump nm test \
+	call_stack geiger
 
 all: $(LOADER_BIN)
 
@@ -183,4 +184,15 @@ ifeq ($(DOCKER),y)
 else
 	cargo +nightly call-stack --bin bootloader --features visionfive --target \
 	riscv64gc-unknown-none-elf > cg.dot ; dot -Tsvg cg.dot > cg.svg && rm cg.dot
+endif
+
+##------------------------------------------------------------------------------
+## Execute cargo geiger
+##------------------------------------------------------------------------------
+geiger:
+ifeq ($(DOCKER),y)
+	$(DOCKER_CMD) cargo geiger --target riscv64gc-unknown-none-elf --features \
+	visionfive
+else
+	cargo geiger --target riscv64gc-unknown-none-elf --features visionfive
 endif
