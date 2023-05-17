@@ -1,4 +1,4 @@
-FROM rust:slim-bullseye
+FROM rust:bullseye
 ENV DEBIAN_FRONTEND noninteractive
 ENV TERM xterm
 
@@ -13,6 +13,7 @@ RUN apt update -y && \
     rustup target add riscv64gc-unknown-none-elf && \
     cargo install cargo-binutils && \
     cargo install cargo-call-stack && \
+    cargo install cargo-geiger && \
     rustup +nightly component add rust-src && \
     rustup component add llvm-tools-preview && \
     rustup component add clippy && \
