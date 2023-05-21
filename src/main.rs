@@ -16,6 +16,7 @@
 
 mod cpu;
 mod panic_wait;
+mod helper;
 use console::{console, println};
 
 /// Early init code.
@@ -47,6 +48,9 @@ extern "C" fn main_hart(_hartid: usize) {
 
 // Main function running after early init
 fn loader_main() -> ! {
+
+    println!("{}", crate::helper::LOGO);
+
     println!(
         "[0] {} version {}",
         env!("CARGO_PKG_NAME"),
