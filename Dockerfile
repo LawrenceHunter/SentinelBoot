@@ -3,7 +3,7 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV TERM xterm
 
 RUN apt update -y && \
-    apt install -y qemu-system make wget graphviz && \
+    apt install -y qemu-system make wget graphviz autoconf gcc genext2fs libconfuse-dev git pkg-config && \
     wget https://github.com/riscv-collab/riscv-gnu-toolchain/releases/download/2023.04.29/riscv64-elf-ubuntu-20.04-nightly-2023.04.29-nightly.tar.gz && \
     tar -xvf riscv64-elf-ubuntu-20.04-nightly-2023.04.29-nightly.tar.gz && \
     rm riscv64-elf-ubuntu-20.04-nightly-2023.04.29-nightly.tar.gz && \
@@ -17,4 +17,10 @@ RUN apt update -y && \
     rustup +nightly component add rust-src && \
     rustup component add llvm-tools-preview && \
     rustup component add clippy && \
+    mkdir genimage && cd genimage && \
+    git clone https://github.com/pengutronix/genimage.git . && \
+    ./autogen.sh && \
+    ./configure --prefix=/usr && \
+    make -j$(nproc) && make install && \
+    cd .. && rm -rf genimage && \
     apt clean

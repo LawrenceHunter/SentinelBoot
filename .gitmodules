@@ -1,3 +1,6 @@
 [submodule "buildroot"]
 	path = buildroot
 	url = git@github.com:buildroot/buildroot.git
+[submodule "genimage"]
+	path = genimage
+	url = git@github.com:pengutronix/genimage.git

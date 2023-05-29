@@ -52,8 +52,13 @@ QEMU_ARGS   = $(QEMU_RELEASE_ARGS) -nographic -display none -serial mon:stdio \
 ##-----------------------------------------------------------------------------
 ## Targets
 ##-----------------------------------------------------------------------------
+<<<<<<< HEAD
 .PHONY: all doc qemu qemu_halted clippy clean readelf objdump nm test \
 	call_stack geiger
+=======
+.PHONY: all doc qemu qemu_halted clippy clean readelf objdump nm test linux \
+	buildroot image
+>>>>>>> a5a9c4c (WIP genimage)
 
 all: $(LOADER_BIN)
 
@@ -195,4 +200,25 @@ ifeq ($(DOCKER),y)
 	visionfive
 else
 	cargo geiger --target riscv64gc-unknown-none-elf --features visionfive
+
+##------------------------------------------------------------------------------
+## Generate SD image
+##------------------------------------------------------------------------------
+buildroot:
+	cp br.config ./buildroot/.config
+ifeq ($(DOCKER),y)
+	$(DOCKER_CMD) (cd buildroot && make -j$(shell nproc))
+else
+	(cd buildroot && make -j$(shell nproc))
+endif
+
+image: $(LOADER_ELF) buildroot linux
+	mkdir genimage && cd genimage
+	ifeq ($(BSP),visionfive)
+		cp ../bsp/src/visionfive/genimage.cfg ./genimage.cfg
+	endif
+ifeq ($(DOCKER),y)
+	$(DOCKER_CMD) genimage
+else
+	genimage
 endif
