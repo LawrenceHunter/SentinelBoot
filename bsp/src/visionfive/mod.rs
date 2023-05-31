@@ -7,9 +7,25 @@ pub mod memory;
 //--------------------------------------------------------------------------------------------------
 
 /// Returns the board name based on enabled features
-pub fn board_name() -> &'static str {
+pub fn name() -> &'static str {
     #[cfg(feature = "visionfive")]
     {
         "VisionFive"
+    }
+}
+
+/// Returns the board hart count based on enabled features
+pub fn hart_count() -> &'static str {
+    #[cfg(feature = "visionfive")]
+    {
+        "5"
+    }
+}
+
+/// Returns placeholder string for unknown boot information
+pub fn unknown() -> &'static str {
+    #[cfg(feature = "visionfive")]
+    {
+        "???"
     }
 }

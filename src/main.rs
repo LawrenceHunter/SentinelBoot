@@ -15,8 +15,8 @@
 #![no_std]
 
 mod cpu;
-mod panic_wait;
 mod helper;
+mod panic_wait;
 use console::{console, println};
 
 /// Early init code.
@@ -48,16 +48,7 @@ extern "C" fn main_hart(_hartid: usize) {
 
 // Main function running after early init
 fn loader_main() -> ! {
-
-    println!("{}", crate::helper::LOGO);
-
-    println!(
-        "[0] {} version {}",
-        env!("CARGO_PKG_NAME"),
-        env!("CARGO_PKG_VERSION")
-    );
-
-    println!("[1] Booting on: {}", bsp::board_name());
+    crate::helper::print_boot_log();
 
     println!("[2] Drivers loaded:");
     driver::driver_manager().enumerate();
