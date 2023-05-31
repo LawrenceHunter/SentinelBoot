@@ -3,7 +3,7 @@
 ##-----------------------------------------------------------------------------
 
 BSP ?= visionfive
-TOOLCHAIN ?= riscv64-unknown-elf-
+TOOLCHAIN ?= riscv64-unknown-linux-gnu-
 DOCKER ?= y
 
 ##-----------------------------------------------------------------------------
@@ -52,13 +52,8 @@ QEMU_ARGS   = $(QEMU_RELEASE_ARGS) -nographic -display none -serial mon:stdio \
 ##-----------------------------------------------------------------------------
 ## Targets
 ##-----------------------------------------------------------------------------
-<<<<<<< HEAD
 .PHONY: all doc qemu qemu_halted clippy clean readelf objdump nm test \
-	call_stack geiger
-=======
-.PHONY: all doc qemu qemu_halted clippy clean readelf objdump nm test linux \
-	buildroot image
->>>>>>> a5a9c4c (WIP genimage)
+	call_stack geiger buildroot image
 
 all: $(LOADER_BIN)
 
@@ -147,7 +142,8 @@ ifeq ($(DOCKER),y)
 else
 	rm -rf target $(LOADER_BIN)
 endif
-
+	(cd linux && make clean)
+	(cd buildroot && make clean)
 ##------------------------------------------------------------------------------
 ## Run readelf
 ##------------------------------------------------------------------------------
@@ -200,6 +196,7 @@ ifeq ($(DOCKER),y)
 	visionfive
 else
 	cargo geiger --target riscv64gc-unknown-none-elf --features visionfive
+endif
 
 ##------------------------------------------------------------------------------
 ## Generate SD image
@@ -207,18 +204,20 @@ else
 buildroot:
 	cp br.config ./buildroot/.config
 ifeq ($(DOCKER),y)
-	$(DOCKER_CMD) (cd buildroot && make -j$(shell nproc))
+	docker build --tag bootloader --file Dockerfile . && \
+	docker run -v $(shell pwd)/buildroot/:$(shell pwd)/buildroot/ \
+	-w $(shell pwd)/buildroot/ bootloader:latest make -j$(shell nproc)
 else
-	(cd buildroot && make -j$(shell nproc))
+	cd buildroot && make -j$(shell nproc)
 endif
 
-image: $(LOADER_ELF) buildroot linux
-	mkdir genimage && cd genimage
-	ifeq ($(BSP),visionfive)
-		cp ../bsp/src/visionfive/genimage.cfg ./genimage.cfg
-	endif
-ifeq ($(DOCKER),y)
-	$(DOCKER_CMD) genimage
-else
-	genimage
+image: $(LOADER_ELF) buildroot
+ifeq ($(BSP),visionfive)
+	cp ./bsp/src/visionfive/genimage.cfg .
 endif
+ifeq ($(DOCKER),y)
+	$(DOCKER_CMD) genimage --inputpath $(shell pwd)
+else
+	genimage --inputpath $(shell pwd)
+endif
+	rm genimage.cfg
