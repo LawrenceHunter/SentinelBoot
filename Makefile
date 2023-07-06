@@ -48,12 +48,13 @@ DOCKER_CMD  = docker build --tag bootloader --file Dockerfile . && \
 				docker run -v $(shell pwd):$(shell pwd) \
 				-w $(shell pwd) bootloader:latest
 QEMU_ARGS   = $(QEMU_RELEASE_ARGS) -nographic -display none -serial mon:stdio \
-				-bios none -kernel $(LOADER_BIN) -s
+				 -s -drive format=raw,file=bootloader.img -bios none \
+				 -kernel visionfive2_fw_payload.img
 ##-----------------------------------------------------------------------------
 ## Targets
 ##-----------------------------------------------------------------------------
 .PHONY: all doc qemu qemu_halted clippy clean readelf objdump nm test \
-	call_stack geiger buildroot image
+	call_stack geiger image
 
 all: $(LOADER_BIN)
 
@@ -111,7 +112,7 @@ endif
 ##------------------------------------------------------------------------------
 ## Run the bootloader in QEMU
 ##------------------------------------------------------------------------------
-qemu: $(LOADER_BIN)
+qemu: image
 ifeq ($(DOCKER),y)
 	$(call color_header, "Launching QEMU")
 	$(DOCKER_CMD) $(EXEC_QEMU) $(QEMU_ARGS)
@@ -120,7 +121,7 @@ else
 	$(EXEC_QEMU) $(QEMU_ARGS)
 endif
 
-qemu_halted: $(LOADER_BIN)
+qemu_halted: image
 	$(call color_header, "Launching QEMU")
 	$(EXEC_QEMU) $(QEMU_ARGS) -S
 ##------------------------------------------------------------------------------
@@ -201,23 +202,18 @@ endif
 ##------------------------------------------------------------------------------
 ## Generate SD image
 ##------------------------------------------------------------------------------
-buildroot:
-	cp br.config ./buildroot/.config
-ifeq ($(DOCKER),y)
-	docker build --tag bootloader --file Dockerfile . && \
-	docker run -v $(shell pwd)/buildroot/:$(shell pwd)/buildroot/ \
-	-w $(shell pwd)/buildroot/ bootloader:latest make -j$(shell nproc)
-else
-	cd buildroot && make -j$(shell nproc)
-endif
 
-image: $(LOADER_ELF) buildroot
+image: $(LOADER_ELF)
 ifeq ($(BSP),visionfive)
 	cp ./bsp/src/visionfive/genimage.cfg .
 endif
 ifeq ($(DOCKER),y)
+	$(DOCKER_CMD) (cd VisionFive2 && make -j$(nproc))
+	$(DOCKER_CMD) (cd VisionFive2 && make buildroot_rootfs -j$(nproc))
 	$(DOCKER_CMD) genimage --inputpath $(shell pwd)
 else
+	(cd VisionFive2 && make -j$(nproc))
+	(cd VisionFive2 && make buildroot_rootfs -j$(nproc))
 	genimage --inputpath $(shell pwd)
 endif
 	rm genimage.cfg

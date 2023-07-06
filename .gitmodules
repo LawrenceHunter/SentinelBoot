@@ -1,6 +1,6 @@
-[submodule "buildroot"]
-	path = buildroot
-	url = git@github.com:buildroot/buildroot.git
 [submodule "genimage"]
 	path = genimage
 	url = git@github.com:pengutronix/genimage.git
+[submodule "visionfive_git"]
+	path = visionfive_git
+	url = https://github.com/starfive-tech/VisionFive2.git
