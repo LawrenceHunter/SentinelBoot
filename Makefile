@@ -48,8 +48,7 @@ DOCKER_CMD  = docker build --tag bootloader --file Dockerfile . && \
 				docker run -v $(shell pwd):$(shell pwd) \
 				-w $(shell pwd) bootloader:latest
 QEMU_ARGS   = $(QEMU_RELEASE_ARGS) -nographic -display none -serial mon:stdio \
-				 -s -drive format=raw,file=bootloader.img -bios none \
-				 -kernel visionfive2_fw_payload.img
+				 -s -drive format=raw,file=images/sdcard.img -bios none
 ##-----------------------------------------------------------------------------
 ## Targets
 ##-----------------------------------------------------------------------------
@@ -143,8 +142,7 @@ ifeq ($(DOCKER),y)
 else
 	rm -rf target $(LOADER_BIN)
 endif
-	(cd linux && make clean)
-	(cd buildroot && make clean)
+	(cd visionfive_git && make clean)
 ##------------------------------------------------------------------------------
 ## Run readelf
 ##------------------------------------------------------------------------------
@@ -203,17 +201,17 @@ endif
 ## Generate SD image
 ##------------------------------------------------------------------------------
 
-image: $(LOADER_ELF)
+DOCKER_VF_CMD = docker build --tag bootloader --file Dockerfile . && \
+				docker run -v $(shell pwd)/visionfive_git:$(shell pwd)/visionfive_git \
+				-w $(shell pwd)/visionfive_git bootloader:latest
+
+image: $(LOADER_BIN)
 ifeq ($(BSP),visionfive)
 	cp ./bsp/src/visionfive/genimage.cfg .
 endif
 ifeq ($(DOCKER),y)
-	$(DOCKER_CMD) (cd VisionFive2 && make -j$(nproc))
-	$(DOCKER_CMD) (cd VisionFive2 && make buildroot_rootfs -j$(nproc))
 	$(DOCKER_CMD) genimage --inputpath $(shell pwd)
 else
-	(cd VisionFive2 && make -j$(nproc))
-	(cd VisionFive2 && make buildroot_rootfs -j$(nproc))
 	genimage --inputpath $(shell pwd)
 endif
 	rm genimage.cfg
