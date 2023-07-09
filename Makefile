@@ -201,10 +201,6 @@ endif
 ## Generate SD image
 ##------------------------------------------------------------------------------
 
-DOCKER_VF_CMD = docker build --tag bootloader --file Dockerfile . && \
-				docker run -v $(shell pwd)/visionfive_git:$(shell pwd)/visionfive_git \
-				-w $(shell pwd)/visionfive_git bootloader:latest
-
 image: $(LOADER_BIN)
 ifeq ($(BSP),visionfive)
 	cp ./bsp/src/visionfive/genimage.cfg .

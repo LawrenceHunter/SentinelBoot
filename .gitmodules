@@ -1,6 +1,3 @@
 [submodule "genimage"]
 	path = genimage
 	url = git@github.com:pengutronix/genimage.git
-[submodule "visionfive_git"]
-	path = visionfive_git
-	url = https://github.com/starfive-tech/VisionFive2.git

@@ -1,3 +1,0 @@
-visionfive_git_artifacts/rootfs.ext4 filter=lfs diff=lfs merge=lfs -text
-visionfive_git_artifacts/starfive-visionfive2-vfat.part filter=lfs diff=lfs merge=lfs -text
-visionfive_git_artifacts/visionfive2_fw_payload.img filter=lfs diff=lfs merge=lfs -text
