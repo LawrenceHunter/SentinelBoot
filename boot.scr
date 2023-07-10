@@ -1,0 +1,8 @@
+setenv ipaddr 192.168.0.2
+setenv serverip 192.168.0.1
+
+tftpboot ${fdt_addr_r} jh7110-visionfive-v2-wm8960.dtb
+tftpboot ${kernel_addr_r} sdcard.img.gz
+tftpboot ${ramdisk_addr_r} rootfs.cpio.gz
+
+booti ${kernel_addr_r} ${ramdisk_addr_r}:${filesize} ${fdt_addr_r}

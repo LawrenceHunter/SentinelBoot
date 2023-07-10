@@ -144,10 +144,11 @@ jobs:
       - uses: actions/checkout@v3
       - run: |
           make image
+          gzip images/sdcard.img
           mv images/sdcard.img /tftpboot/boot
           cp boot.scr /tftpboot/boot
           cd /tftpboot/boot
-          mkimage -A riscv -T script -O linux -d boot.scr boot.scr.uimg
+          mkimage -A riscv -T script -O linux -C gzip -d boot.scr boot.scr.uimg
           usbrelay HURTM_1=0 && usbrelay HURTM_2=0
           timeout 10m minicom -D /dev/ttyUSB0 -C output_log
           usbrelay HURTM_1=1 && usbrelay HURTM_2=1
