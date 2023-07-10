@@ -1,3 +1,7 @@
+setenv fileaddr a0000000
+setenv fdtcontroladdr 0xffffffffffffffff
+setenv kernel_comp_addr_r 0xb0000000
+setenv kernel_comp_size 0x10000000
 setenv ipaddr 192.168.0.2
 setenv serverip 192.168.0.1
 
