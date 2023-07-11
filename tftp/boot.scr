@@ -3,4 +3,4 @@ setenv ipaddr 192.168.0.2
 setenv serverip 192.168.0.1
 
 tftpboot 0x80000000 bootloader.img
-booti 0x80000000
+go 0x80000000

@@ -1,7 +1,9 @@
-FROM ubuntu:jammy
+FROM --platform=linux/amd64 ubuntu:jammy
 ENV DEBIAN_FRONTEND noninteractive
 ENV TERM xterm
 ENV PATH="/usr/bin:/root/.cargo/bin:${PATH}"
+ENV CROSS_COMPILE="riscv64-unknown-linux-gnu-"
+ENV ARCH=riscv
 
 RUN apt update -y && \
     apt install -y qemu-system make wget autoconf gcc genext2fs libconfuse-dev git \

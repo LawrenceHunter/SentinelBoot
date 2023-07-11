@@ -53,7 +53,7 @@ QEMU_ARGS   = $(QEMU_RELEASE_ARGS) -nographic -display none -serial mon:stdio \
 ## Targets
 ##-----------------------------------------------------------------------------
 .PHONY: all doc qemu qemu_halted clippy clean readelf objdump nm test \
-	call_stack geiger image
+	call_stack geiger tftp image
 
 all: $(LOADER_BIN)
 
@@ -100,11 +100,10 @@ endif
 ## Generate the documentation
 ##------------------------------------------------------------------------------
 doc:
-ifeq ($(DOCKER),y)
 	$(call color_header, "Generating docs")
+ifeq ($(DOCKER),y)
 	$(DOCKER_CMD) $(DOC_CMD)
 else
-	$(call color_header, "Generating docs")
 	$(DOC_CMD)
 endif
 
@@ -112,11 +111,10 @@ endif
 ## Run the bootloader in QEMU
 ##------------------------------------------------------------------------------
 qemu: image
-ifeq ($(DOCKER),y)
 	$(call color_header, "Launching QEMU")
+ifeq ($(DOCKER),y)
 	$(DOCKER_CMD) $(EXEC_QEMU) $(QEMU_ARGS)
 else
-	$(call color_header, "Launching QEMU")
 	$(EXEC_QEMU) $(QEMU_ARGS)
 endif
 
@@ -127,6 +125,7 @@ qemu_halted: image
 ## Run clippy
 ##------------------------------------------------------------------------------
 clippy:
+	$(call color_header, "Running cargo clippy")
 ifeq ($(DOCKER),y)
 	$(DOCKER_CMD) $(CLIPPY_CMD)
 else
@@ -137,6 +136,7 @@ endif
 ## Clean
 ##------------------------------------------------------------------------------
 clean:
+	$(call color_header, "Cleaning")
 ifeq ($(DOCKER),y)
 	$(DOCKER_CMD) rm -rf target $(LOADER_BIN)
 else
@@ -177,6 +177,7 @@ test:
 ## Generate call stack graph
 ##------------------------------------------------------------------------------
 call_stack:
+	$(call color_header, "Generating cargo call stack")
 ifeq ($(DOCKER),y)
 	$(DOCKER_CMD) cargo +nightly call-stack --bin bootloader --features \
 	visionfive --target riscv64gc-unknown-none-elf > cg.dot ; \
@@ -190,12 +191,31 @@ endif
 ## Execute cargo geiger
 ##------------------------------------------------------------------------------
 geiger:
+	$(call color_header, "Running cargo geiger")
 ifeq ($(DOCKER),y)
 	$(DOCKER_CMD) cargo geiger --target riscv64gc-unknown-none-elf --features \
 	visionfive
 else
 	cargo geiger --target riscv64gc-unknown-none-elf --features visionfive
 endif
+
+##------------------------------------------------------------------------------
+## Run QEMU under tftp
+##------------------------------------------------------------------------------
+
+QEMU_TFTP_ARGS = $(QEMU_RELEASE_ARGS) -nographic -display none -serial mon:stdio \
+				 -s -bios tftp/u-boot.bin
+
+tftp: $(LOADER_BIN)
+# Generating u-boot.bin has no benefit to this project so a generated one is used
+ifeq ($(DOCKER),y)
+	$(call color_header, "Running QEMU")
+	$(DOCKER_CMD) $(EXEC_QEMU) $(QEMU_TFTP_ARGS)
+else
+	$(call color_header, "Running QEMU")
+	$(EXEC_QEMU) $(QEMU_TFTP_ARGS)
+endif
+
 
 ##------------------------------------------------------------------------------
 ## Generate SD image
@@ -205,6 +225,7 @@ image: $(LOADER_BIN)
 ifeq ($(BSP),visionfive)
 	cp ./bsp/src/visionfive/genimage.cfg .
 endif
+	$(call color_header, "Generating SD card image")
 ifeq ($(DOCKER),y)
 	$(DOCKER_CMD) genimage --inputpath $(shell pwd)
 else
