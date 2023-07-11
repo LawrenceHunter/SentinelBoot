@@ -155,7 +155,7 @@ readelf: $(LOADER_ELF)
 ##------------------------------------------------------------------------------
 objdump: $(LOADER_ELF)
 	$(call color_header, "Launching objdump")
-	@$(DOCKER_TOOLS) $(OBJDUMP_BINARY) --disassemble --demangle \
+	$(OBJDUMP_BINARY) --disassemble --demangle \
                 --section .text     \
                 --section .rodata   \
                 $(LOADER_ELF) | rustfilt
