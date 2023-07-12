@@ -31,12 +31,4 @@ RUN apt update -y && \
     make -j$(nproc) && \
     cp ./genimage /usr/bin && \
     cd .. && rm -rf genimage && \
-    mkdir -p /tftpboot/boot && \
-    chown tftp:tftp /tftpboot/boot && \
-    mkdir /srv/riscv-nfs && \
     apt clean
-
-COPY tftp/docker/network-interfaces /etc/network/interfaces
-COPY tftp/docker/isc-dhcp-server /etc/defaults/isc-dhcp-server
-COPY tftp/docker/dhcpd /etc/dhcp/dhcpd.conf
-COPY tftp/docker/tftpd /etc/default/tftpd-hpa

@@ -143,15 +143,28 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: |
-          make image
-          gzip images/sdcard.img
-          mv images/sdcard.img /tftpboot/boot
+          make
+          mv bootloader.img /tftpboot/boot
           cp boot.scr /tftpboot/boot
           cd /tftpboot/boot
           mkimage -A riscv -T script -O linux -C gzip -d boot.scr boot.scr.uimg
           usbrelay HURTM_1=0 && usbrelay HURTM_2=0
-          timeout 10m minicom -D /dev/ttyUSB0 -C output_log
+          timeout 5m minicom -D /dev/ttyUSB0 -C output_log
           usbrelay HURTM_1=1 && usbrelay HURTM_2=1
           echo '```' >> $GITHUB_STEP_SUMMARY
           cat output_log >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
+
+  qemu_tftp:
+    needs: build
+    runs-on: [self-hosted, vf2]
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          make
+          mv bootloader.img /tftpboot/boot
+          cp boot.scr /tftpboot/boot
+          (cd /tftpboot/boot && mkimage -A riscv -T script -O linux -C gzip -d boot.scr boot.scr.uimg)
+          timeout 5m qemu-system-riscv64 -M virt -cpu rv64 -smp 2 -m 512 -nographic -display none \
+          -serial mon:stdio -s -netdev tap,id=mynet0,ifname=tap0,script=no,downscript=no \
+          -device e1000,netdev=mynet0,mac=52:55:00:d1:55:01 -bios tfpt/u-boot.bin

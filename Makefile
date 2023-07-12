@@ -44,11 +44,10 @@ DOC_CMD     = cargo doc $(COMPILER_ARGS) --all-features \
 CLIPPY_CMD  = cargo clippy $(COMPILER_ARGS) -- -A clippy::modulo_one
 OBJCOPY_CMD = rust-objcopy -O binary
 EXEC_QEMU   = $(QEMU_BINARY) -M $(QEMU_MACHINE_TYPE)
-DOCKER_CMD  = docker network create --subnet=172.18.0.0/24 tfpd || true && \
-				docker build --tag bootloader --file Dockerfile . && \
+DOCKER_CMD  = docker build --tag bootloader --file Dockerfile . && \
 				docker run -v $(shell pwd):$(shell pwd) \
-				-w $(shell pwd) --net tfpd --ip 172.18.0.2 bootloader:latest
-QEMU_ARGS   = $(QEMU_RELEASE_ARGS) -nographic -display none -serial mon:stdio \
+				-w $(shell pwd) bootloader:latest
+QEMU_ARGS   = $(QEMU_RELEASE_ARGS) -nographic -display none -serial stdio \
 				 -s -drive format=raw,file=images/sdcard.img
 ##-----------------------------------------------------------------------------
 ## Targets
@@ -143,7 +142,7 @@ ifeq ($(DOCKER),y)
 else
 	rm -rf target $(LOADER_BIN)
 endif
-	(cd visionfive_git && make clean)
+
 ##------------------------------------------------------------------------------
 ## Run readelf
 ##------------------------------------------------------------------------------
@@ -199,24 +198,6 @@ ifeq ($(DOCKER),y)
 else
 	cargo geiger --target riscv64gc-unknown-none-elf --features visionfive
 endif
-
-##------------------------------------------------------------------------------
-## Run QEMU under tftp
-##------------------------------------------------------------------------------
-
-QEMU_TFTP_ARGS = $(QEMU_RELEASE_ARGS) -nographic -display none \
-				 -s -bios tftp/u-boot.bin
-
-tftp: $(LOADER_BIN)
-# Generating u-boot.bin has no benefit to this project so a generated one is used
-ifeq ($(DOCKER),y)
-	$(call color_header, "Running QEMU")
-	$(DOCKER_CMD) $(EXEC_QEMU) $(QEMU_TFTP_ARGS)
-else
-	$(call color_header, "Running QEMU")
-	$(EXEC_QEMU) $(QEMU_TFTP_ARGS)
-endif
-
 
 ##------------------------------------------------------------------------------
 ## Generate SD image
