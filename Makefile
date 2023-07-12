@@ -14,7 +14,7 @@ ifeq ($(BSP),visionfive)
     LOADER_BIN        = bootloader.img
     QEMU_BINARY       = qemu-system-riscv64
     QEMU_MACHINE_TYPE = virt
-    QEMU_RELEASE_ARGS = -cpu rv64 -smp 4 -m 128M
+    QEMU_RELEASE_ARGS = -cpu rv64 -smp 4 -m 4G
     OBJDUMP_BINARY    = $(TOOLCHAIN)objdump
     NM_BINARY         = $(TOOLCHAIN)nm
     READELF_BINARY    = $(TOOLCHAIN)readelf
@@ -44,11 +44,12 @@ DOC_CMD     = cargo doc $(COMPILER_ARGS) --all-features \
 CLIPPY_CMD  = cargo clippy $(COMPILER_ARGS) -- -A clippy::modulo_one
 OBJCOPY_CMD = rust-objcopy -O binary
 EXEC_QEMU   = $(QEMU_BINARY) -M $(QEMU_MACHINE_TYPE)
-DOCKER_CMD  = docker build --tag bootloader --file Dockerfile . && \
+DOCKER_CMD  = docker network create --subnet=172.18.0.0/24 tfpd || true && \
+				docker build --tag bootloader --file Dockerfile . && \
 				docker run -v $(shell pwd):$(shell pwd) \
-				-w $(shell pwd) bootloader:latest
+				-w $(shell pwd) --net tfpd --ip 172.18.0.2 bootloader:latest
 QEMU_ARGS   = $(QEMU_RELEASE_ARGS) -nographic -display none -serial mon:stdio \
-				 -s -drive format=raw,file=images/sdcard.img -bios none
+				 -s -drive format=raw,file=images/sdcard.img
 ##-----------------------------------------------------------------------------
 ## Targets
 ##-----------------------------------------------------------------------------
@@ -203,7 +204,7 @@ endif
 ## Run QEMU under tftp
 ##------------------------------------------------------------------------------
 
-QEMU_TFTP_ARGS = $(QEMU_RELEASE_ARGS) -nographic -display none -serial mon:stdio \
+QEMU_TFTP_ARGS = $(QEMU_RELEASE_ARGS) -nographic -display none \
 				 -s -bios tftp/u-boot.bin
 
 tftp: $(LOADER_BIN)

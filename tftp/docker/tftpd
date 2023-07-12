@@ -1,0 +1,4 @@
+TFTP_USERNAME="tftp"
+TFTP_DIRECTORY="/tftpboot/boot"
+TFTP_ADDRESS="172.18.0.2:69"
+TFTP_OPTIONS="--ipv4 --secure --create"

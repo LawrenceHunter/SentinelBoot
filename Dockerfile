@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 ubuntu:jammy
+FROM ubuntu:jammy
 ENV DEBIAN_FRONTEND noninteractive
 ENV TERM xterm
 ENV PATH="/usr/bin:/root/.cargo/bin:${PATH}"
@@ -8,7 +8,8 @@ ENV ARCH=riscv
 RUN apt update -y && \
     apt install -y qemu-system make wget autoconf gcc genext2fs libconfuse-dev git \
     pkg-config file g++ cpio unzip rsync bc build-essential libc6 libc-bin locales \
-    curl libncurses5-dev libncursesw5-dev flex bison libssl-dev graphviz && \
+    curl libncurses5-dev libncursesw5-dev flex bison libssl-dev graphviz \
+    isc-dhcp-server tftpd-hpa nfs-kernel-server u-boot-tools minicom && \
     wget https://github.com/riscv-collab/riscv-gnu-toolchain/releases/download/2023.05.27/riscv64-glibc-ubuntu-20.04-nightly-2023.05.27-nightly.tar.gz && \
     tar -xvf riscv64-glibc-ubuntu-20.04-nightly-2023.05.27-nightly.tar.gz && \
     rm riscv64-glibc-ubuntu-20.04-nightly-2023.05.27-nightly.tar.gz && \
@@ -30,4 +31,12 @@ RUN apt update -y && \
     make -j$(nproc) && \
     cp ./genimage /usr/bin && \
     cd .. && rm -rf genimage && \
+    mkdir -p /tftpboot/boot && \
+    chown tftp:tftp /tftpboot/boot && \
+    mkdir /srv/riscv-nfs && \
     apt clean
+
+COPY tftp/docker/network-interfaces /etc/network/interfaces
+COPY tftp/docker/isc-dhcp-server /etc/defaults/isc-dhcp-server
+COPY tftp/docker/dhcpd /etc/dhcp/dhcpd.conf
+COPY tftp/docker/tftpd /etc/default/tftpd-hpa
