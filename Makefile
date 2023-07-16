@@ -47,8 +47,8 @@ EXEC_QEMU   = $(QEMU_BINARY) -M $(QEMU_MACHINE_TYPE)
 DOCKER_CMD  = docker build --tag bootloader --file Dockerfile . && \
 				docker run -v $(shell pwd):$(shell pwd) \
 				-w $(shell pwd) bootloader:latest
-QEMU_ARGS   = $(QEMU_RELEASE_ARGS) -nographic -display none -serial stdio \
-				 -s -drive format=raw,file=images/sdcard.img
+QEMU_ARGS   = $(QEMU_RELEASE_ARGS) -nographic -display none -serial mon:stdio \
+				 -s -bios bootloader.img
 ##-----------------------------------------------------------------------------
 ## Targets
 ##-----------------------------------------------------------------------------
@@ -211,6 +211,7 @@ endif
 ifeq ($(DOCKER),y)
 	$(DOCKER_CMD) genimage --inputpath $(shell pwd)
 else
-	genimage --inputpath $(shell pwd)
+	# FIXME
+	$(DOCKER_CMD) genimage --inputpath $(shell pwd)
 endif
 	rm genimage.cfg

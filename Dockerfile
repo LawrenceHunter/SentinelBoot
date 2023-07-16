@@ -1,4 +1,4 @@
-FROM ubuntu:jammy
+FROM debian:bullseye-slim
 ENV DEBIAN_FRONTEND noninteractive
 ENV TERM xterm
 ENV PATH="/usr/bin:/root/.cargo/bin:${PATH}"
@@ -8,13 +8,17 @@ ENV ARCH=riscv
 RUN apt update -y && \
     apt install -y qemu-system make wget autoconf gcc genext2fs libconfuse-dev git \
     pkg-config file g++ cpio unzip rsync bc build-essential libc6 libc-bin locales \
-    curl libncurses5-dev libncursesw5-dev flex bison libssl-dev graphviz && \
-    wget https://github.com/riscv-collab/riscv-gnu-toolchain/releases/download/2023.05.27/riscv64-glibc-ubuntu-20.04-nightly-2023.05.27-nightly.tar.gz && \
+    curl libncurses5-dev libncursesw5-dev flex bison libssl-dev graphviz \
+    isc-dhcp-server tftpd-hpa nfs-kernel-server u-boot-tools minicom && \
+    apt clean
+
+RUN wget https://github.com/riscv-collab/riscv-gnu-toolchain/releases/download/2023.05.27/riscv64-glibc-ubuntu-20.04-nightly-2023.05.27-nightly.tar.gz && \
     tar -xvf riscv64-glibc-ubuntu-20.04-nightly-2023.05.27-nightly.tar.gz && \
     rm riscv64-glibc-ubuntu-20.04-nightly-2023.05.27-nightly.tar.gz && \
     cp riscv/bin/* /usr/bin && \
-    rm -rf riscv && \
-    curl https://sh.rustup.rs -sSf | sh -s -- -y && \
+    rm -rf riscv
+
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y && \
     rustup override set nightly && \
     rustup target add riscv64gc-unknown-none-elf && \
     cargo install cargo-binutils && \
@@ -22,12 +26,12 @@ RUN apt update -y && \
     cargo install cargo-geiger && \
     rustup +nightly component add rust-src && \
     rustup component add llvm-tools-preview && \
-    rustup component add clippy && \
-    mkdir genimage && cd genimage && \
+    rustup component add clippy
+
+RUN mkdir genimage && cd genimage && \
     git clone https://github.com/pengutronix/genimage.git . && \
     ./autogen.sh && \
     ./configure && \
     make -j$(nproc) && \
     cp ./genimage /usr/bin && \
-    cd .. && rm -rf genimage && \
-    apt clean
+    cd .. && rm -rf genimage
