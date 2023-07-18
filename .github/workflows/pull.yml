@@ -1,10 +1,24 @@
 on:
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 name: Pull CI
 
 jobs:
+  gen_docker_vf2:
+    name: Build docker image for vf2 pi
+    runs-on: [self-hosted, vf2]
+    steps:
+      - uses: actions/checkout@v3
+      - run: docker build --tag bootloader --file Dockerfile .
+    timeout-minutes: 60
+  gen_docker_sp4:
+    name: Build docker image for sp4 pi
+    runs-on: [self-hosted, sp4]
+    steps:
+      - uses: actions/checkout@v3
+      - run: docker build --tag bootloader --file Dockerfile .
+    timeout-minutes: 60
   build:
     name: Build project
     runs-on: self-hosted
