@@ -1,20 +1,26 @@
-FROM rust:bullseye
+FROM debian:bullseye-slim AS toolchain
+WORKDIR /src
+ENV DEBIAN_FRONTEND noninteractive
+RUN apt update -y && \
+    apt install -y wget && \
+    apt clean
+RUN wget https://github.com/riscv-collab/riscv-gnu-toolchain/releases/download/2023.05.27/riscv64-glibc-ubuntu-20.04-nightly-2023.05.27-nightly.tar.gz && \
+    tar -xvf riscv64-glibc-ubuntu-20.04-nightly-2023.05.27-nightly.tar.gz && \
+    rm riscv64-glibc-ubuntu-20.04-nightly-2023.05.27-nightly.tar.gz
+
+# Split more than it should to prevent Pi crashes
+FROM rust:bullseye AS rust
 ENV DEBIAN_FRONTEND noninteractive
 ENV TERM xterm
-
+COPY --from=toolchain /src/riscv/bin /usr/bin
+RUN rustup override set nightly
+RUN rustup target add riscv64gc-unknown-none-elf
+RUN cargo install cargo-binutils
+RUN cargo install cargo-call-stack
+RUN cargo install cargo-geiger
+RUN rustup +nightly component add rust-src
+RUN rustup component add llvm-tools-preview
+RUN rustup component add clippy
 RUN apt update -y && \
     apt install -y qemu-system make wget graphviz && \
-    wget https://github.com/riscv-collab/riscv-gnu-toolchain/releases/download/2023.04.29/riscv64-elf-ubuntu-20.04-nightly-2023.04.29-nightly.tar.gz && \
-    tar -xvf riscv64-elf-ubuntu-20.04-nightly-2023.04.29-nightly.tar.gz && \
-    rm riscv64-elf-ubuntu-20.04-nightly-2023.04.29-nightly.tar.gz && \
-    cp riscv/bin/* /usr/bin && \
-    rm -rf riscv && \
-    rustup override set nightly && \
-    rustup target add riscv64gc-unknown-none-elf && \
-    cargo install cargo-binutils && \
-    cargo install cargo-call-stack && \
-    cargo install cargo-geiger && \
-    rustup +nightly component add rust-src && \
-    rustup component add llvm-tools-preview && \
-    rustup component add clippy && \
     apt clean
