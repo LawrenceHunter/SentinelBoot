@@ -12,15 +12,7 @@ jobs:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
-      - run: |
-          if ! [ -x "$(command -v docker)" ]; then
-            curl -fsSL https://get.docker.com -o get-docker.sh
-            sh get-docker.sh
-            groupadd docker || true
-            usermod -aG docker $USER
-            newgrp docker
-          fi
-          make clean && make
+      - run: make
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -47,13 +39,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: |
-          if ! [ -x "$(command -v docker)" ]; then
-            curl -fsSL https://get.docker.com -o get-docker.sh
-            sh get-docker.sh
-            groupadd docker || true
-            usermod -aG docker $USER
-            newgrp docker
-          fi
           make doc
           tar -zcvf doc.tar.gz target/riscv64gc-unknown-none-elf/doc/
       - name: Create Release

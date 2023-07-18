@@ -10,15 +10,7 @@ jobs:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
-      - run: |
-          if ! [ -x "$(command -v docker)" ]; then
-            curl -fsSL https://get.docker.com -o get-docker.sh
-            sh get-docker.sh
-            groupadd docker || true
-            usermod -aG docker $USER
-            newgrp docker
-          fi
-          make clean && make
+      - run: make
       - uses: actions/upload-artifact@v3
         with:
           name: bootloader.img
@@ -30,17 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: |
-          if ! [ -x "$(command -v docker)" ]; then
-            curl -fsSL https://get.docker.com -o get-docker.sh
-            sh get-docker.sh
-            groupadd docker || true
-            usermod -aG docker $USER
-            newgrp docker
-          fi
-          if ! [ -x "$(command -v qemu-system-riscv64)" ]; then
-            apt install -y qemu-system
-          fi
-          echo "# Test summary\n"
+          echo "# Test summary\n" >> $GITHUB_STEP_SUMMARY
           make test >> $GITHUB_STEP_SUMMARY
   clippy:
     needs: build
@@ -48,13 +30,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: |
-          if ! [ -x "$(command -v docker)" ]; then
-            curl -fsSL https://get.docker.com -o get-docker.sh
-            sh get-docker.sh
-            groupadd docker || true
-            usermod -aG docker $USER
-            newgrp docker
-          fi
           make clippy >> $GITHUB_STEP_SUMMARY
   Doc:
     needs: build
@@ -62,13 +37,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: |
-          if ! [ -x "$(command -v docker)" ]; then
-            curl -fsSL https://get.docker.com -o get-docker.sh
-            sh get-docker.sh
-            groupadd docker || true
-            usermod -aG docker $USER
-            newgrp docker
-          fi
           make doc
           tar -zcvf doc.tar.gz target/riscv64gc-unknown-none-elf/doc/
       - uses: actions/upload-artifact@v3
@@ -80,15 +48,7 @@ jobs:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
-      - run: |
-          if ! [ -x "$(command -v docker)" ]; then
-            curl -fsSL https://get.docker.com -o get-docker.sh
-            sh get-docker.sh
-            groupadd docker || true
-            usermod -aG docker $USER
-            newgrp docker
-          fi
-          make call_stack
+      - run: make call_stack
       - uses: actions/upload-artifact@v3
         with:
           name: Call graph
@@ -108,16 +68,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: |
-          if ! [ -x "$(command -v docker)" ]; then
-            curl -fsSL https://get.docker.com -o get-docker.sh
-            sh get-docker.sh
-            groupadd docker || true
-            usermod -aG docker $USER
-            newgrp docker
-          fi
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          make geiger >> $GITHUB_STEP_SUMMARY  || true
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          make geiger >> $GITHUB_STEP_SUMMARY || true
+          echo '```' >> $GITHUB_STEP_SUMMARY
   tftp:
     needs: build
     runs-on: [self-hosted, vf2]
@@ -135,7 +88,6 @@ jobs:
           timeout 5m python3 vf2_tftp.py >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           ./power_vf2.sh off
-          echo '```' >> $GITHUB_STEP_SUMMARY
   qemu_tftp:
     needs: build
     runs-on: [self-hosted, qemu]
