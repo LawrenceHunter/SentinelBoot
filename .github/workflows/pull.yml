@@ -136,3 +136,19 @@ jobs:
           echo '```' >> $GITHUB_STEP_SUMMARY
           ./power_vf2.sh off
           echo '```' >> $GITHUB_STEP_SUMMARY
+  qemu_tftp:
+    needs: build
+    runs-on: [self-hosted, qemu]
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          make
+          mv bootloader.img /tftpboot/boot
+          cp tftp/* /tftpboot/boot
+          cd /tftpboot/boot
+          chmod +x *.sh
+          cd /tftpboot/boot
+          ./mkimage.sh
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          timeout 5m ./qemu_tftp.sh >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
