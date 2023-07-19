@@ -13,7 +13,7 @@ _start:
 	csrw	satp, zero
 	# Any harts not bootstrapping need to wait for IPI
 	csrr	t0, mhartid
-	bnez 	t0, hart_parking_loop
+	# bnez 	t0, hart_parking_loop
 
 	# Set all bytes in BSS to 0
 	la		a0, _bss_start
