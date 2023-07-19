@@ -5,6 +5,14 @@ ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=0.5)
 tests = [("❕ Waiting for 'Hit any key to stop autoboot'...",
           "✅ Got Hit any key to stop autoboot'",
           "".encode(),
+          "Hit any key to stop autoboot"),
+          ("❕ Waiting for 'bootloader version'...",
+          "✅ Got 'bootloader version'",
+          "".encode(),
+          "Hit any key to stop autoboot"),
+          ("❕ Waiting for 'Echoing input now'...",
+          "✅ Got 'Echoing input now'",
+          "".encode(),
           "Hit any key to stop autoboot")]
 
 test = 0
@@ -22,5 +30,5 @@ if __name__ == "__main__":
                     print(tests[test][0])
                 except IndexError:
                     break
-                ser.write(tests[test][2].encode())
+                ser.write(tests[test][2])
     print("✅ All expected output achieved!")
