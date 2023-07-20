@@ -1,0 +1,19 @@
+on:
+    push:
+      paths:
+      - 'Dockerfile'
+
+name: Regen Docker containers
+
+gen_docker_vf2:
+    name: Build docker image for vf2 pi
+    runs-on: [self-hosted, vf2]
+    steps:
+      - uses: actions/checkout@v3
+      - run: docker build -m 512m --tag bootloader --file Dockerfile .
+  gen_docker_sp4:
+    name: Build docker image for sp4 pi
+    runs-on: [self-hosted, sp4]
+    steps:
+      - uses: actions/checkout@v3
+      - run: docker build -m 512m --tag bootloader --file Dockerfile .
