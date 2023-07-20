@@ -9,11 +9,11 @@ tests = [("❕ Waiting for 'Hit any key to stop autoboot'...",
           ("❕ Waiting for 'bootloader version'...",
           "✅ Got 'bootloader version'",
           "".encode(),
-          "Hit any key to stop autoboot"),
+          "'bootloader version"),
           ("❕ Waiting for 'Echoing input now'...",
           "✅ Got 'Echoing input now'",
           "".encode(),
-          "Hit any key to stop autoboot")]
+          "Echoing input now")]
 
 test = 0
 
@@ -22,6 +22,7 @@ if __name__ == "__main__":
     while test < len(tests):
         while ser.in_waiting:
             data = ser.readline().decode("ascii")
+            print(data)
             if tests[test][3] in data:
                 state = 1
                 print(tests[test][1])
