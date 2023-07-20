@@ -13,7 +13,7 @@ _start:
 	csrw	satp, zero
 	# Any harts not bootstrapping need to wait for IPI
 	csrr	t0, mhartid
-	# bnez 	t0, hart_parking_loop
+	bnez 	t0, hart_parking_loop
 
 	# Set all bytes in BSS to 0
 	la		a0, _bss_start
@@ -45,7 +45,7 @@ hart_parking_loop:
 
 	# Divide the stack among harts
 	la 		sp, _stack
-	li		t0, 0x1000
+	li		t0, 0x10000
 	csrr	a0, mhartid
 	mul		t0, t0, a0
 	sub		sp, sp, t0
@@ -53,6 +53,10 @@ hart_parking_loop:
 	# Put harts into machine mode with interrupts enabled
 	li 		t0, 0b11 << 11 | (1 << 7)
 	csrw 	mstatus, t0
+
+	# Allow software interrupts
+	li		t3, (1 << 3)
+	csrw	mie, t3
 
 	la		t1, main_hart
 	csrw	mepc, t1
