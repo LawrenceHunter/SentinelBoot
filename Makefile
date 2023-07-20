@@ -44,11 +44,11 @@ DOC_CMD     = cargo doc $(COMPILER_ARGS) --all-features \
 CLIPPY_CMD  = cargo clippy $(COMPILER_ARGS) -- -A clippy::modulo_one
 OBJCOPY_CMD = rust-objcopy -O binary
 EXEC_QEMU   = $(QEMU_BINARY) -M $(QEMU_MACHINE_TYPE)
-DOCKER_CMD  = docker build --tag bootloader --file Dockerfile . && \
+DOCKER_CMD  = docker build --tag bootloader --file docker/Dockerfile . && \
 				docker run -v $(shell pwd):$(shell pwd) \
 				-w $(shell pwd) bootloader:latest
 QEMU_ARGS   = $(QEMU_RELEASE_ARGS) -nographic -display none -serial mon:stdio \
-				-bios none -kernel $(LOADER_BIN) -s
+				-bios $(LOADER_BIN) -s
 ##-----------------------------------------------------------------------------
 ## Targets
 ##-----------------------------------------------------------------------------
