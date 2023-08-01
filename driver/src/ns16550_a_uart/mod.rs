@@ -1,10 +1,10 @@
 //! NS16550A UART driver.
 use core::fmt;
+pub use riscv64::nop;
 use synchronisation::interface::Mutex;
 use tock_registers::{
     interfaces::{Readable, Writeable},
-    register_bitfields,
-    register_structs,
+    register_bitfields, register_structs,
     registers::{Aliased, ReadWrite},
 };
 
@@ -172,6 +172,9 @@ impl NS16550AUartInner {
 
     // Setup baudrate and characteristics
     pub fn init(&mut self) {
+        // Ensure all pending chars are transmitted
+        self.flush();
+
         // Set line control register (LCR) word length to 8 bit
         self.registers.LCR.write(LCR::WLEN::EightBit);
 
@@ -198,28 +201,44 @@ impl NS16550AUartInner {
 
     /// Send a char
     fn write_char(&mut self, c: char) {
+        // Spin while TX FIFO full is set
+        while self.registers.IER.matches_all(IER::ETBEI::Enabled) {
+            nop();
+        }
+
         self.registers.RB_RH_R.set(c as u8);
         self.chars_written += 1;
     }
 
     /// Writes all buffered chars
-    fn flush(&self) {}
+    fn flush(&self) {
+        // spin until the busy bit is cleared
+        while self.registers.IER.matches_all(IER::ETBEI::Enabled) {
+            nop();
+        }
+    }
 
     /// Receive char
     fn read_char_converting(
         &mut self,
-        _blocking_mode: BlockingMode,
+        blocking_mode: BlockingMode,
     ) -> Option<char> {
         if self.registers.LSR.is_set(LSR::DR) {
-            let mut ret = self.registers.RB_RH_R.get() as char;
-            // Convert \r -> \n
-            if ret == '\r' {
-                ret = '\n'
+            if blocking_mode == BlockingMode::NonBlocking {
+                return None;
             }
-            self.chars_read += 1;
-            return Some(ret);
+
+            while self.registers.IER.matches_all(IER::ERBFI::Disabled) {
+                nop();
+            }
         }
-        None
+        let mut ret = self.registers.RB_RH_R.get() as char;
+        // Convert \r -> \n
+        if ret == '\r' {
+            ret = '\n'
+        }
+        self.chars_read += 1;
+        Some(ret)
     }
 }
 
