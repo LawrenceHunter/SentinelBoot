@@ -13,3 +13,4 @@ tock-registers = { version = "0.8.x", default-features = false, features = ["reg
 synchronisation = { path = "../synchronisation", version = "*"  }
 console = { path = "../console", version = "*"  }
 mmio = { path = "../mmio", version = "*"  }
+riscv64 = { path = "../riscv64", version = "*"  }
