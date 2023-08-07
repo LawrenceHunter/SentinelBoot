@@ -10,6 +10,8 @@ Cargo.lock
 **/*.rs.bk
 
 .vscode
+.idea
 *.img
 *.DS_Store
 *.tar.gz
+*.svg
