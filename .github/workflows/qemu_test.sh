@@ -8,10 +8,6 @@ set -x # Similar to verbose mode (-v), but expands commands
 rm -f /tmp/{guest,host}.{in,out} && mkfifo /tmp/{guest,host}.{in,out}
 set +x
 
-echo "🔨 Building bootloader..."
-make
-echo "✅ Built bootloader"
-
 printf -v QEMU_CMDLINE '%s' 'qemu-system-riscv64 -serial pipe:/tmp/guest ' \
 '-M virt -cpu rv64 -smp 4 -m 128M -nographic -bios none -kernel bootloader.img'
 

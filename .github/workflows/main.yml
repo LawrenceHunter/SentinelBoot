@@ -94,3 +94,12 @@ jobs:
           echo '```' >> $GITHUB_STEP_SUMMARY
           timeout 5m ./qemu_tftp.sh >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
+  hyperfine:
+    needs: build
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          make
+          make hyperfine
+          cat test.md >> $GITHUB_STEP_SUMMARY
