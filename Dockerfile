@@ -21,6 +21,7 @@ RUN cargo install -j1 cargo-geiger
 RUN rustup +nightly component add rust-src
 RUN rustup component add llvm-tools-preview
 RUN rustup component add clippy
+RUN cargo install -j1 hyperfine
 RUN apt update -y && \
     apt install -y qemu-system make wget graphviz && \
     apt clean

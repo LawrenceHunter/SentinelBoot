@@ -53,7 +53,7 @@ QEMU_ARGS   = $(QEMU_RELEASE_ARGS) -nographic -display none -serial mon:stdio \
 ## Targets
 ##-----------------------------------------------------------------------------
 .PHONY: all doc qemu qemu_halted clippy clean readelf objdump nm test \
-	call_stack geiger
+	call_stack geiger hyperfine
 
 all: $(LOADER_BIN)
 
@@ -170,7 +170,7 @@ nm: $(LOADER_ELF)
 ##------------------------------------------------------------------------------
 ## Run tests
 ##------------------------------------------------------------------------------
-test:
+test: $(LOADER_BIN)
 	timeout 5m .github/workflows/qemu_test.sh
 
 ##------------------------------------------------------------------------------
@@ -195,4 +195,14 @@ ifeq ($(DOCKER),y)
 	visionfive
 else
 	cargo geiger --target riscv64gc-unknown-none-elf --features visionfive
+endif
+
+##------------------------------------------------------------------------------
+## Execute hyperfine
+##------------------------------------------------------------------------------
+hyperfine:
+ifeq ($(DOCKER),y)
+	$(DOCKER_CMD) hyperfine --warmup 1 --show-output --export-markdown test.md ./.github/workflows/qemu_test.sh
+else
+	hyperfine --warmup 1 --show-output --export-markdown test.md ./.github/workflows/qemu_test.sh
 endif
