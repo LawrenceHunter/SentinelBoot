@@ -53,7 +53,7 @@ QEMU_ARGS   = $(QEMU_RELEASE_ARGS) -nographic -display none -serial mon:stdio \
 ## Targets
 ##-----------------------------------------------------------------------------
 .PHONY: all doc qemu qemu_halted clippy clean readelf objdump nm test \
-	call_stack geiger hyperfine
+	call_stack geiger hyperfine asm
 
 all: $(LOADER_BIN)
 
@@ -210,4 +210,15 @@ ifeq ($(DOCKER),y)
 	$(DOCKER_CMD) hyperfine --warmup 1 --show-output --export-markdown test.md ./.github/workflows/qemu_test.sh
 else
 	hyperfine --warmup 1 --show-output --export-markdown test.md ./.github/workflows/qemu_test.sh
+endif
+
+##------------------------------------------------------------------------------
+## Execute cargo asm
+##------------------------------------------------------------------------------
+asm:
+ifeq ($(DOCKER),y)
+	$(DOCKER_CMD) cargo asm --target riscv64gc-unknown-none-elf --features \
+	visionfive
+else
+	cargo asm --target riscv64gc-unknown-none-elf --features visionfive
 endif
