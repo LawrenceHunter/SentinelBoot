@@ -18,11 +18,11 @@ RUN rustup target add riscv64gc-unknown-none-elf
 RUN cargo install -j1 cargo-binutils
 RUN cargo install -j1 cargo-call-stack
 RUN cargo install -j1 cargo-geiger
-RUN cargo install -j1 cargo-asm
 RUN rustup +nightly component add rust-src
 RUN rustup component add llvm-tools-preview
 RUN rustup component add clippy
 RUN cargo install -j1 hyperfine
+RUN cargo install -j1 cargo-asm
 RUN apt update -y && \
     apt install -y qemu-system make wget graphviz && \
     apt clean
