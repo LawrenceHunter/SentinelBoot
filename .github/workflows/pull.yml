@@ -15,52 +15,43 @@ jobs:
         with:
           name: bootloader.img
           path: ./bootloader.img
+
   test:
     needs: build
     name: Test
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
-      - run: |
-          echo "# Test summary\n" >> $GITHUB_STEP_SUMMARY
-          make test >> $GITHUB_STEP_SUMMARY
+      - run: make test
+
   clippy:
     needs: build
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
-      - run: |
-          make clippy >> $GITHUB_STEP_SUMMARY
+      - run: make clippy
+
   Doc:
     needs: build
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
-      - run: |
-          make doc
-          tar -zcvf doc.tar.gz target/riscv64gc-unknown-none-elf/doc/
+      - run: make doc
+      - run: tar -zcvf doc.tar.gz target/riscv64gc-unknown-none-elf/doc/
       - uses: actions/upload-artifact@v3
         with:
           name: docs
           path: ./doc.tar.gz
-  Guess_unsafe_count:
-    needs: build
-    runs-on: self-hosted
-    steps:
-      - uses: actions/checkout@v3
-      - run: |
-          echo "# Crude unsafe line estimate" >> $GITHUB_STEP_SUMMARY
-          echo "Count: " >> $GITHUB_STEP_SUMMARY
-          grep -r -E "unsafe\s?\{" | wc -l >> $GITHUB_STEP_SUMMARY
+
   Geiger:
     needs: build
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
       - run: |
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          make geiger >> $GITHUB_STEP_SUMMARY || true
-          echo '```' >> $GITHUB_STEP_SUMMARY
+          make geiger || true
+          cat .github/workflows/geiger.md >> $GITHUB_STEP_SUMMARY
+
   tftp:
     needs: build
     runs-on: [self-hosted, vf2]
@@ -74,10 +65,9 @@ jobs:
           chmod +x *.sh
           ./mkimage.sh
           ./power_vf2.sh off && ./power_vf2.sh on
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          timeout 5m python3 vf2_tftp.py >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+          timeout 5m python3 vf2_tftp.py
           ./power_vf2.sh off
+
   qemu_tftp:
     needs: build
     runs-on: [self-hosted, qemu]
@@ -91,9 +81,8 @@ jobs:
           chmod +x *.sh
           cd /tftpboot/boot
           ./mkimage.sh
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          timeout 5m ./qemu_tftp.sh >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+          timeout 5m ./qemu_tftp.sh
+
   hyperfine:
     needs: build
     runs-on: self-hosted
@@ -103,3 +92,4 @@ jobs:
           make
           make hyperfine
           cat test.md >> $GITHUB_STEP_SUMMARY
+
