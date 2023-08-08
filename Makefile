@@ -190,12 +190,17 @@ endif
 ## Execute cargo geiger
 ##------------------------------------------------------------------------------
 geiger:
+	echo "# Safety Report" > .github/workflows/geiger.md
 ifeq ($(DOCKER),y)
 	$(DOCKER_CMD) cargo geiger --target riscv64gc-unknown-none-elf --features \
-	visionfive
+	visionfive --output-format GitHubMarkdown --update-readme \
+	--readme-path .github/workflows/geiger.md
 else
-	cargo geiger --target riscv64gc-unknown-none-elf --features visionfive
+	cargo geiger --target riscv64gc-unknown-none-elf --features visionfive \
+	--output-format GitHubMarkdown --update-readme \
+	--readme-path .github/workflows/geiger.md
 endif
+	cat .github/workflows/geiger.md
 
 ##------------------------------------------------------------------------------
 ## Execute hyperfine

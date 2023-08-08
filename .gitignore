@@ -15,3 +15,5 @@ Cargo.lock
 *.DS_Store
 *.tar.gz
 *.svg
+
+.github/workflows/*.md
