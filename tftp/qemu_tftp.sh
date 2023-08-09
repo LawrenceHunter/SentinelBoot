@@ -8,8 +8,8 @@ set -x # Similar to verbose mode (-v), but expands commands
 rm -f /tmp/{guest,host}.{in,out} && mkfifo /tmp/{guest,host}.{in,out}
 set +x
 
-printf -v QEMU_CMDLINE '%s' 'qemu-system-riscv64 -M virt ' \
-    '-cpu rv64 -smp 2 -m 512 -nographic ' \
+printf -v QEMU_CMDLINE '%s' 'qemu-system-riscv64 -M sifive_u ' \
+    '-cpu sifive-u54 -smp 4 -m 2G -nographic ' \
     '-display none -serial pipe:/tmp/guest -s ' \
     '-netdev tap,id=mynet0,ifname=tap0,script=no,downscript=no ' \
     '-device e1000,netdev=mynet0,mac=52:55:00:d1:55:01 ' \
