@@ -29,9 +29,13 @@ wait_for_line () {
 echo "❕ Running QEMU in the background..."
 eval "$QEMU_CMDLINE" &
 
-echo "❕ Waiting for 'Hit any key to stop autoboot'..."
-wait_for_line "Hit any key to stop autoboot" /tmp/guest.out
-echo "✅ Got 'Hit any key to stop autoboot'"
+echo "❕ Waiting for 'bootloader version'..."
+wait_for_line "bootloader version" /tmp/guest.out
+echo "✅ Got 'bootloader version'"
+
+echo "❕ Waiting for 'Echoing input now'..."
+wait_for_line "Echoing input now" /tmp/guest.out
+echo "✅ Got 'Echoing input now'"
 
 echo "✅ All expected output achieved!"
 rm -f /tmp/{guest,host}.{in,out}
