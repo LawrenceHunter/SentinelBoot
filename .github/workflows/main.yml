@@ -52,9 +52,25 @@ jobs:
           make geiger || true
           cat .github/workflows/geiger.md >> $GITHUB_STEP_SUMMARY
 
-  tftp:
+  vf2_tftp:
     needs: build
     runs-on: [self-hosted, vf2]
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          make
+          mv bootloader.img /tftpboot/boot
+          cp tftp/* /tftpboot/boot
+          cd /tftpboot/boot
+          chmod +x *.sh
+          ./mkimage.sh
+          ./power_vf2.sh off && ./power_vf2.sh on
+          timeout 5m python3 vf2_tftp.py
+          ./power_vf2.sh off
+
+  sp4_tftp:
+    needs: build
+    runs-on: [self-hosted, sp4]
     steps:
       - uses: actions/checkout@v3
       - run: |
