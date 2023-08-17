@@ -179,10 +179,10 @@ test: $(LOADER_BIN)
 call_stack:
 ifeq ($(DOCKER),y)
 	$(DOCKER_CMD) cargo +nightly call-stack --bin bootloader --features \
-	visionfive --target riscv64gc-unknown-none-elf > cg.dot ; \
+	$(BSP) --target riscv64gc-unknown-none-elf > cg.dot ; \
 	dot -Tsvg cg.dot > cg.svg && rm cg.dot
 else
-	cargo +nightly call-stack --bin bootloader --features visionfive --target \
+	cargo +nightly call-stack --bin bootloader --features $(BSP) --target \
 	riscv64gc-unknown-none-elf > cg.dot ; dot -Tsvg cg.dot > cg.svg && rm cg.dot
 endif
 
@@ -193,10 +193,10 @@ geiger:
 	echo "# Safety Report" > .github/workflows/geiger.md
 ifeq ($(DOCKER),y)
 	$(DOCKER_CMD) cargo geiger --target riscv64gc-unknown-none-elf --features \
-	visionfive --output-format GitHubMarkdown --update-readme \
+	$(BSP) --output-format GitHubMarkdown --update-readme \
 	--readme-path .github/workflows/geiger.md
 else
-	cargo geiger --target riscv64gc-unknown-none-elf --features visionfive \
+	cargo geiger --target riscv64gc-unknown-none-elf --features $(BSP) \
 	--output-format GitHubMarkdown --update-readme \
 	--readme-path .github/workflows/geiger.md
 endif
