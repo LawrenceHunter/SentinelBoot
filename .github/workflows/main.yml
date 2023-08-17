@@ -45,7 +45,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: |
-          make
+          BSP=visionfive make
           mv bootloader.img /tftpboot/boot
           cp tftp/* /tftpboot/boot
           cd /tftpboot/boot
