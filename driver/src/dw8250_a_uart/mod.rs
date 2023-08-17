@@ -1,29 +1,27 @@
-//! NS16550A UART driver.
+//! DW8250 UART driver.
 use core::fmt;
 pub use riscv64::nop;
 use synchronisation::interface::Mutex;
 use tock_registers::{
     interfaces::{Readable, Writeable},
     register_bitfields, register_structs,
-    registers::{Aliased, ReadWrite},
+    registers::{Aliased, ReadWrite, WriteOnly},
 };
 
 //--------------------------------------------------------------------------------------------------
 // Private Definitions
 //--------------------------------------------------------------------------------------------------
 
-// NS16550A
+// DW8250
 register_bitfields! {
-    u8,
-
+    u32,
     // Receiver Buffer Register
     RB_RH_R [
         DATA OFFSET(0) NUMBITS(8) [],
     ],
-
     // Interrupt Enable Register
     IER [
-        // Recieved data available
+        // Received data available
         ERBFI OFFSET(0) NUMBITS(1) [
             Disabled = 0,
             Enabled = 1
@@ -33,7 +31,7 @@ register_bitfields! {
             Disabled = 0,
             Enabled = 1
         ],
-        // Receiever line status
+        // Receiver line status
         ELSI OFFSET(2) NUMBITS(1) [
             Disabled = 0,
             Enabled = 1
@@ -45,20 +43,43 @@ register_bitfields! {
         ],
         DIVISOR_LATCH_MS OFFSET(0) NUMBITS(8) []
     ],
-
-    // // Interrupt Ident Register
-    // IIR [
-    // ],
-
     // FIFO Control Register
     FCR [
         // Enable FIFOs
         FEN OFFSET(0) NUMBITS(1) [
             FifosDisabled = 0,
             FifosEnabled = 1
+        ],
+        // Reset receiver FIFO
+        RRFIFO OFFSET(1) NUMBITS(1) [
+            ResetLow = 0,
+            ResetHigh = 1
+        ],
+        // Reset transmitter FIFO
+        RTFIFO OFFSET(2) NUMBITS(1) [
+            ResetLow = 0,
+            ResetHigh = 1
+        ],
+        // Set DMA mode
+        DMA OFFSET(3) NUMBITS(1) [
+            SingleTransfer = 0,
+            MultipleTransfer = 1
+        ],
+        // Set Transmit FIFO trigger level
+        TFIFOTL OFFSET(4) NUMBITS(2) [
+            OneChar = 0b00,
+            FourChars = 0b01,
+            EightChars = 0b10,
+            FourteenChars = 0b11
+        ],
+        // Set Receive FIFO trigger level
+        RFIFOTL OFFSET(6) NUMBITS(2) [
+            OneChar = 0b00,
+            FourChars = 0b01,
+            EightChars = 0b10,
+            FourteenChars = 0b11
         ]
     ],
-
     // Line control Register
     LCR [
         // Word length
@@ -69,67 +90,64 @@ register_bitfields! {
             SevenBit = 0b10,
             EightBit = 0b11
         ],
-
+        // Set number of stop bits
+        STPB OFFSET(2) NUMBITS(1) [
+            OneBit = 0,
+            TwoBit = 1,
+        ],
+        // Set number of parity bits
+        PARE OFFSET(3) NUMBITS(1) [
+            Disabled = 0,
+            Enabled = 1,
+        ],
+        // Set parity mode
+        EPAR OFFSET(4) NUMBITS(1) [
+            Odd = 0,
+            Even = 1,
+        ],
+        // Divisor Latch Access Bit
+        BREAK OFFSET(6) NUMBITS(1) [
+            NULL = 0,
+            Force = 1
+        ],
         // Divisor Latch Access Bit
         DLAB OFFSET(7) NUMBITS(1) [
             Disabled = 0,
             Enabled = 1
         ]
     ],
-
-    // // Modem Control Register
-    // MCR [
-    //     // Receive enable
-    //     RXE OFFSET(9) NUMBITS(1) [
-    //         Disabled = 0,
-    //         Enabled = 1
-    //     ],
-
-    //     // Transmit enable
-    //     TXE OFFSET(8) NUMBITS(1) [
-    //         Disabled = 0,
-    //         Enabled = 1
-    //     ],
-
-    //     // UART enable
-    //     UARTEN OFFSET(0) NUMBITS(1) [
-    //         Disabled = 0,
-    //         Enabled = 1
-    //     ]
-    // ],
-
     // Line Status Register
     LSR [
         // Data ready
         DR OFFSET(0) NUMBITS(1) [
             Disabled = 0,
             Enabled = 1
+        ],
+        // Transmitter Holding Register Empty
+        THRE OFFSET(5) NUMBITS(1) [
+            Full = 0,
+            Empty = 1
+        ],
+        // THR and TSR empty
+        TE OFFSET(6) NUMBITS(1) [
+            Full = 0,
+            Empty = 1
         ]
-    ],
-
-    // // MODEM Status Register
-    // MSR [
-
-    // ],
-
-    // // Scratch Register
-    // SCR [
-
-    // ],
+    ]
 }
 
-// Generates dscriptor block of register types, addresses, and names
+// Generates descriptor block of register types, addresses, and names
 register_structs! {
     /// Descriptor block of register types, addresses, and names
     #[allow(non_snake_case)]
     pub RegisterBlock {
-        (0x00 => RB_RH_R: Aliased<u8, RB_RH_R::Register>),
-        (0x01 => IER: ReadWrite<u8, IER::Register>),
-        (0x02 => FCR: Aliased<u8, FCR::Register>),
-        (0x03 => LCR: ReadWrite<u8, LCR::Register>),
-        (0x04 => _reserved0),
-        (0x05 => LSR: ReadWrite<u8, LSR::Register>),
-        (0x06 => @END),
+        (0x00 => RB_RH_R: Aliased<u32, RB_RH_R::Register>),
+        (0x04 => IER: ReadWrite<u32, IER::Register>),
+        (0x08 => FCR: WriteOnly<u32, FCR::Register>),
+        (0x0c => LCR: ReadWrite<u32, LCR::Register>),
+        (0x10 => _reserved0),
+        (0x14 => LSR: ReadWrite<u32, LSR::Register>),
+        (0x18 => @END),
     }
 }
 
@@ -142,7 +160,7 @@ enum BlockingMode {
     NonBlocking,
 }
 
-struct NS16550AUartInner {
+struct DW8250UartInner {
     registers: Registers,
     chars_written: usize,
     chars_read: usize,
@@ -153,15 +171,15 @@ struct NS16550AUartInner {
 //--------------------------------------------------------------------------------------------------
 
 /// Representation of the UART.
-pub struct NS16550AUart {
-    inner: synchronisation::NullLock<NS16550AUartInner>,
+pub struct DW8250Uart {
+    inner: synchronisation::NullLock<DW8250UartInner>,
 }
 
 //--------------------------------------------------------------------------------------------------
 // Private Code
 //--------------------------------------------------------------------------------------------------
 
-impl NS16550AUartInner {
+impl DW8250UartInner {
     pub const unsafe fn new(mmio_start_addr: usize) -> Self {
         Self {
             registers: Registers::new(mmio_start_addr),
@@ -174,46 +192,23 @@ impl NS16550AUartInner {
     pub fn init(&mut self) {
         // Ensure all pending chars are transmitted
         self.flush();
-
-        // Set line control register (LCR) word length to 8 bit
-        self.registers.LCR.write(LCR::WLEN::EightBit);
-
-        // Enable FIFO
-        self.registers.FCR.set(FCR::FEN::FifosEnabled.value);
-
-        // Enable receiver buffer interrupts
-        self.registers.IER.write(IER::ERBFI::Enabled);
-
-        // Set Divisor Latch Access Bit
-        self.registers
-            .LCR
-            .write(LCR::WLEN::EightBit + LCR::DLAB::Enabled);
-
-        // Write DLL and DLM
-        self.registers.RB_RH_R.set(0x01);
-        self.registers.IER.write(IER::DIVISOR_LATCH_MS.val(0x00));
-
-        // Unset Divisor Latch Access Bit
-        self.registers
-            .LCR
-            .write(LCR::WLEN::EightBit + LCR::DLAB::Disabled);
     }
 
     /// Send a char
     fn write_char(&mut self, c: char) {
         // Spin while TX FIFO full is set
-        while self.registers.IER.matches_all(IER::ETBEI::Enabled) {
+        while self.registers.LSR.read(LSR::THRE) == 0 {
             nop();
         }
 
-        self.registers.RB_RH_R.set(c as u8);
+        self.registers.RB_RH_R.set(c as u32);
         self.chars_written += 1;
     }
 
     /// Writes all buffered chars
     fn flush(&self) {
-        // spin until the busy bit is cleared
-        while self.registers.IER.matches_all(IER::ETBEI::Enabled) {
+        // spin until the Transmission Holding Register Empty bit is cleared
+        while self.registers.LSR.matches_all(LSR::THRE::Full) {
             nop();
         }
     }
@@ -223,27 +218,32 @@ impl NS16550AUartInner {
         &mut self,
         blocking_mode: BlockingMode,
     ) -> Option<char> {
-        if self.registers.LSR.is_set(LSR::DR) {
+        if !self.registers.LSR.is_set(LSR::DR) {
             if blocking_mode == BlockingMode::NonBlocking {
                 return None;
             }
 
-            while self.registers.IER.matches_all(IER::ERBFI::Disabled) {
+            while !self.registers.LSR.is_set(LSR::DR) {
                 nop();
             }
         }
-        let mut ret = self.registers.RB_RH_R.get() as char;
-        // Convert \r -> \n
-        if ret == '\r' {
-            ret = '\n'
+        let ret = char::from_u32(self.registers.RB_RH_R.get());
+
+        match ret {
+            Some(mut x) => {
+                if x == '\r' {
+                    x = '\n'
+                }
+                self.chars_read += 1;
+                return Some(x);
+            }
+            None => return None,
         }
-        self.chars_read += 1;
-        Some(ret)
     }
 }
 
 /// Allows writing formatted strings to UART
-impl fmt::Write for NS16550AUartInner {
+impl fmt::Write for DW8250UartInner {
     /// Writes each char in string to UART
     fn write_str(&mut self, s: &str) -> fmt::Result {
         for c in s.chars() {
@@ -257,17 +257,17 @@ impl fmt::Write for NS16550AUartInner {
 // Public Code
 //--------------------------------------------------------------------------------------------------
 
-/// Implemenets struct for UART
-impl NS16550AUart {
-    /// Driver firendly name
-    pub const NAME: &'static str = "NS16550A UART";
+/// Implements struct for UART
+impl DW8250Uart {
+    /// Driver friendly name
+    pub const NAME: &'static str = "DW8250 (UART)";
 
     /// Instantiates new UART driver with given address
     /// # Safety
     /// Caller must ensure mmio start address is valid for the target hardware
     pub const unsafe fn new(mmio_start_addr: usize) -> Self {
         Self {
-            inner: synchronisation::NullLock::new(NS16550AUartInner::new(
+            inner: synchronisation::NullLock::new(DW8250UartInner::new(
                 mmio_start_addr,
             )),
         }
@@ -278,9 +278,9 @@ impl NS16550AUart {
 // OS Interface Code
 //------------------------------------------------------------------------------
 
-/// Implementes DeviceDriver trait for UART
-impl super::interface::DeviceDriver for NS16550AUart {
-    /// Returns a reference to the driver's friednly name
+/// Implements DeviceDriver trait for UART
+impl super::interface::DeviceDriver for DW8250Uart {
+    /// Returns a reference to the driver's friendly name
     fn name(&self) -> &'static str {
         Self::NAME
     }
@@ -292,7 +292,7 @@ impl super::interface::DeviceDriver for NS16550AUart {
     }
 }
 
-impl console::interface::Write for NS16550AUart {
+impl console::interface::Write for DW8250Uart {
     // Pass through 'args' to 'core::fmt::Write' implementation
     // but guarded by a Mutex to serialise access
     fn write_char(&self, c: char) {
@@ -310,7 +310,7 @@ impl console::interface::Write for NS16550AUart {
     }
 }
 
-impl console::interface::Read for NS16550AUart {
+impl console::interface::Read for DW8250Uart {
     /// Blocking reads char from UART guarded by mutex
     fn read_char(&self) -> char {
         self.inner.lock(|inner| {
@@ -328,7 +328,7 @@ impl console::interface::Read for NS16550AUart {
     }
 }
 
-impl console::interface::Statistics for NS16550AUart {
+impl console::interface::Statistics for DW8250Uart {
     /// Returns the characters written statistic guarded by mutex
     fn chars_written(&self) -> usize {
         self.inner.lock(|inner| inner.chars_written)
@@ -340,4 +340,4 @@ impl console::interface::Statistics for NS16550AUart {
     }
 }
 
-impl console::interface::All for NS16550AUart {}
+impl console::interface::All for DW8250Uart {}

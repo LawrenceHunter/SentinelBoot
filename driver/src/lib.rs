@@ -7,11 +7,12 @@ mod virt16550_a_uart;
 
 #[cfg(feature = "qemu")]
 pub use virt16550_a_uart::*;
-#[cfg(feature = "visionfive")]
-mod ns16550_a_uart;
 
 #[cfg(feature = "visionfive")]
-pub use ns16550_a_uart::*;
+mod dw8250_a_uart;
+
+#[cfg(feature = "visionfive")]
+pub use dw8250_a_uart::*;
 
 #[cfg(feature = "unmatched")]
 mod unmatched_uart;
