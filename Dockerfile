@@ -22,6 +22,7 @@ RUN rustup +nightly component add rust-src
 RUN rustup component add llvm-tools-preview
 RUN rustup component add clippy
 RUN cargo install -j1 hyperfine
+RUN cargo install -j1 cargo-expand
 RUN apt update -y && \
     apt install -y qemu-system make wget graphviz python3-pip && \
     apt clean

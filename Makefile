@@ -223,3 +223,13 @@ ifeq ($(DOCKER),y)
 else
 	hyperfine --warmup 1 --show-output --export-markdown test.md ./.github/workflows/qemu_test.sh
 endif
+
+##------------------------------------------------------------------------------
+## Execute cargo expand
+##------------------------------------------------------------------------------
+hyperfine:
+ifeq ($(DOCKER),y)
+	$(DOCKER_CMD) cargo expand --target riscv64gc-unknown-none-elf --features $(BSP)
+else
+	cargo expand --target riscv64gc-unknown-none-elf --features $(BSP)
+endif
