@@ -24,36 +24,23 @@ jobs:
       - uses: actions/checkout@v3
       - run: make test
 
-  clippy:
-    needs: build
-    runs-on: self-hosted
-    steps:
-      - uses: actions/checkout@v3
-      - run: make clippy
-
-  Doc:
-    needs: build
-    runs-on: self-hosted
-    steps:
-      - uses: actions/checkout@v3
-      - run: make doc
-      - run: tar -zcvf doc.tar.gz target/riscv64gc-unknown-none-elf/doc/
-      - uses: actions/upload-artifact@v3
-        with:
-          name: docs
-          path: ./doc.tar.gz
-
-  Geiger:
-    needs: build
-    runs-on: self-hosted
+  qemu_tftp:
+    needs: test
+    runs-on: [self-hosted, qemu]
     steps:
       - uses: actions/checkout@v3
       - run: |
-          make geiger || true
-          cat .github/workflows/geiger.md >> $GITHUB_STEP_SUMMARY
+          make
+          mv bootloader.img /tftpboot/boot
+          cp tftp/* /tftpboot/boot
+          cd /tftpboot/boot
+          chmod +x *.sh
+          cd /tftpboot/boot
+          ./mkimage.sh
+          timeout 5m ./qemu_tftp.sh
 
-  tftp:
-    needs: build
+  vf2_tftp:
+    needs: qemu_tftp
     runs-on: [self-hosted, vf2]
     steps:
       - uses: actions/checkout@v3
@@ -68,23 +55,8 @@ jobs:
           timeout 5m python3 vf2_tftp.py
           ./power_vf2.sh off
 
-  qemu_tftp:
-    needs: build
-    runs-on: [self-hosted, qemu]
-    steps:
-      - uses: actions/checkout@v3
-      - run: |
-          make
-          mv bootloader.img /tftpboot/boot
-          cp tftp/* /tftpboot/boot
-          cd /tftpboot/boot
-          chmod +x *.sh
-          cd /tftpboot/boot
-          ./mkimage.sh
-          timeout 5m ./qemu_tftp.sh
-
   hyperfine:
-    needs: build
+    needs: vf2_tftp
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
@@ -92,3 +64,31 @@ jobs:
           make
           make hyperfine
           cat test.md >> $GITHUB_STEP_SUMMARY
+
+  clippy:
+    needs: vf2_tftp
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v3
+      - run: make clippy
+
+  Doc:
+    needs: vf2_tftp
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v3
+      - run: make doc
+      - run: tar -zcvf doc.tar.gz target/riscv64gc-unknown-none-elf/doc/
+      - uses: actions/upload-artifact@v3
+        with:
+          name: docs
+          path: ./doc.tar.gz
+
+  Geiger:
+    needs: vf2_tftp
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          make geiger || true
+          cat .github/workflows/geiger.md >> $GITHUB_STEP_SUMMARY
