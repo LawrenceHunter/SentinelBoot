@@ -9,7 +9,15 @@
 
 use core::arch::global_asm;
 // Assembly counterpart to this file.
+#[cfg(feature = "qemu")]
 global_asm!(include_str!("boot.s"));
+
+#[cfg(feature = "visionfive")]
+global_asm!(include_str!("boot-u-boot.s"));
+
+#[cfg(feature = "unmatched")]
+global_asm!(include_str!("boot-u-boot.s"));
+
 global_asm!(include_str!("trap.s"));
 
 //--------------------------------------------------------------------------------------------------
