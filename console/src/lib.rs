@@ -90,8 +90,11 @@ macro_rules! print {
 /// Prints with a newline.
 #[macro_export]
 macro_rules! println {
-    () => ($crate::print!("\n"));
+    () => {
+        $crate::print!("\r\n")
+    };
     ($($arg:tt)*) => ({
+        $crate::print!("\r");
         $crate::_print(format_args_nl!($($arg)*));
     })
 }
