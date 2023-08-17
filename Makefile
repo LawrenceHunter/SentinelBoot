@@ -18,6 +18,7 @@ ifeq ($(BSP),qemu)
     OBJDUMP_BINARY    = $(TOOLCHAIN)objdump
     NM_BINARY         = $(TOOLCHAIN)nm
     READELF_BINARY    = $(TOOLCHAIN)readelf
+	LD_PATH			  = riscv64/src/cpu/bootloader-raw.ld
 endif
 
 ifeq ($(BSP),visionfive)
@@ -28,6 +29,7 @@ ifeq ($(BSP),visionfive)
     OBJDUMP_BINARY    = $(TOOLCHAIN)objdump
     NM_BINARY         = $(TOOLCHAIN)nm
     READELF_BINARY    = $(TOOLCHAIN)readelf
+	LD_PATH           = riscv64/src/cpu/bootloader-u-boot.ld
 endif
 
 ##-----------------------------------------------------------------------------
@@ -79,6 +81,7 @@ $(LAST_BUILD_CONFIG):
 ## Compile the bootloader ELF
 ##------------------------------------------------------------------------------
 $(LOADER_ELF): $(LOADER_ELF_DEPS)
+	cp $(LD_PATH) ./bootloader.ld
 ifeq ($(DOCKER),y)
 	$(call color_header, "Compiling bootloader ELF - $(BSP)")
 	$(DOCKER_CMD) python3 gen_helper.py
@@ -88,6 +91,7 @@ else
 	python3 gen_helper.py
 	$(RUSTC_CMD)
 endif
+	rm ./bootloader.ld
 ##------------------------------------------------------------------------------
 ## Generate the stripped bootloader binary
 ##------------------------------------------------------------------------------
