@@ -29,13 +29,13 @@ wait_for_line () {
 echo "❕ Running QEMU in the background..."
 eval "$QEMU_CMDLINE" &
 
-echo "❕ Waiting for 'bootloader version'..."
-wait_for_line "bootloader version" /tmp/guest.out
-echo "✅ Got 'bootloader version'"
+echo "❕ Waiting for 'OpenThesis version'..."
+wait_for_line "OpenThesis version" /tmp/guest.out
+echo "✅ Got 'OpenThesis version'"
 
-echo "❕ Waiting for 'Echoing input now'..."
-wait_for_line "Echoing input now" /tmp/guest.out
-echo "✅ Got 'Echoing input now'"
+echo "❕ Waiting for 'Drivers loaded'..."
+wait_for_line "Drivers loaded" /tmp/guest.out
+echo "✅ Got 'Drivers loaded'"
 
 echo "✅ All expected output achieved!"
 rm -f /tmp/{guest,host}.{in,out}

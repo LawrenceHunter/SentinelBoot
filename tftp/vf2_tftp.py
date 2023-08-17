@@ -6,10 +6,14 @@ tests = [("❕ Waiting for 'Hit any key to stop autoboot'...",
           "✅ Got 'Hit any key to stop autoboot'",
           "".encode(),
           "Hit any key to stop autoboot"),
-          ("❕ Waiting for 'Echoing input now'...",
-          "✅ Got 'Echoing input now'",
+          ("❕ Waiting for 'OpenThesis version'...",
+          "✅ Got 'OpenThesis version'",
           "".encode(),
-          "Echoing input now")]
+          "OpenThesis version"),
+          ("❕ Waiting for 'Drivers loaded'...",
+          "✅ Got 'Drivers loaded'",
+          "".encode(),
+          "Drivers loaded")]
 
 test = 0
 
