@@ -1,8 +1,11 @@
 # trap.S
-# Assembly-level trap handler.
+# In the future our trap vector will go here.
 
+.section .text
 .global asm_trap_vector
+# This will be our trap vector when we start
+# handling interrupts.
+.align 4
 asm_trap_vector:
-    # We get here when the CPU is interrupted
-	# for any reason.
-    mret
+	wfi
+	j asm_trap_vector
