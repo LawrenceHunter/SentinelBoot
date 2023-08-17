@@ -15,3 +15,10 @@ mod bsp;
 
 #[cfg(feature = "visionfive")]
 pub use bsp::*;
+
+#[cfg(feature = "unmatched")]
+#[path = "unmatched/mod.rs"]
+mod bsp;
+
+#[cfg(feature = "unmatched")]
+pub use bsp::*;

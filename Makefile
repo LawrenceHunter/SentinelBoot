@@ -32,6 +32,18 @@ ifeq ($(BSP),visionfive)
 	LD_PATH           = riscv64/src/cpu/bootloader-u-boot.ld
 endif
 
+ifeq ($(BSP),unmatched)
+    LOADER_BIN        = bootloader.img
+    QEMU_BINARY       = qemu-system-riscv64
+    QEMU_MACHINE_TYPE = sifive_u
+    QEMU_RELEASE_ARGS = -cpu rv64 -smp 4 -m 128M
+    OBJDUMP_BINARY    = $(TOOLCHAIN)objdump
+    NM_BINARY         = $(TOOLCHAIN)nm
+    READELF_BINARY    = $(TOOLCHAIN)readelf
+	LD_PATH			  = riscv64/src/cpu/bootloader-u-boot.ld
+endif
+
+
 ##-----------------------------------------------------------------------------
 ## Targets and Prerequisites
 ##-----------------------------------------------------------------------------

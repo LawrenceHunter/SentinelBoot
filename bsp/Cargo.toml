@@ -13,3 +13,4 @@ console = { path = "../console", version = "*"  }
 default = []
 qemu = ["driver/qemu"]
 visionfive = ["driver/visionfive"]
+unmatched = ["driver/unmatched"]
