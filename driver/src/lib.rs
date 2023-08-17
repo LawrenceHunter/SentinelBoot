@@ -2,6 +2,11 @@
 #![no_std]
 #![feature(format_args_nl)]
 
+#[cfg(feature = "qemu")]
+mod virt16550_a_uart;
+
+#[cfg(feature = "qemu")]
+pub use virt16550_a_uart::*;
 #[cfg(feature = "visionfive")]
 mod ns16550_a_uart;
 
