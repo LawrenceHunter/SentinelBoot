@@ -13,3 +13,8 @@ pub fn board_name() -> &'static str {
         "QEMU"
     }
 }
+
+/// Output board information
+pub fn print_info() {
+    console::println!("\tNAME: {}", crate::board_name());
+}

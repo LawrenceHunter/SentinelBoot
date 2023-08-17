@@ -58,7 +58,7 @@ fn loader_main() -> ! {
         crate::helper::SHA
     );
 
-    println!("[1] Booting on: {}", bsp::board_name());
+    bsp::print_info();
 
     println!("[2] Drivers loaded:");
     driver::driver_manager().enumerate();
