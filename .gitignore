@@ -17,3 +17,4 @@ Cargo.lock
 *.svg
 
 .github/workflows/*.md
+src/helper.rs

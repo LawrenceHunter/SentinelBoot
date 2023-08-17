@@ -34,5 +34,5 @@ members = ["bsp", "riscv64", "synchronisation", "console", "driver"]
 
 [features]
 default = []
-emu = ["bsp/qemu", "driver/qemu"]
+qemu = ["bsp/qemu", "driver/qemu"]
 visionfive = ["bsp/visionfive", "driver/visionfive"]

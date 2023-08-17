@@ -15,8 +15,8 @@
 #![no_std]
 
 mod cpu;
-mod panic_wait;
 mod helper;
+mod panic_wait;
 use console::{console, println};
 
 /// Early init code.
@@ -27,7 +27,7 @@ use console::{console, println};
 extern "C" fn loader_init() {
     // Initialise BSP driver subsystem
     if let Err(x) = unsafe { bsp::device_driver::init() } {
-        panic!("Error intialising BSP driver subsystem: {}", x);
+        panic!("Error initialising BSP driver subsystem: {}", x);
     }
 
     // Initialise all device drivers
@@ -49,12 +49,13 @@ extern "C" fn main_hart(_hartid: usize) {
 // Main function running after early init
 fn loader_main() -> ! {
 
-    println!("{}", crate::helper::LOGO);
+    crate::helper::print_boot_logo();
 
     println!(
-        "[0] {} version {}",
+        "[0] {} version {} ({})",
         env!("CARGO_PKG_NAME"),
-        env!("CARGO_PKG_VERSION")
+        env!("CARGO_PKG_VERSION"),
+        crate::helper::SHA
     );
 
     println!("[1] Booting on: {}", bsp::board_name());

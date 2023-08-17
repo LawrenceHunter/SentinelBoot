@@ -81,9 +81,11 @@ $(LAST_BUILD_CONFIG):
 $(LOADER_ELF): $(LOADER_ELF_DEPS)
 ifeq ($(DOCKER),y)
 	$(call color_header, "Compiling bootloader ELF - $(BSP)")
+	$(DOCKER_CMD) python3 gen_helper.py
 	$(DOCKER_CMD) $(RUSTC_CMD)
 else
 	$(call color_header, "Compiling bootloader ELF - $(BSP)")
+	python3 gen_helper.py
 	$(RUSTC_CMD)
 endif
 ##------------------------------------------------------------------------------
