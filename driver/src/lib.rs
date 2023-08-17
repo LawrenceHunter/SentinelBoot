@@ -13,6 +13,12 @@ mod ns16550_a_uart;
 #[cfg(feature = "visionfive")]
 pub use ns16550_a_uart::*;
 
+#[cfg(feature = "unmatched")]
+mod unmatched_uart;
+
+#[cfg(feature = "unmatched")]
+pub use unmatched_uart::*;
+
 use synchronisation::{interface::Mutex, NullLock};
 
 //--------------------------------------------------------------------------------------------------
