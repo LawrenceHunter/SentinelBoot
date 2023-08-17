@@ -52,7 +52,7 @@ fn loader_main() -> ! {
     crate::helper::print_boot_logo();
 
     println!(
-        "[0] {} version {} ({})",
+        "{} version {} ({})",
         env!("CARGO_PKG_NAME"),
         env!("CARGO_PKG_VERSION"),
         crate::helper::SHA
@@ -60,12 +60,12 @@ fn loader_main() -> ! {
 
     bsp::print_info();
 
-    println!("[2] Drivers loaded:");
+    println!("Drivers loaded:");
     driver::driver_manager().enumerate();
 
-    println!("[3] Chars written: {}", console().chars_written());
+    println!("Chars written: {}", console().chars_written());
 
-    println!("[4] Echoing input now.");
+    println!("Echoing input now.");
 
     console().clear_rx();
     loop {
