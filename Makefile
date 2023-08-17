@@ -2,13 +2,23 @@
 ## Optional, user-provided configuration values
 ##-----------------------------------------------------------------------------
 
-BSP ?= visionfive
+BSP ?= qemu
 TOOLCHAIN ?= riscv64-unknown-elf-
 DOCKER ?= y
 
 ##-----------------------------------------------------------------------------
 ## BSP-specific configuration values
 ##-----------------------------------------------------------------------------
+
+ifeq ($(BSP),qemu)
+    LOADER_BIN        = bootloader.img
+    QEMU_BINARY       = qemu-system-riscv64
+    QEMU_MACHINE_TYPE = virt
+    QEMU_RELEASE_ARGS = -cpu rv64 -smp 4 -m 256M
+    OBJDUMP_BINARY    = $(TOOLCHAIN)objdump
+    NM_BINARY         = $(TOOLCHAIN)nm
+    READELF_BINARY    = $(TOOLCHAIN)readelf
+endif
 
 ifeq ($(BSP),visionfive)
     LOADER_BIN        = bootloader.img

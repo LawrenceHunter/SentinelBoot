@@ -11,4 +11,5 @@ console = { path = "../console", version = "*"  }
 
 [features]
 default = []
+qemu = ["driver/qemu"]
 visionfive = ["driver/visionfive"]
