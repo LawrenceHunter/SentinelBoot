@@ -1,5 +1,5 @@
 [package]
-name = "bootloader"
+name = "OpenThesis"
 version = "0.1.0"
 edition = "2021"
 
