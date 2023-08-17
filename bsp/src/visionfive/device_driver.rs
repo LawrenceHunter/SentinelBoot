@@ -1,16 +1,16 @@
 //! BSP driver support.
 
-use super::memory::map::mmio;
+use crate::memory::map::mmio;
 use core::sync::atomic::{AtomicBool, Ordering};
-use driver::{driver_manager, DeviceDriverDescriptor, NS16550AUart};
+use driver::{driver_manager, DeviceDriverDescriptor, DW8250Uart};
 
 //--------------------------------------------------------------------------------------------------
 // Global instances
 //--------------------------------------------------------------------------------------------------
 
-/// Unsafe instantiation of NS16550A UART
-static NS16550A_UART: NS16550AUart =
-    unsafe { NS16550AUart::new(mmio::NS16550A_UART_START) };
+/// Unsafe instantiation of DW8250Uart UART
+static DW8250_UART: DW8250Uart =
+    unsafe { DW8250Uart::new(mmio::DW8250_UART_START) };
 
 //--------------------------------------------------------------------------------------------------
 // Private Code
@@ -18,14 +18,14 @@ static NS16550A_UART: NS16550AUart =
 
 /// After initialisation register the output device with console
 fn post_init_uart() -> Result<(), &'static str> {
-    console::register_console(&NS16550A_UART);
+    console::register_console(&DW8250_UART);
     Ok(())
 }
 
 /// Registers UART driver with driver manager
 fn driver_uart() -> Result<(), &'static str> {
     let uart_descriptor =
-        DeviceDriverDescriptor::new(&NS16550A_UART, Some(post_init_uart));
+        DeviceDriverDescriptor::new(&DW8250_UART, Some(post_init_uart));
     driver_manager().register_driver(uart_descriptor);
     Ok(())
 }

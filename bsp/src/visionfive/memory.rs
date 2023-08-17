@@ -9,6 +9,6 @@ pub(crate) mod map {
     // Physical devices based on feature target
     #[cfg(feature = "visionfive")]
     pub mod mmio {
-        pub const NS16550A_UART_START:  usize = 0x1000_0000;
+        pub const DW8250_UART_START:  usize = 0x1000_0000;
     }
 }
