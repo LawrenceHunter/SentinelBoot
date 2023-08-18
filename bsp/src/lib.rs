@@ -9,6 +9,13 @@ mod bsp;
 #[cfg(feature = "qemu")]
 pub use bsp::*;
 
+#[cfg(feature = "qemu_tftp")]
+#[path = "qemu/mod.rs"]
+mod bsp;
+
+#[cfg(feature = "qemu_tftp")]
+pub use bsp::*;
+
 #[cfg(feature = "visionfive")]
 #[path = "visionfive/mod.rs"]
 mod bsp;

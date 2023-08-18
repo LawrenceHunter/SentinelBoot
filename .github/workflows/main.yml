@@ -30,7 +30,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: |
-          make
+          BSP=qemu_tftp make
           mv bootloader.img /tftpboot/boot
           cp tftp/* /tftpboot/boot
           cd /tftpboot/boot
