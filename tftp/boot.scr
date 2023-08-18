@@ -1,2 +1,0 @@
-tftpboot 0x80000000 bootloader.img
-go 0x80000000

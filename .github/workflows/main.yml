@@ -37,6 +37,7 @@ jobs:
           chmod +x *.sh
           cd /tftpboot/boot
           ./mkimage.sh
+          echo "tftpboot 0x80000000 bootloader.img; go 0x80000000" > boot.scr
           timeout 5m ./qemu_tftp.sh
 
   vf2_tftp:
@@ -51,6 +52,7 @@ jobs:
           cd /tftpboot/boot
           chmod +x *.sh
           ./mkimage.sh
+          echo "tftpboot 0x80300000 bootloader.img; go 0x80300000" > boot.scr
           ./power_vf2.sh off && ./power_vf2.sh on
           timeout 5m python3 vf2_tftp.py
           ./power_vf2.sh off
