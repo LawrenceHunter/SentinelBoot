@@ -8,10 +8,7 @@ pub mod memory;
 
 /// Returns the board name based on enabled features
 pub fn board_name() -> &'static str {
-    #[cfg(feature = "qemu")]
-    {
-        "QEMU"
-    }
+    "QEMU"
 }
 
 /// Output board information

@@ -8,6 +8,12 @@ mod virt16550_a_uart;
 #[cfg(feature = "qemu")]
 pub use virt16550_a_uart::*;
 
+#[cfg(feature = "qemu_tftp")]
+mod virt16550_a_uart;
+
+#[cfg(feature = "qemu_tftp")]
+pub use virt16550_a_uart::*;
+
 #[cfg(feature = "visionfive")]
 mod dw8250_a_uart;
 

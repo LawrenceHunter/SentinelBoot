@@ -6,6 +6,7 @@ edition = "2021"
 [features]
 default = []
 qemu = []
+qemu_tftp = []
 visionfive = []
 unmatched = []
 
