@@ -9,13 +9,13 @@ rm -f /tmp/{guest,host}.{in,out} && mkfifo /tmp/{guest,host}.{in,out}
 set +x
 
 printf -v QEMU_CMDLINE '%s' 'qemu-system-riscv64 -serial pipe:/tmp/guest ' \
-'-M virt -cpu rv64 -smp 4 -m 128M -nographic -bios none -kernel bootloader.img'
+'-M virt -cpu rv64 -smp 4 -m 256M -nographic -bios none -kernel bootloader.img'
 
 wait_for_line () {
     local expected_line_pattern="$1"
     local fifo="$2"
     while read -r line; do
-        echo "  [$(date +"%T")] $line"
+        echo "$line"
         if [[ $line == *$expected_line_pattern* ]]; then
             break
         fi

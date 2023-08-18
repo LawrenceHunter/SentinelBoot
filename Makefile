@@ -74,7 +74,7 @@ FEATURES      = --features $(BSP)
 COMPILER_ARGS = $(FEATURES) --release
 
 RUSTC_CMD   = cargo rustc $(COMPILER_ARGS)
-DOC_CMD     = cargo doc $(COMPILER_ARGS) --all-features \
+DOC_CMD     = cargo doc $(COMPILER_ARGS) --features $(BSP) \
 				--document-private-items --workspace
 CLIPPY_CMD  = cargo clippy $(COMPILER_ARGS) -- -A clippy::modulo_one
 OBJCOPY_CMD = rust-objcopy -O binary
@@ -246,15 +246,19 @@ endif
 ##------------------------------------------------------------------------------
 hyperfine:
 ifeq ($(DOCKER),y)
+	$(DOCKER_CMD) touch test.md
 	$(DOCKER_CMD) hyperfine --warmup 1 --show-output --export-markdown test.md ./.github/workflows/qemu_test.sh
+	$(DOCKER_CMD) cat test.md
 else
+	touch test.md
 	hyperfine --warmup 1 --show-output --export-markdown test.md ./.github/workflows/qemu_test.sh
+	cat test.md
 endif
 
 ##------------------------------------------------------------------------------
 ## Execute cargo expand
 ##------------------------------------------------------------------------------
-hyperfine:
+expand:
 ifeq ($(DOCKER),y)
 	$(DOCKER_CMD) cargo expand --target riscv64gc-unknown-none-elf --features $(BSP)
 else

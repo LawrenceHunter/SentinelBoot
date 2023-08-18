@@ -18,3 +18,4 @@ Cargo.lock
 
 .github/workflows/*.md
 src/helper.rs
+test.md
