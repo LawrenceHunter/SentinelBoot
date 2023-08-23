@@ -17,7 +17,8 @@
 mod cpu;
 mod helper;
 mod panic_wait;
-use console::{console, println};
+use console::println;
+use global_allocator::Allocator;
 
 /// Early init code.
 ///
@@ -43,13 +44,16 @@ extern "C" fn loader_init() {
 #[no_mangle]
 extern "C" fn main_hart(_hartid: usize) {
     // We aren't going to do anything here until we get SMP going.
-    // All non-0 harts initialize here.
+    // All non-0 harts initialise here.
 }
 
 // Main function running after early init
 fn loader_main() -> ! {
-
+    // ########################################################################
+    // ENSURE THESE LINES ARE FIRST
     crate::helper::print_boot_logo();
+    Allocator::init();
+    // ########################################################################
 
     println!(
         "{} version {} ({})",

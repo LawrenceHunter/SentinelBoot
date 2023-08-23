@@ -20,13 +20,14 @@ riscv64 = { path = "riscv64", version = "*"  }
 synchronisation = { path = "synchronisation", version = "*"  }
 console = { path = "console", version = "*"  }
 driver = { path = "driver", version = "*"  }
+global_allocator = { path = "global_allocator", version = "*" }
 
 ##--------------------------------------------------------------------------------------------------
 ## Workspace
 ##--------------------------------------------------------------------------------------------------
 
 [workspace]
-members = ["bsp", "riscv64", "synchronisation", "console", "driver"]
+members = ["bsp", "riscv64", "synchronisation", "console", "driver", "global_allocator"]
 
 ##--------------------------------------------------------------------------------------------------
 ## Features
