@@ -5,16 +5,21 @@ def generate_header():
 
 def generate_boot_logo():
     # Fonts: http://www.figlet.org/examples.html
-    logo = pyfiglet.figlet_format("OpenThesis", font="larry3d", width=80)
+    logo = pyfiglet.figlet_format("OpenThesis", font="larry3d", width=80).split("\n")
     text = "pub fn print_boot_logo() {\n"
-    for line in logo.split("\n"):
+    for line in logo:
         text += f"\tprintln!(r\"{line}\");\n"
     text += "}"
     return text
 
 def generate_version():
     sha = subprocess.check_output(["git", "rev-parse", "--short=8", "HEAD"]).decode().strip()
-    return f"pub const SHA: &str = \"{sha}\";\n"
+    dirty = ""
+    try:
+        subprocess.check_call(["git", "diff", "--quiet"])
+    except subprocess.CalledProcessError:
+        dirty = "dirty"
+    return f"pub const SHA: &str = \"{sha} {dirty}\";\n"
 
 if __name__ == "__main__":
     with open("./src/helper.rs", "w") as f:
