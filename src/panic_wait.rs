@@ -38,15 +38,16 @@ fn panic(info: &PanicInfo) -> ! {
         Some(loc) => (loc.file(), loc.line(), loc.column()),
         _ => ("???", 0, 0),
     };
-
+    println!("\n\nXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX PANIC XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
     println!(
-        "Kernel panic!\n\nPanic location:\n   File '{}', line {}, column \
-         {}\n\n{}",
+        "LOCATION:\n\tFILE: '{}'\n\tLINE: {}\n\tCOLUMN: \
+         {}\n\tMESSAGE: '{}'",
         location,
         line,
         column,
         info.message().unwrap_or(&format_args!("")),
     );
+    println!("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
 
     cpu::wait_forever()
 }
