@@ -3,9 +3,12 @@
 #![feature(format_args_nl)]
 #![feature(alloc_error_handler)]
 
-use console::{logln, println};
+use alloc::string;
+use console::logln;
 use core::alloc::*;
+use core::ops::{DerefMut, Deref};
 use core::ptr::null_mut;
+use synchronisation::interface::Mutex;
 
 //--------------------------------------------------------------------------------------------------
 // Private Definitions
@@ -20,10 +23,46 @@ extern "C" {
 // Public Definitions
 //--------------------------------------------------------------------------------------------------
 
-/// Every byte is described by the Address structure
-/// This wastes 50% of storage but we can't be more precise than the address which is u16 but
-pub struct Address {
-    flags: u16,
+/// Represents if the Alloc is free or allocated
+#[repr(u8)]
+#[derive(PartialEq)]
+pub enum AllocFlags {
+    /// Currently in use
+    Allocated = 0,
+    /// Available
+    Free = 1,
+}
+
+/// Wrapper around the actual Alloc values
+pub struct AllocInner {
+    addr: usize,
+    flags: AllocFlags,
+}
+
+pub struct AllocPointer {
+    p: *mut Alloc
+}
+/// Every byte is described by the Alloc structure forming a linked list
+pub struct Alloc {
+    curr: synchronisation::NullLock<AllocInner>,
+    prev: synchronisation::NullLock<Option<AllocPointer>>,
+    next: synchronisation::NullLock<Option<AllocPointer>>,
+}
+
+unsafe impl Sync for Alloc {}
+
+impl Deref for AllocPointer {
+    type Target = Alloc;
+
+    fn deref(&self) -> &Self::Target {
+        unsafe { &*(self.p) }
+    }
+}
+
+impl DerefMut for AllocPointer {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { &mut *(self.p) }
+    }
 }
 
 /// Embedded implementation for heap memory allocation
@@ -34,82 +73,104 @@ pub struct Allocator;
 #[global_allocator]
 static GLOBAL_ALLOCATOR: Allocator = Allocator;
 
+/// The static root Alloc.
+static ROOT_ALLOC: Alloc = Alloc {
+    curr: synchronisation::NullLock::new(AllocInner { addr: HEAP_START, flags: AllocFlags::Free }),
+    prev: synchronisation::NullLock::new(None),
+    next: synchronisation::NullLock::new(None),
+};
+
 //--------------------------------------------------------------------------------------------------
 // Public Code
 //--------------------------------------------------------------------------------------------------
 
-impl Address {
-    /// Returns if the address has been marked as the final allocation
-    pub fn is_last(&self) -> bool {
-        todo!();
-        false
+/// Adds helpful function implementations
+impl AllocInner {
+    /// Sets the internal address
+    pub fn set_addr(&mut self, addr: usize) {
+        self.addr = addr;
     }
 
-    /// Returns if the address is marked as being taken (allocated)
-    pub fn is_taken(&self) -> bool {
-        todo!();
-        false
+    /// Gets the internal address
+    pub fn addr(&self) -> usize {
+        self.addr
     }
 
-    /// This is the opposite of is_taken().
-    pub fn is_free(&self) -> bool {
-        todo!();
-        false
+    /// Gets the internal flags
+    pub fn flags(&self) -> AllocFlags {
+        self.flags
     }
 
-    /// Clear the address structure and all associated allocations
-    pub fn clear(&mut self) {
-        todo!();
+    /// Sets the internal flags
+    pub fn set_flags(&mut self, flags: AllocFlags) {
+        self.flags = flags;
+    }
+}
+
+/// Implements functions to assist with memory allocation
+impl Alloc {
+    pub fn get_start_address(self) -> usize {
+        self.curr.lock(|inner| inner.addr())
     }
 
-    /// Set a certain flag
-    pub fn set_flag(&mut self, flag: AddressBits) {
-        todo!();
+    pub fn get_flags(self) -> AllocFlags {
+        self.curr.lock(|inner| inner.flags())
     }
 
-    /// Unset a certain flag
-    pub fn clear_flag(&mut self, flag: AddressBits) {
-        todo!();
+    pub fn set_address(self, addr: usize) {
+        self.curr.lock(|inner| inner.set_addr(addr));
+    }
+
+    pub fn set_flags(self, flags: AllocFlags) {
+        self.curr.lock(|inner| inner.set_flags(flags));
+    }
+
+    pub fn get_size(self) -> usize {
+        let current_address = self.curr.lock(|inner| inner.addr());
+        let mut address_width = 0;
+        if let Some(x) = self.next.lock(|inner| *(inner)) {
+            address_width = x.deref().curr.lock(|inner| inner.addr());
+        }
+        address_width - current_address
+    }
+
+    pub fn get_end_address(self) -> usize {
+        self.curr.lock(|inner| inner.addr()) + self.get_size()
+    }
+
+    pub fn set_value(self, addr: usize, value: u8) {
+        assert!(addr >= self.get_start_address() && addr < self.get_end_address());
+        unsafe { *(addr as *mut u8) = value; }
+    }
+
+    pub fn get_value(self, addr: usize) -> u8 {
+        assert!(addr >= self.get_start_address() && addr < self.get_end_address());
+        unsafe { return *(addr as *mut u8); }
+    }
+
+    pub fn get_prev(self) -> Option<AllocPointer> {
+        self.prev.lock(|inner| *(inner))
+    }
+
+    pub fn get_next(self) -> Option<AllocPointer> {
+        self.next.lock(|inner| *(inner))
     }
 }
 
 impl Allocator {
     /// Initialise the allocation system
     pub fn init() {
-        unsafe {
-            let num_addresses = HEAP_SIZE / 16;
-            let ptr = HEAP_START as *mut Address;
-            logln!(
-                "CLEARING ADDRESSES {:?} -> {:?}.",
-                ptr,
-                ptr.add(num_addresses)
-            );
-            // Clear all addresses
-            for i in 0..num_addresses {
-                todo!()
-                // (*ptr.add(i)).clear();
-            }
-            logln!("LOGGING FIRST 10 CLEARS:");
-            for i in 0..10 {
-                logln!("\tMARKED ADDRESS {:?} AS FREE", ptr.add(i));
-            }
-        }
     }
 
     /// Returns the number of addresses marked taken
-    pub fn get_alloc_count() -> u64 {
-        let mut count = 0;
-        unsafe {
-            let num_addresses = HEAP_SIZE / 16;
-            let mut start = HEAP_START as *const Address;
-            let end = start.add(num_addresses);
-            while start < end {
-                todo!();
-                // if (*start).is_taken() {
-                //     count += 1;
-                // }
-                start = start.add(1);
+    pub fn get_alloc_count() -> usize {
+        let mut temp_alloc = &ROOT_ALLOC;
+        let mut count: usize = 0;
+        while temp_alloc.get_next().is_some() {
+            if temp_alloc.get_next().unwrap().deref().get_flags() == AllocFlags::Allocated {
+                count += temp_alloc.get_next().unwrap().deref().get_size();
             }
+            temp_alloc = temp_alloc.get_next().unwrap().deref();
         }
         count
     }
@@ -124,54 +185,11 @@ unsafe impl GlobalAlloc for Allocator {
         // We have to find a contiguous allocation of bytes
         // Create a Byte structure for each byte on the heap
         let num_addresses = HEAP_SIZE / 16;
-        let ptr = HEAP_START as *mut Address;
+        let ptr = HEAP_START as *mut u8;
 
         // Each address is 16 bits so lets normalise to 16 bit chunks
         let normalised_size = layout.size();
 
-        for i in 0..num_addresses - normalised_size {
-            let mut found = false;
-            // Check if the chunk is free
-            todo!();
-            // if (*ptr.add(i)).is_free() {
-            //     found = true;
-            //     for j in i..i + normalised_size {
-            //         // Check to see if we have contiguous allocation
-            //         todo!();
-            //         // if (*ptr.add(j)).is_taken() {
-            //         //     found = false;
-            //         //     break;
-            //         // }
-            //     }
-            // }
-            if found {
-                for k in i..i + normalised_size - 1 {
-                    todo!();
-                    // (*ptr.add(k)).set_flag(AddressBits::Taken);
-                    logln!("\tMARKING {:<10?} TAKEN", ptr.add(k));
-                }
-                todo!();
-                // (*ptr.add(i + normalised_size - 1))
-                //     .set_flag(AddressBits::Taken);
-                // logln!(
-                //     "\tMARKING {:<10?} TAKEN",
-                //     ptr.add(i + normalised_size - 1)
-                // );
-                todo!();
-                // (*ptr.add(i + normalised_size - 1)).set_flag(AddressBits::Last);
-                // logln!(
-                //     "\tMARKING {:<10?} LAST",
-                //     ptr.add(i + normalised_size - 1)
-                // );
-                logln!(
-                    "ALLOCATED {:>9} BYTES: {:<10?} -> {:<10?}",
-                    layout.size(),
-                    ptr.add(i),
-                    ptr.add(i + normalised_size - 1)
-                );
-                return ptr.add(i) as *mut u8;
-            }
-        }
         // No contiguous allocation was found
         null_mut()
     }
@@ -194,20 +212,7 @@ unsafe impl GlobalAlloc for Allocator {
                 && (ptr as usize) < HEAP_START + HEAP_SIZE
         );
 
-        let mut p = ptr as *mut Address;
-
-        // Keep clearing bytes until we hit the last byte.
-        todo!();
-        // while (*p).is_taken() && !(*p).is_last() {
-        //     logln!("\tMARKING {:<10?} FREE", p);
-        //     (*p).clear();
-        //     *(p as *mut u8) = 0;
-        //     p = p.add(1);
-        // }
-        todo!();
-        // assert!((*p).is_last() == true, "Possible double-free detected!");
-        todo!();
-        // (*p).clear();
+        let mut p = ptr as *mut u8;
         logln!(
             "DEALLOCATED {:>7} BYTES: {:<10?} -> {:<10?}",
             layout.size(),
@@ -223,53 +228,11 @@ unsafe impl GlobalAlloc for Allocator {
         // We have to find a contiguous allocation of bytes
         // Create a Byte structure for each byte on the heap
         let num_addresses = HEAP_SIZE / 16;
-        let ptr = HEAP_START as *mut Address;
+        let ptr = HEAP_START as *mut u8;
 
         // Each address is 16 bits so lets normalise to 16 bit chunks
         let normalised_size = layout.size();
 
-        for i in 0..num_addresses - normalised_size {
-            let mut found = false;
-            // Check if the chunk is free
-            todo!();
-            // if (*ptr.add(i)).is_free() {
-            //     found = true;
-            //     for j in i..i + normalised_size {
-            //         // Check to see if we have contiguous allocation
-            //         if (*ptr.add(j)).is_taken() {
-            //             found = false;
-            //             break;
-            //         }
-            //     }
-            // }
-            if found {
-                for k in i..i + normalised_size - 1 {
-                    todo!();
-                    // (*ptr.add(k)).set_flag(AddressBits::Taken);
-                    *(ptr.add(k) as *mut u8) = 0;
-                    logln!("\tMARKING {:<10?} TAKEN", ptr.add(k));
-                }
-                todo();
-                // (*ptr.add(i + normalised_size - 1)).set_flag(AddressBits::TAKEN);
-                // logln!(
-                //     "\tMARKING {:<10?} TAKEN",
-                //     ptr.add(i + normalised_size - 1)
-                // );
-                // (*ptr.add(i + normalised_size - 1)).set_flag(AddressBits::Last);
-                // logln!(
-                //     "\tMARKING {:<10?} LAST",
-                //     ptr.add(i + normalised_size - 1)
-                // );
-                *(ptr.add(i + normalised_size - 1) as *mut u8) = 0;
-                logln!(
-                    "ZERO ALLOCATED {:>4} BYTES: {:<10?} -> {:<10?}",
-                    layout.size(),
-                    ptr.add(i),
-                    ptr.add(i + normalised_size - 1)
-                );
-                return ptr.add(i) as *mut u8;
-            }
-        }
         // No contiguous allocation was found
         null_mut()
     }
@@ -287,7 +250,7 @@ unsafe impl GlobalAlloc for Allocator {
             layout.size(),
             new_size
         );
-        let ptr_clone = ptr as *mut Address;
+        let ptr_clone = ptr as *mut u8;
         // Each address is 16 bits so lets normalise to 16 bit chunks
         let normalised_new_size = new_size;
 
@@ -297,129 +260,6 @@ unsafe impl GlobalAlloc for Allocator {
         // Each address is 16 bits so lets normalise to 16 bit chunks
         let normalised_diff = normalised_new_size - normalised_orig_size;
 
-        let mut end_ptr = ptr as *mut Address;
-        end_ptr = end_ptr.add(normalised_orig_size);
-
-        let mut extend = true;
-        for i in 0..normalised_diff {
-            // Check if the chunk is free
-            logln!(
-                "\tCHECKING IF ADDRESS {:?} IS MARKED FREE.",
-                end_ptr.add(i)
-            );
-            todo();
-            // if !(*end_ptr.add(i)).is_free() {
-            //     logln!("\t\tADDRESS {:?} IS MARKED TAKEN.", end_ptr.add(i));
-            //     extend = false;
-            // }
-        }
-
-        // If we can just extend the current allocation
-        if extend {
-            println!("EXTENDING:");
-            let mut i = normalised_orig_size;
-            while i < normalised_new_size - 1 {
-                todo();
-                // (*ptr_clone.add(i)).clear();
-                // (*ptr_clone.add(i)).set_flag(AddressBits::Taken);
-                *(ptr.add(i) as *mut u8) = 0;
-                logln!("\tMARKING {:<10?} TAKEN", ptr.add(i));
-                i += 1
-            }
-            todo();
-            // (*ptr_clone.add(i + normalised_new_size - 1))
-            //     .set_flag(AddressBits::Taken);
-            // (*ptr_clone.add(i + normalised_new_size - 1))
-            //     .set_flag(AddressBits::Last);
-            logln!(
-                "\tMARKING {:<10?} TAKEN",
-                ptr.add(i + normalised_new_size - 1)
-            );
-            logln!(
-                "\tMARKING {:<10?} LAST",
-                ptr.add(i + normalised_new_size - 1)
-            );
-            logln!(
-                "REALLOCATED {:>7} BYTES: {:<10?} -> {:<10?}",
-                new_size,
-                ptr_clone,
-                ptr_clone.add(i + normalised_new_size - 1)
-            );
-            return ptr_clone as *mut u8;
-        }
-        // If we have to allocate a new chunk
-        else {
-            println!("RELOCATING:");
-            let old_ptr = ptr as *mut Address;
-
-            // We have to find a contiguous allocation of bytes
-            // Create a Byte structure for each byte on the heap
-            let num_addresses = HEAP_SIZE / 16;
-            let ptr = HEAP_START as *mut Address;
-
-            for i in 0..num_addresses - normalised_new_size {
-                let mut found = false;
-                // Check if the chunk is free
-                todo();
-                // if (*ptr.add(i)).is_free() {
-                //     found = true;
-                //     for j in i..i + normalised_new_size {
-                //         // Check to see if we have contiguous allocation
-                //         if (*ptr.add(j)).is_taken() {
-                //             found = false;
-                //             break;
-                //         }
-                //     }
-                // }
-                if found {
-                    // Mark as taken
-                    for k in i..i + normalised_new_size - 1 {
-                        todo();
-                        // (*ptr.add(k)).set_flag(AddressBits::Taken);
-                        *(ptr.add(k) as *mut u8) = 0;
-                        logln!("\tMARKING {:<10?} TAKEN", ptr.add(k));
-                    }
-
-                    // Copy values from old alloc and free
-                    for k in i..i + normalised_orig_size {
-                        todo();
-                        // (*old_ptr.add(k)).clear();
-                        // logln!("\tMARKING {:<10?} FREE", old_ptr.add(k - i));
-                        *(ptr.add(k) as *mut u8) =
-                            *(old_ptr.add(k - i) as *mut u8);
-                        logln!(
-                            "\tMoving value 0x{:x} from {:?} to {:?}.",
-                            *(old_ptr.add(k - i) as *mut u8),
-                            old_ptr.add(k - i),
-                            ptr.add(k)
-                        )
-                    }
-
-                    // Set final address as last
-                    todo();
-                    // (*ptr.add(i + normalised_new_size - 1))
-                    //     .set_flag(AddressBits::Taken);
-                    // (*ptr.add(i + normalised_new_size - 1))
-                    //     .set_flag(AddressBits::Last);
-                    logln!(
-                        "\tMARKING {:<10?} TAKEN",
-                        ptr.add(i + normalised_new_size - 1)
-                    );
-                    logln!(
-                        "\tMARKING {:<10?} LAST",
-                        ptr.add(i + normalised_new_size - 1)
-                    );
-
-                    logln!(
-                        "REALLOCATED {:>7} BYTES: {:<10?} -> {:<10?}",
-                        layout.size(),
-                        ptr.add(i),
-                        ptr.add(i + normalised_new_size - 1)
-                    );
-                    return ptr.add(i) as *mut u8;
-                }
-            }
-        }
         // No contiguous allocation was found
         null_mut()
     }
