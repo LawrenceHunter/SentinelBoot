@@ -14,10 +14,13 @@
 #![no_main]
 #![no_std]
 
+extern crate alloc;
+
 mod cpu;
 mod helper;
 mod panic_wait;
-use console::println;
+use alloc::vec::Vec;
+use console::{logln, println};
 use global_allocator::Allocator;
 
 /// Early init code.
@@ -48,7 +51,7 @@ extern "C" fn main_hart(_hartid: usize) {
 }
 
 // Main function running after early init
-fn loader_main() -> ! {
+fn loader_main() {
     // ########################################################################
     // ENSURE THESE LINES ARE FIRST
     crate::helper::print_boot_logo();
@@ -67,13 +70,16 @@ fn loader_main() -> ! {
     println!("Drivers loaded:");
     driver::driver_manager().enumerate();
 
-    println!("Chars written: {}", console().chars_written());
-
-    println!("Echoing input now.");
-
-    console().clear_rx();
-    loop {
-        let c = console().read_char();
-        console().write_char(c);
+    println!("Testing memory allocation:");
+    {
+        let mut x: Vec<u8> = Vec::new();
+        for i in 0..10 as u8 {
+            x.push(i);
+            logln!("ADDRESSES ALLOCATED: {}", Allocator::get_alloc_count());
+            logln!("Vector: {:?}", x);
+        }
+        logln!("ADDRESSES ALLOCATED: {}", Allocator::get_alloc_count());
+        logln!("Vector: {:?}", x);
     }
+    logln!("ADDRESSES ALLOCATED: {}", Allocator::get_alloc_count());
 }
