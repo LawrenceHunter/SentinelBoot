@@ -4,6 +4,7 @@
 #![feature(alloc_error_handler)]
 
 use alloc::string;
+use console::interface::All;
 use console::logln;
 use core::alloc::*;
 use core::ops::{DerefMut, Deref};
@@ -45,8 +46,8 @@ pub struct AllocPointer {
 /// Every byte is described by the Alloc structure forming a linked list
 pub struct Alloc {
     curr: synchronisation::NullLock<AllocInner>,
-    prev: synchronisation::NullLock<Option<AllocPointer>>,
-    next: synchronisation::NullLock<Option<AllocPointer>>,
+    prev: Option<synchronisation::NullLock<AllocPointer>>,
+    next: Option<synchronisation::NullLock<AllocPointer>>,
 }
 
 unsafe impl Sync for Alloc {}
@@ -76,8 +77,8 @@ static GLOBAL_ALLOCATOR: Allocator = Allocator;
 /// The static root Alloc.
 static ROOT_ALLOC: Alloc = Alloc {
     curr: synchronisation::NullLock::new(AllocInner { addr: HEAP_START, flags: AllocFlags::Free }),
-    prev: synchronisation::NullLock::new(None),
-    next: synchronisation::NullLock::new(None),
+    prev: None,
+    next: None,
 };
 
 //--------------------------------------------------------------------------------------------------
@@ -128,8 +129,8 @@ impl Alloc {
     pub fn get_size(self) -> usize {
         let current_address = self.curr.lock(|inner| inner.addr());
         let mut address_width = 0;
-        if let Some(x) = self.next.lock(|inner| *(inner)) {
-            address_width = x.deref().curr.lock(|inner| inner.addr());
+        if let Some(x) = self.next {
+            address_width = x.lock(|inner| *(inner)).deref().curr.lock(|inner| inner.addr());
         }
         address_width - current_address
     }
@@ -148,12 +149,12 @@ impl Alloc {
         unsafe { return *(addr as *mut u8); }
     }
 
-    pub fn get_prev(self) -> Option<AllocPointer> {
-        self.prev.lock(|inner| *(inner))
+    pub fn get_prev(self) -> Option<synchronisation::NullLock<AllocPointer>> {
+        self.prev
     }
 
-    pub fn get_next(self) -> Option<AllocPointer> {
-        self.next.lock(|inner| *(inner))
+    pub fn get_next(self) -> Option<synchronisation::NullLock<AllocPointer>> {
+        self.next
     }
 }
 
@@ -167,10 +168,10 @@ impl Allocator {
         let mut temp_alloc = &ROOT_ALLOC;
         let mut count: usize = 0;
         while temp_alloc.get_next().is_some() {
-            if temp_alloc.get_next().unwrap().deref().get_flags() == AllocFlags::Allocated {
-                count += temp_alloc.get_next().unwrap().deref().get_size();
+            if temp_alloc.get_next().unwrap().lock(|inner| inner.deref().get_flags() == AllocFlags::Allocated) {
+                count += temp_alloc.get_next().unwrap().lock(|inner| inner.deref().get_size());
             }
-            temp_alloc = temp_alloc.get_next().unwrap().deref();
+            temp_alloc = temp_alloc.get_next().unwrap().lock(|inner| inner.deref());
         }
         count
     }
@@ -184,14 +185,52 @@ unsafe impl GlobalAlloc for Allocator {
 
         // We have to find a contiguous allocation of bytes
         // Create a Byte structure for each byte on the heap
-        let num_addresses = HEAP_SIZE / 16;
+        let num_addresses = HEAP_SIZE / 8;
         let ptr = HEAP_START as *mut u8;
 
-        // Each address is 16 bits so lets normalise to 16 bit chunks
-        let normalised_size = layout.size();
+        // Find an alloc with enough bytes which is marked free
+        let mut temp_alloc = &mut ROOT_ALLOC;
+        while ((temp_alloc.get_size() < layout.size()) | (temp_alloc.get_flags() != AllocFlags::Free)) && temp_alloc.get_next().is_some() {
+            temp_alloc = temp_alloc.get_next().unwrap().lock(|inner| inner.deref_mut());
+        }
 
-        // No contiguous allocation was found
-        null_mut()
+        // No memory was available
+        if temp_alloc.get_flags() == AllocFlags::Allocated {
+            return null_mut();
+        }
+
+        // Calculate the alloc boundary
+        let new_end = temp_alloc.get_start_address() + layout.size();
+
+        // Set the Alloc as allocated
+        temp_alloc.set_flags(AllocFlags::Allocated);
+
+        if let Some(mut x) = temp_alloc.get_next() {
+            // If the next Alloc is free let's amalgamate the space
+            if x.lock(|inner| inner.get_flags() == AllocFlags::Free) {
+                x.lock(|inner| inner.set_address(new_end));
+                return temp_alloc.get_start_address() as *mut u8;
+            }
+            // Else create a new free Alloc between
+            else {
+                let new_alloc_inner = synchronisation::NullLock::new(AllocInner {addr: new_end, flags: AllocFlags::Free});
+                let prev_pointer = Some(synchronisation::NullLock::new(AllocPointer{p: temp_alloc as *mut Alloc}));
+                let next_pointer = Some(x);
+                let mut new_alloc = Alloc {curr: new_alloc_inner, prev: prev_pointer, next: next_pointer};
+                let new_alloc_pointer = Some(synchronisation::NullLock::new(AllocPointer{p: (&mut new_alloc) as *mut Alloc}));
+                temp_alloc.next = new_alloc_pointer;
+                x.lock(|inner| inner.prev = new_alloc_pointer);
+                return new_alloc.curr.lock(|inner| inner.addr()) as *mut u8;
+            }
+        }
+
+        // If we don't have an Alloc after create a new one
+        let new_alloc_inner = synchronisation::NullLock::new(AllocInner {addr: new_end, flags: AllocFlags::Free});
+        let prev_pointer = Some(synchronisation::NullLock::new(AllocPointer{p: temp_alloc as *mut Alloc}));
+        let mut new_alloc = Alloc {curr: new_alloc_inner, prev: prev_pointer, next: None};
+        let new_alloc_pointer = Some(synchronisation::NullLock::new(AllocPointer{p: (&mut new_alloc) as *mut Alloc}));
+        temp_alloc.next = new_alloc_pointer;
+        return new_alloc.curr.lock(|inner| inner.addr()) as *mut u8;
     }
 
     /// Deallocate a byte by its pointer
