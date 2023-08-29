@@ -13,4 +13,4 @@ pub fn print_boot_logo() {
 	println!(r"              \/_/                                                           ");
 	println!(r"");
 }
-pub const SHA: &str = "dbe1c22f dirty";
+pub const SHA: &str = "0ae0d2d2 dirty";

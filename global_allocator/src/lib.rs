@@ -21,8 +21,8 @@ use synchronisation::interface::Mutex;
 // }
 
 // Temporary until I can get help with linking ^
-static HEAP_START: usize = ;
-static HEAP_SIZE: usize = ;
+static HEAP_START: usize = 0x00000000800830c8;
+static HEAP_SIZE: usize =  0x7f7cf38;
 
 //--------------------------------------------------------------------------------------------------
 // Public Definitions
@@ -83,7 +83,8 @@ static mut GLOBAL_ALLOCATOR: Allocator = Allocator;
 
 /// The static root Alloc.
 static mut ROOT_ALLOC: Alloc = Alloc {
-    curr: unsafe { synchronisation::NullLock::new(AllocInner { addr: HEAP_START, flags: AllocFlags::Free }) },
+    // curr: unsafe { synchronisation::NullLock::new(AllocInner { addr: HEAP_START, flags: AllocFlags::Free }) },
+    curr: synchronisation::NullLock::new(AllocInner { addr: HEAP_START, flags: AllocFlags::Free }),
     next: None,
 };
 
@@ -210,12 +211,16 @@ impl Allocator {
         assert!(!ptr.is_null());
 
         // Make sure that the address makes sense
-        unsafe {
-            assert!(
-                (ptr as usize) >= HEAP_START
-                    && (ptr as usize) < HEAP_START + HEAP_SIZE
-            );
-        }
+        // unsafe {
+        //     assert!(
+        //         (ptr as usize) >= HEAP_START
+        //             && (ptr as usize) < HEAP_START + HEAP_SIZE
+        //     );
+        // }
+        assert!(
+            (ptr as usize) >= HEAP_START
+                && (ptr as usize) < HEAP_START + HEAP_SIZE
+        );
 
         // Find an alloc with enough bytes which is marked free
         let mut temp_alloc = unsafe { &mut ROOT_ALLOC };
