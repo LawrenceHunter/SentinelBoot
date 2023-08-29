@@ -15,4 +15,5 @@ debug = []
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
 console = { path = "../console", version = "*"  }
+riscv64 = { path = "../riscv64", version = "*"  }
 synchronisation = { path = "../synchronisation", version = "*"  }
