@@ -75,6 +75,7 @@ fn loader_main() {
     println!("Testing memory allocation:");
      {
          let mut x: Vec<u8> = Vec::new();
+         logln!("CREATED VECTOR");
          for i in 0..10 as u8 {
              x.push(i);
              logln!("ADDRESSES ALLOCATED: {}", Allocator::get_alloc_count());
