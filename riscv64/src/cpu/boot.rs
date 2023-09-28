@@ -22,6 +22,7 @@ global_asm!(include_str!("boot-u-boot.s"));
 global_asm!(include_str!("boot-u-boot.s"));
 
 global_asm!(include_str!("trap.s"));
+global_asm!(include_str!("mem.s"));
 
 //--------------------------------------------------------------------------------------------------
 // Public Code
