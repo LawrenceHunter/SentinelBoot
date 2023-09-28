@@ -6,6 +6,7 @@ BSP ?= qemu
 TOOLCHAIN ?= riscv64-unknown-elf-
 DOCKER ?= y
 DEBUG ?= n
+CLEAR ?= y
 
 ##-----------------------------------------------------------------------------
 ## BSP-specific configuration values
@@ -110,6 +111,9 @@ $(LAST_BUILD_CONFIG):
 ## Compile the bootloader ELF
 ##------------------------------------------------------------------------------
 $(LOADER_ELF): $(LOADER_ELF_DEPS)
+ifeq ($(CLEAR),y)
+	clear
+endif
 	cp $(LD_PATH) ./bootloader.ld
 ifeq ($(DOCKER),y)
 	$(call color_header, "Compiling bootloader ELF - $(BSP)")
