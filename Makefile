@@ -5,6 +5,7 @@
 BSP ?= qemu
 TOOLCHAIN ?= riscv64-unknown-elf-
 DOCKER ?= y
+DEBUG ?= n
 
 ##-----------------------------------------------------------------------------
 ## BSP-specific configuration values
@@ -70,7 +71,12 @@ LOADER_ELF_DEPS = $(filter-out %: ,$(file < $(LOADER_ELF).d)) \
 ##-----------------------------------------------------------------------------
 ## Command building blocks
 ##-----------------------------------------------------------------------------
-FEATURES      = --features $(BSP)
+ifeq ($(DEBUG),y)
+	FEATURES = --features $(BSP),debug
+else
+	FEATURES = --features $(BSP)
+endif
+
 COMPILER_ARGS = $(FEATURES) --release
 
 RUSTC_CMD   = cargo rustc $(COMPILER_ARGS)
