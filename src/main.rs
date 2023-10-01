@@ -19,8 +19,8 @@ extern crate alloc;
 mod cpu;
 mod helper;
 mod panic_wait;
-use console::{console, println, logln};
-use alloc::vec::Vec;
+mod run_time_checks;
+use console::{console, println};
 use global_allocator::Allocator;
 
 /// Early init code.
@@ -72,17 +72,5 @@ fn loader_main() {
 
     println!("Chars written: {}", console().chars_written());
 
-    println!("Testing memory allocation:");
-     {
-         let mut x: Vec<u8> = Vec::new();
-         logln!("CREATED VECTOR");
-         for i in 0..10 as u8 {
-             x.push(i);
-             logln!("ADDRESSES ALLOCATED: {}", Allocator::get_alloc_count());
-             logln!("Vector: {:?}", x);
-         }
-         logln!("ADDRESSES ALLOCATED: {}", Allocator::get_alloc_count());
-         logln!("Vector: {:?}", x);
-     }
-     logln!("ADDRESSES ALLOCATED: {}", Allocator::get_alloc_count());
+    run_time_checks::suite();
 }

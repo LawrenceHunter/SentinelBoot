@@ -250,7 +250,7 @@ impl Allocator {
 
             // No memory was available
             if (*(temp_alloc)).get_start_address() != (ptr as usize) {
-                panic!("Received a ptr to an unknown Alloc.")
+                panic!("Received a ptr to an unknown Alloc: {:#018x}", ptr as usize)
             }
             logln!("(get_ptr_alloc) RET ALLOC: {}", (*(temp_alloc)));
         }
@@ -296,7 +296,7 @@ unsafe impl GlobalAlloc for Allocator {
             let x = (*(temp_alloc)).get_next_deref();
 
             // If the next Alloc is free let's amalgamate the space
-            if (*(x)).get_flag() == AllocFlags::Free {
+            if (*(x)).get_flag() != AllocFlags::Allocated {
                 logln!("(alloc) AMALGAMATING {:#018x} -> {:#018x} WITH {:#018x} -> {:#018x}",
                     new_end, (*(temp_alloc)).get_start_address(),
                     (*(x)).get_start_address(),
@@ -308,11 +308,13 @@ unsafe impl GlobalAlloc for Allocator {
             }
             // Else create a new free Alloc between
             else {
-                logln!("(alloc) CREATING ALLOC {:#018x} -> {:#018x}", (*(temp_alloc)).get_start_address(), new_end);
-                let new_alloc = Alloc::new(AllocFlags::Free, new_end, Some(temp_alloc as usize), Some(x as usize));
-                (*(temp_alloc)).set_next(Some(new_alloc as usize));
-                (*(x)).set_prev(Some(new_alloc as usize));
-                logln!("(alloc) NEW ALLOC {}", (*(new_alloc)));
+                if new_end - (*(x)).get_start_address() != 0 {
+                    logln!("(alloc) CREATING ALLOC {:#018x} -> {:#018x}", (*(temp_alloc)).get_start_address(), new_end);
+                    let new_alloc = Alloc::new(AllocFlags::Free, new_end, Some(temp_alloc as usize), Some(x as usize));
+                    (*(temp_alloc)).set_next(Some(new_alloc as usize));
+                    (*(x)).set_prev(Some(new_alloc as usize));
+                    logln!("(alloc) NEW ALLOC {}", (*(new_alloc)));
+                }
                 return (*(temp_alloc)).get_start_address() as *mut u8;
             }
         }
@@ -333,7 +335,7 @@ unsafe impl GlobalAlloc for Allocator {
             ptr.add(layout.size()) as usize
         );
 
-        let temp_alloc = Allocator::get_ptr_alloc(ptr);
+        let mut temp_alloc = Allocator::get_ptr_alloc(ptr);
 
         // Make sure dealloc makes sense
         assert!((*(temp_alloc)).get_size() == layout.size());
@@ -344,10 +346,25 @@ unsafe impl GlobalAlloc for Allocator {
         if (*(temp_alloc)).get_flag() == AllocFlags::Allocated {
             // Zero the memory addresses
             for address in (*(temp_alloc)).get_start_address()..(*(temp_alloc)).get_end_address() {
+                logln!("(dealloc) ZEROING {:#018x}", address);
                 (*(temp_alloc)).set_value(address, 0);
             }
             // Set the Alloc as Free
             (*(temp_alloc)).set_flag(AllocFlags::Free);
+        }
+
+        // If the prev Alloc is free let's amalgamate the space
+        if (*((*(temp_alloc)).get_prev_deref())).get_flag() == AllocFlags::Free {
+            logln!("(dealloc) AMALGAMATING {:#018x} -> {:#018x} WITH {:#018x} -> {:#018x}",
+                (*(temp_alloc)).get_start_address(), (*(temp_alloc)).get_end_address(),
+                (*((*(temp_alloc)).get_prev_deref())).get_start_address(),
+                (*((*(temp_alloc)).get_prev_deref())).get_end_address()
+            );
+            (*((*(temp_alloc)).get_prev_deref())).set_next((*(temp_alloc)).get_next());
+            (*((*(temp_alloc)).get_next_deref())).set_prev((*(temp_alloc)).get_prev());
+            logln!("(dealloc) AMAL ALLOC: {}", (*((*(temp_alloc)).get_prev_deref())));
+            (*(temp_alloc)).set_flag(AllocFlags::Dead);
+            temp_alloc = (*(temp_alloc)).get_prev_deref();
         }
 
         // If the next Alloc is free let's amalgamate the space
@@ -401,12 +418,12 @@ unsafe impl GlobalAlloc for Allocator {
 
         // Zero the memory addresses
         for address in (*(temp_alloc)).get_start_address()..new_end {
-            (*(temp_alloc)).set_value(address, 0);
             logln!("(alloc_zeroed) ZEROING {:#018x}", address);
+            (*(temp_alloc)).set_value(address, 0);
         }
 
         if (*(temp_alloc)).get_next().is_some() {
-            let x = (*(temp_alloc)).get_next_deref();
+            let x: *mut Alloc = (*(temp_alloc)).get_next_deref();
 
             // If the next Alloc is free let's amalgamate the space
             if (*(x)).get_flag() == AllocFlags::Free {
@@ -419,6 +436,7 @@ unsafe impl GlobalAlloc for Allocator {
                 logln!("(alloc_zeroed) GOT ALLOC: {}", (*(x)));
                 return (*(temp_alloc)).get_start_address() as *mut u8;
             }
+
             // Else create a new free Alloc between
             else {
                 logln!("(alloc_zeroed) CREATING ALLOC {:#018x} -> {:#018x}", (*(temp_alloc)).get_start_address(), new_end);
@@ -448,9 +466,8 @@ unsafe impl GlobalAlloc for Allocator {
             new_size
         );
 
-        let temp_alloc = Allocator::get_ptr_alloc(HEAP_PUBLIC_START as *mut u8);
+        let temp_alloc = Allocator::get_ptr_alloc(ptr);
         let old_ptr = (*(temp_alloc)).get_start_address();
-
         logln!("(realloc) DEALLOCATING {}", (*(temp_alloc)));
 
         // Stops dealloc from zeroing
@@ -463,14 +480,27 @@ unsafe impl GlobalAlloc for Allocator {
         logln!("(realloc) NEW ALLOC {}", (*(new_alloc)));
 
         // Transfer data from old Alloc to new Alloc
-        let offset = old_ptr - (*(new_alloc)).get_start_address();
-        for address in old_ptr..old_ptr + layout.size() {
-            (*(new_alloc)).set_value(address + offset, core::ptr::read(address as *mut u8));
-            logln!("(realloc) COPYING {:#018x} ({:#02x})-> {:#018x}", address, core::ptr::read(address as *mut u8), address + offset);
+        let offset: usize;
+        logln!("(realloc) OLD_PTR: {:#018x} - NEW_PTR: {:#018x}", old_ptr, (*(new_alloc)).get_start_address());
+        let new_start = (*(new_alloc)).get_start_address();
+        if old_ptr >= new_start {
+            offset = old_ptr - new_start;
+            logln!("(realloc) 1 OFFSET: {:#018x}", offset);
+            for address in old_ptr..old_ptr + layout.size() {
+                logln!("(realloc) COPYING {:#018x} ({:#02x})-> {:#018x}", address, core::ptr::read(address as *mut u8), address - offset);
+                (*(new_alloc)).set_value(address - offset, core::ptr::read(address as *mut u8));
+            }
+        } else {
+            offset = new_start - old_ptr;
+            logln!("(realloc) 2 OFFSET: {:#018x}", offset);
+            for address in old_ptr..old_ptr + layout.size() {
+                logln!("(realloc) COPYING {:#018x} ({:#02x})-> {:#018x}", address, core::ptr::read(address as *mut u8), address + offset);
+                (*(new_alloc)).set_value(address + offset, core::ptr::read(address as *mut u8));
+            }
         }
 
         // Zero the old memory addresses
-        if (*(temp_alloc)).get_start_address() + layout.size() < (*(new_alloc)).get_start_address() ||
+        if (*(temp_alloc)).get_start_address() + layout.size() < new_start ||
             (*(temp_alloc)).get_start_address() - layout.size() < (*(new_alloc)).get_end_address() {
             for address in (*(temp_alloc)).get_start_address()..(*(temp_alloc)).get_start_address() + layout.size() {
                 core::ptr::write_bytes(address as *mut u8, 0, 1);
@@ -482,10 +512,10 @@ unsafe impl GlobalAlloc for Allocator {
             "(realloc) REALLOCATED {} BYTES: {:#018x} -> {:#018x} to {:#018x} -> {:#018x}",
             layout.size(),
             old_ptr, old_ptr,
-            (*(new_alloc)).get_start_address(), (*(new_alloc)).get_end_address()
+            new_start, (*(new_alloc)).get_end_address()
         );
 
-        return (*(new_alloc)).get_start_address() as *mut u8;
+        return new_start as *mut u8;
     }
 }
 
