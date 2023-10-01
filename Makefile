@@ -113,7 +113,7 @@ $(LAST_BUILD_CONFIG):
 ##------------------------------------------------------------------------------
 $(LOADER_ELF): $(LOADER_ELF_DEPS)
 ifeq ($(CLEAR),y)
-	clear
+	clear && tmux clear-history || true
 endif
 	cp $(LD_PATH) ./bootloader.ld
 ifeq ($(DOCKER),y)
