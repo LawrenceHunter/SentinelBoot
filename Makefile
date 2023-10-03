@@ -170,6 +170,10 @@ else
 	$(EXEC_QEMU) $(QEMU_ARGS)
 endif
 
+qemu_monitor: $(LOADER_BIN)
+	$(call color_header, "Launching QEMU")
+	$(EXEC_QEMU) $(QEMU_ARGS)
+
 qemu_halted: $(LOADER_BIN)
 	$(call color_header, "Launching QEMU")
 	$(EXEC_QEMU) $(QEMU_ARGS) -S
