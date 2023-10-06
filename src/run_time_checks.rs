@@ -9,7 +9,7 @@ pub fn simple_alloc_check() {
         x.push(0);
         assert!(Allocator::get_alloc_count() == 8, "{}", format!("Expected Vector initialisation of 8 bytes got {}.", Allocator::get_alloc_count()));
 
-        for i in 1..8 as u8 {
+        for i in 1..8 {
             x.push(i);
             logln!("ADDRESSES ALLOCATED: {}", Allocator::get_alloc_count());
             logln!("Vector: {:?}", x);
@@ -18,7 +18,7 @@ pub fn simple_alloc_check() {
         x.push(8);
         assert!(Allocator::get_alloc_count() == 16, "{}", format!("Expected Vector reallocation of 8 to 16 bytes got {}.", Allocator::get_alloc_count()));
 
-        for i in 9..16 as u8 {
+        for i in 9..16 {
             x.push(i);
         }
         assert!(x == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], "{}", format!("x did not match expected '[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]' got {:?}.", x));
@@ -33,11 +33,11 @@ pub fn dual_alloc_check() {
         let mut x: Vec<u8> = Vec::new();
         let mut y: Vec<u8> = Vec::new();
         x.push(0);
-        y.push(u8::MAX - 0);
+        y.push(u8::MAX);
 
         assert!(Allocator::get_alloc_count() == 16, "{}", format!("Expected Vector initialisation of 16 bytes got {}.", Allocator::get_alloc_count()));
 
-        for i in 1..8 as u8 {
+        for i in 1..8 {
             x.push(i);
             y.push(u8::MAX - i);
             logln!("ADDRESSES ALLOCATED: {}", Allocator::get_alloc_count());
@@ -56,7 +56,7 @@ pub fn dual_alloc_check() {
         assert!(x == [0, 1, 2, 3, 4, 5, 6, 7, 8], "{}", format!("x did not match expected '[0, 1, 2, 3, 4, 5, 6, 7, 8]' got {:?}.", x));
         assert!(y == [255, 254, 253, 252, 251, 250, 249, 248, 247], "{}", format!("y did not match expected '[255, 254, 253, 252, 251, 250, 249, 248, 247]' got {:?}.", y));
 
-        for i in 9..16 as u8 {
+        for i in 9..16 {
             x.push(i);
             y.push(u8::MAX - i);
         }
@@ -76,49 +76,49 @@ pub fn quad_alloc_check() {
         let mut b: Vec<u8> = Vec::new();
         let mut c: Vec<u8> = Vec::new();
         let mut d: Vec<u8> = Vec::new();
-        a.push(0 + 0);
-        b.push(0 + 16);
-        c.push(0 + 32);
-        d.push(0 + 48);
+        a.push(0);
+        b.push(16);
+        c.push(32);
+        d.push(48);
 
         assert!(Allocator::get_alloc_count() == 32, "{}", format!("Expected Vector initialisation of 32 bytes got {}.", Allocator::get_alloc_count()));
 
-        for i in 1..8 as u8 {
-            a.push(i + 0);
+        for i in 1..8 {
+            a.push(i);
             b.push(i + 16);
             c.push(i + 32);
             d.push(i + 48);
         }
 
-        for i in 1..8 as u8 {
-            assert!(a.as_slice()[i as usize] == (i + 0));
+        for i in 1..8 {
+            assert!(a.as_slice()[i as usize] == (i));
             assert!(b.as_slice()[i as usize] == (i + 16));
             assert!(c.as_slice()[i as usize] == (i + 32));
             assert!(d.as_slice()[i as usize] == (i + 48));
         }
 
-        a.push(8 + 0);
+        a.push(8);
         b.push(8 + 16);
         c.push(8 + 32);
         d.push(8 + 48);
         assert!(Allocator::get_alloc_count() == 64, "{}", format!("Expected Vector reallocation of 32 to 64 bytes got {}.", Allocator::get_alloc_count()));
 
-        for i in 1..9 as u8 {
-            assert!(a.as_slice()[i as usize] == (i + 0));
+        for i in 1..9 {
+            assert!(a.as_slice()[i as usize] == (i));
             assert!(b.as_slice()[i as usize] == (i + 16));
             assert!(c.as_slice()[i as usize] == (i + 32));
             assert!(d.as_slice()[i as usize] == (i + 48));
         }
 
-        for i in 9..16 as u8 {
-            a.push(i + 0);
+        for i in 9..16 {
+            a.push(i);
             b.push(i + 16);
             c.push(i + 32);
             d.push(i + 48);
         }
 
-        for i in 1..16 as u8 {
-            assert!(a.as_slice()[i as usize] == (i + 0));
+        for i in 1..16 {
+            assert!(a.as_slice()[i as usize] == (i));
             assert!(b.as_slice()[i as usize] == (i + 16));
             assert!(c.as_slice()[i as usize] == (i + 32));
             assert!(d.as_slice()[i as usize] == (i + 48));
