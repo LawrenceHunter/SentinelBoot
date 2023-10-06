@@ -62,7 +62,7 @@ pub struct Alloc {
 
 impl Display for Alloc {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        unsafe { return write!(f, "\n| Allocated:     {:?}\n| Start Address: {:#018x}\n| End Address:   {:#018x}\n| \
+        unsafe { write!(f, "\n| Allocated:     {:?}\n| Start Address: {:#018x}\n| End Address:   {:#018x}\n| \
          Previous:      {:#018x} ({:#018x} -> {:#018x})\n| Next:          {:#018x} ({:#018x} -> {:#018x})\n| Size:          {} bytes\n",
             self.get_flag(), self.get_start_address(), self.get_end_address(),
             if self.get_prev().is_some() {self.get_prev().unwrap()} else {usize::MAX},
@@ -71,8 +71,8 @@ impl Display for Alloc {
             if self.get_next().is_some() {self.get_next().unwrap()} else {usize::MAX},
             if self.get_next().is_some() {(*(self.get_next().unwrap() as *mut Alloc)).get_start_address()} else {usize::MAX},
             if self.get_next().is_some() {(*(self.get_next().unwrap() as *mut Alloc)).get_end_address()} else {usize::MAX},
-            self.get_size());
-        };
+            self.get_size())
+        }
     }
 }
 
@@ -83,19 +83,19 @@ impl Alloc {
         while ptr < (HEAP_PUBLIC_START) {
             unsafe {
                 // A reasonable guess it's not used
-                if core::ptr::read(ptr as *mut u128) == 0 {
-                    return ptr as *mut Alloc;
-                }
-                else if core::ptr::read(ptr as *mut Alloc).get_flag() == AllocFlags::Dead {
+                if core::ptr::read(ptr as *mut u128) == 0 ||
+                    core::ptr::read(ptr as *mut Alloc).get_flag() == AllocFlags::Dead {
                     return ptr as *mut Alloc;
                 }
             }
             ptr += size_of::<Alloc>();
         }
-        return core::ptr::null_mut();
+        core::ptr::null_mut()
     }
 
     /// Constructor which handles allocation
+    /// # Safety
+    /// Handles raw pointers the developer must ensure they have not modified the heap
     pub unsafe fn new(flag: AllocFlags, curr: usize, prev: Option<usize>, next: Option<usize>) -> *mut Alloc {
         let new_alloc_ptr: *mut Alloc;
 
@@ -161,7 +161,7 @@ impl Alloc {
         }
 
         let next = self.get_next_deref();
-        unsafe { return (*(next)).get_start_address(); }
+        unsafe { (*(next)).get_start_address() }
     }
 
     /// Sets the value of a byte in the Alloc's control
@@ -175,7 +175,7 @@ impl Alloc {
     pub fn get_value(&self, address: usize) -> u8 {
         assert!(address >= self.get_start_address());
         assert!(address < self.get_end_address());
-        unsafe { return core::ptr::read(address as *mut u8) };
+        unsafe { core::ptr::read(address as *mut u8) }
     }
 
     /// Returns the Alloc of next
@@ -275,8 +275,8 @@ unsafe impl GlobalAlloc for Allocator {
         // Find an alloc with enough bytes which is marked free
         let mut temp_alloc = Allocator::get_ptr_alloc(HEAP_PUBLIC_START as *mut u8);
 
-        while ((*(temp_alloc)).get_size() < layout.size()) | (((*(temp_alloc)).get_flag() != AllocFlags::Free)) && ((*(temp_alloc)).get_next().is_some()) {
-            temp_alloc = ((*(temp_alloc))).get_next_deref();
+        while ((*(temp_alloc)).get_size() < layout.size()) | ((*(temp_alloc)).get_flag() != AllocFlags::Free) && ((*(temp_alloc)).get_next().is_some()) {
+            temp_alloc = (*(temp_alloc)).get_next_deref();
         }
 
         logln!("(alloc) GOT ALLOC: {}", (*(temp_alloc)));
@@ -323,7 +323,7 @@ unsafe impl GlobalAlloc for Allocator {
         (*(temp_alloc)).set_next(Some(new_alloc as usize));
         logln!("(alloc) NEW ALLOC {}", (*(new_alloc)));
         logln!("(alloc) OLD ALLOC {}", (*(temp_alloc)));
-        return (*(temp_alloc)).get_start_address() as *mut u8;
+        (*(temp_alloc)).get_start_address() as *mut u8
     }
 
     /// Deallocate a byte by its pointer
@@ -397,8 +397,8 @@ unsafe impl GlobalAlloc for Allocator {
         // Find an alloc with enough bytes which is marked free
         let mut temp_alloc = Allocator::get_ptr_alloc(HEAP_PUBLIC_START as *mut u8);
 
-        while ((*(temp_alloc)).get_size() < layout.size()) | (((*(temp_alloc)).get_flag() != AllocFlags::Free)) && ((*(temp_alloc)).get_next().is_some()) {
-            temp_alloc = ((*(temp_alloc))).get_next_deref();
+        while ((*(temp_alloc)).get_size() < layout.size()) | ((*(temp_alloc)).get_flag() != AllocFlags::Free) && ((*(temp_alloc)).get_next().is_some()) {
+            temp_alloc = (*(temp_alloc)).get_next_deref();
         }
 
         logln!("(alloc_zeroed) GOT ALLOC: {}", (*(temp_alloc)));
@@ -453,7 +453,7 @@ unsafe impl GlobalAlloc for Allocator {
         (*(temp_alloc)).set_next(Some(new_alloc as usize));
         logln!("(alloc_zeroed) NEW ALLOC {}", (*(new_alloc)));
         logln!("(alloc_zeroed) OLD ALLOC {}", (*(temp_alloc)));
-        return (*(temp_alloc)).get_start_address() as *mut u8;
+        (*(temp_alloc)).get_start_address() as *mut u8
     }
 
     unsafe fn realloc(&self, ptr: *mut u8, layout: Layout, new_size: usize) -> *mut u8 {
@@ -515,7 +515,7 @@ unsafe impl GlobalAlloc for Allocator {
             new_start, (*(new_alloc)).get_end_address()
         );
 
-        return new_start as *mut u8;
+        new_start as *mut u8
     }
 }
 
