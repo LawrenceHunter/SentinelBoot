@@ -192,9 +192,9 @@ endif
 ##------------------------------------------------------------------------------
 clean:
 ifeq ($(DOCKER),y)
-	$(DOCKER_CMD) rm -rf target $(LOADER_BIN)
+	$(DOCKER_CMD) rm -rf target $(LOADER_BIN) bootloader.ld
 else
-	rm -rf target $(LOADER_BIN)
+	rm -rf target $(LOADER_BIN) bootloader.ld
 endif
 
 ##------------------------------------------------------------------------------

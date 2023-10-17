@@ -13,7 +13,6 @@ Cargo.lock
 .idea
 *.img
 *.DS_Store
-*.tar.gz
 *.svg
 
 .github/workflows/*.md
@@ -21,3 +20,4 @@ src/helper.rs
 test.md
 
 vendor/
+tftp/buildroot

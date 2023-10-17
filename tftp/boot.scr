@@ -1,0 +1,3 @@
+tftpboot 0x80300000 bootloader.img;
+tftpboot 0x80400000 bootloader.img;
+go 0x80300000
