@@ -73,4 +73,16 @@ fn loader_main() {
     println!("Chars written: {}", console().chars_written());
 
     run_time_checks::suite();
+
+    println!("EXECUTION DONE");
+
+    unsafe {
+        let mut data: u128;
+        let mut address: usize = 0x80100000;
+        for _ in 0..10 {
+            data = core::ptr::read(address as *mut u128);
+            println!("{:#010x}: {:>#034x}", address, data);
+            address = address + 0x10;
+        }
+    }
 }

@@ -13,7 +13,7 @@ CLEAR ?= y
 ##-----------------------------------------------------------------------------
 
 ifeq ($(BSP),qemu)
-    LOADER_BIN        = bootloader.img
+    LOADER_BIN        = bootloader
     QEMU_BINARY       = qemu-system-riscv64
     QEMU_MACHINE_TYPE = virt
     QEMU_RELEASE_ARGS = -cpu rv64 -smp 4 -m 256M
@@ -24,7 +24,7 @@ ifeq ($(BSP),qemu)
 endif
 
 ifeq ($(BSP),qemu_tftp)
-    LOADER_BIN        = bootloader.img
+    LOADER_BIN        = bootloader
     QEMU_BINARY       = qemu-system-riscv64
     QEMU_MACHINE_TYPE = virt
     QEMU_RELEASE_ARGS = -cpu rv64 -smp 4 -m 256M
@@ -35,7 +35,7 @@ ifeq ($(BSP),qemu_tftp)
 endif
 
 ifeq ($(BSP),visionfive)
-    LOADER_BIN        = bootloader.img
+    LOADER_BIN        = bootloader
     QEMU_BINARY       = qemu-system-riscv64
     QEMU_MACHINE_TYPE = virt
     QEMU_RELEASE_ARGS = -cpu rv64 -smp 4 -m 128M
@@ -46,7 +46,7 @@ ifeq ($(BSP),visionfive)
 endif
 
 ifeq ($(BSP),unmatched)
-    LOADER_BIN        = bootloader.img
+    LOADER_BIN        = bootloader
     QEMU_BINARY       = qemu-system-riscv64
     QEMU_MACHINE_TYPE = sifive_u
     QEMU_RELEASE_ARGS = -cpu rv64 -smp 4 -m 128M
@@ -90,7 +90,7 @@ DOCKER_CMD  = docker build --tag bootloader --file Dockerfile . && \
 				docker run -v $(shell pwd):$(shell pwd) \
 				-w $(shell pwd) bootloader:latest
 QEMU_ARGS   = $(QEMU_RELEASE_ARGS) -nographic -display none -serial mon:stdio \
-				-bios none -kernel $(LOADER_BIN) -s \
+				-bios tftp/u-boot.bin -drive format=raw,file=sdcard.img -s \
 				-monitor unix:qemu-monitor-socket,server,nowait
 ##-----------------------------------------------------------------------------
 ## Targets
@@ -161,7 +161,13 @@ endif
 ##------------------------------------------------------------------------------
 ## Run the bootloader in QEMU
 ##------------------------------------------------------------------------------
-qemu: $(LOADER_BIN)
+jh7110-visionfive-v2.dtb:
+	wget https://github.com/starfive-tech/VisionFive2/releases/download/VF2_v3.7.5/jh7110-visionfive-v2.dtb
+
+sdcard.img:
+	wget https://github.com/starfive-tech/VisionFive2/releases/download/VF2_v3.7.5/sdcard.img
+
+qemu: $(LOADER_BIN) sdcard.img jh7110-visionfive-v2.dtb
 ifeq ($(DOCKER),y)
 	$(call color_header, "Launching QEMU")
 	$(DOCKER_CMD) $(EXEC_QEMU) $(QEMU_ARGS)
@@ -192,9 +198,9 @@ endif
 ##------------------------------------------------------------------------------
 clean:
 ifeq ($(DOCKER),y)
-	$(DOCKER_CMD) rm -rf target $(LOADER_BIN)
+	$(DOCKER_CMD) rm -rf target $(LOADER_BIN) bootloader.ld
 else
-	rm -rf target $(LOADER_BIN)
+	rm -rf target $(LOADER_BIN) bootloader.ld
 endif
 
 ##------------------------------------------------------------------------------
