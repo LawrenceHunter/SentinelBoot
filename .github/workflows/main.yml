@@ -39,6 +39,7 @@ jobs:
           rm boot.scr
           mv boot.scr.qemu boot.scr
           tar xvf Image.tar.gz
+          tar xvf rootfs.ext4.tar.gz
           ./mkimage.sh
           timeout 5m ./qemu_tftp.sh
 

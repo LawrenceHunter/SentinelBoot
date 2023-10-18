@@ -20,4 +20,4 @@ RUN make oldconfig
 
 ADD .defconfig /src/buildroot/.defconfig
 ADD .config /src/buildroot/.config
-RUN make -j$(nproc)
+RUN make

@@ -24,7 +24,7 @@ ifeq ($(BSP),qemu)
 endif
 
 ifeq ($(BSP),qemu_tftp)
-    LOADER_BIN        = bootloader.img
+    LOADER_BIN        = bootloader
     QEMU_BINARY       = qemu-system-riscv64
     QEMU_MACHINE_TYPE = virt
     QEMU_RELEASE_ARGS = -cpu rv64 -smp 4 -m 256M
@@ -35,7 +35,7 @@ ifeq ($(BSP),qemu_tftp)
 endif
 
 ifeq ($(BSP),visionfive)
-    LOADER_BIN        = bootloader.img
+    LOADER_BIN        = bootloader
     QEMU_BINARY       = qemu-system-riscv64
     QEMU_MACHINE_TYPE = virt
     QEMU_RELEASE_ARGS = -cpu rv64 -smp 4 -m 128M
@@ -46,7 +46,7 @@ ifeq ($(BSP),visionfive)
 endif
 
 ifeq ($(BSP),unmatched)
-    LOADER_BIN        = bootloader.img
+    LOADER_BIN        = bootloader
     QEMU_BINARY       = qemu-system-riscv64
     QEMU_MACHINE_TYPE = sifive_u
     QEMU_RELEASE_ARGS = -cpu rv64 -smp 4 -m 128M
@@ -56,6 +56,7 @@ ifeq ($(BSP),unmatched)
 	LD_PATH			  = riscv64/src/cpu/bootloader-u-boot.ld
 endif
 
+LOADER_IMG = $(LOADER_ELF).img
 
 ##-----------------------------------------------------------------------------
 ## Targets and Prerequisites
@@ -90,7 +91,7 @@ DOCKER_CMD  = docker build --tag bootloader --file Dockerfile . && \
 				docker run -v $(shell pwd):$(shell pwd) \
 				-w $(shell pwd) bootloader:latest
 QEMU_ARGS   = $(QEMU_RELEASE_ARGS) -nographic -display none -serial mon:stdio \
-				-bios none -kernel $(LOADER_BIN) -s \
+				-bios u-boot.bin -drive format=raw,file=$(LOADER_IMG)  -s \
 				-monitor unix:qemu-monitor-socket,server,nowait
 ##-----------------------------------------------------------------------------
 ## Targets
@@ -161,7 +162,18 @@ endif
 ##------------------------------------------------------------------------------
 ## Run the bootloader in QEMU
 ##------------------------------------------------------------------------------
-qemu: $(LOADER_BIN)
+$(LOADER_IMG): $(LOADER_ELF)
+ifeq ($(DOCKER),y)
+	wget https://github.com/starfive-tech/VisionFive2/releases/download/VF2_v3.7.5/u-boot-spl.bin.normal.out
+	wget https://github.com/starfive-tech/VisionFive2/releases/download/VF2_v3.7.5/visionfive2_fw_payload.img
+	$(DOCKER_CMD) genimage
+	mv ./disk.img ../$(LOADER_IMG)
+else
+
+endif
+
+
+qemu: $(LOADER_IMG)
 ifeq ($(DOCKER),y)
 	$(call color_header, "Launching QEMU")
 	$(DOCKER_CMD) $(EXEC_QEMU) $(QEMU_ARGS)
