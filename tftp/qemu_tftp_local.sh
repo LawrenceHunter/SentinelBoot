@@ -8,6 +8,15 @@ fi
 set -x
 
 ETH=ens160   #Ethernet interface in your HOST
+
+if [ $# -eq 1 ]
+  then
+    ETH=ens160
+else
+    ETH=$2
+fi
+
+
 USR=l    #User name- whoami
 
 alias ifup_tap='sudo ~/ProjectWork/bin/tuntap.sh up'

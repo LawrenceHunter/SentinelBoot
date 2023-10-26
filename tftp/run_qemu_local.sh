@@ -19,21 +19,23 @@ function ctrl_c() {
 rm -f /tmp/{guest,host}.{in,out} && mkfifo /tmp/{guest,host}.{in,out}
 set +x
 
-cp ./* /srv/tftp/
+rm -f /srv/tftp/*
+cp ./{Image,rootfs.cpio.gz,qemu.dtb} /srv/tftp/
 cp ../bootloader /srv/tftp/
-(cd /srv/tftp && tar xvf Image.tar.gz)
+# (cd /srv/tftp && gzip --decompress Image.gz)
+(cd /srv/tftp && mkimage -A riscv -T ramdisk -d rootfs.cpio.gz initrd.img)
 
 printf -v QEMU_CMDLINE '%s' 'qemu-system-riscv64 -M virt ' \
     '-cpu rv64 -smp 2 -m 512 -nographic ' \
     '-display none -serial pipe:/tmp/guest -s ' \
     '-netdev tap,id=mynet0,ifname=tap0,script=no,downscript=no ' \
     '-device e1000,netdev=mynet0,mac=52:55:00:d1:55:01 ' \
-    '-bios u-boot.bin'
+    '-kernel u-boot.bin'
 
 wait_for_line () {
     local expected_line_pattern="$1"
     local fifo="$2"
-    while read line; do
+    while read line || [ -n "$line" ]; do
         echo "  [$(date +"%T")] $line"
         if [[ $line == *$expected_line_pattern* ]]; then
             break
@@ -45,33 +47,48 @@ echo "❕ Running QEMU in the background..."
 eval "$QEMU_CMDLINE" &
 pid=$!
 
-echo "❕ Waiting for 'OpenThesis version'..."
-wait_for_line "serverip" /tmp/guest.out
-wait_for_line "serverip" /tmp/guest.out
-printf " setenv serverip 10.8.8.1; setenv ipaddr 10.8.8.2; setenv netmask 255.255.255.0;\n" > /tmp/guest.in
-echo "✅ Got input prompt"
-
-echo "❕ Waiting for 'Drivers loaded'..."
+wait_for_line "eth0" /tmp/guest.out
+printf "a\n" > /tmp/guest.in
 wait_for_line "=>" /tmp/guest.out
+printf "setenv serverip 10.8.8.1; setenv ipaddr 10.8.8.2; setenv netmask 255.255.255.0; setenv devicetree_image qemu.dtb; setenv bootargs \"console=ttyS0,115200n8 earlycon=uart16550,mmio32,0x10000000 debug rootwait earlyprintk\"\n" > /tmp/guest.in
+
+wait_for_line "=>" /tmp/guest.out
+echo "✅ Got input prompt"
 printf "ping 10.8.8.1\n" > /tmp/guest.in
 
 wait_for_line "is alive" /tmp/guest.out
 echo "✅ TFTP Alive"
-
-printf "tftpboot 0x80000000 bootloader\n" > /tmp/guest.in
-
-wait_for_line "Bytes transferred" /tmp/guest.out
-printf "tftpboot 0x80100000 Image\n" > /tmp/guest.in
+printf "tftp 0x80100000 \${serverip}:bootloader\n" > /tmp/guest.in
 
 wait_for_line "Bytes transferred" /tmp/guest.out
-printf "go 0x80000000\n" > /tmp/guest.in
+echo "✅ Kernel transferred"
+printf "tftp 0x80200000 \${serverip}:Image\n" > /tmp/guest.in
 
 wait_for_line "Bytes transferred" /tmp/guest.out
-printf "md 0x80000000 0x100\n" > /tmp/guest.in
+echo "✅ Kernel transferred"
+printf "tftp 0x84a00000 \${serverip}:qemu.dtb\n" > /tmp/guest.in
 
-wait_for_line "OpenThesis version" /tmp/guest.out
-echo "✅ Got 'OpenThesis version'"
-wait_for_line "EXECUTION DONE" /tmp/guest.out
+wait_for_line "Bytes transferred" /tmp/guest.out
+echo "✅ DTB transferred"
+printf "tftp 0x85000000 \${serverip}:initrd.img\n" > /tmp/guest.in
+
+wait_for_line "Bytes transferred" /tmp/guest.out
+echo "✅ RAM disk transferred"
+printf "booti 0x80200000 0x85000000 0x84a00000\n" > /tmp/guest.in
+# printf "go 0x80100000\n" > /tmp/guest.in
+
+wait_for_line "Bytes transferred" /tmp/guest.out
+echo "✅ RAM disk transferred"
+printf "booti 0x80200000 0x85000000 0x84a00000\n" > /tmp/guest.in
+
+sleep 10
+printf "root\n" > /tmp/guest.in
+sleep 2
+printf "root\n" > /tmp/guest.in
+sleep 2
+printf "cat /proc/config.gz | gunzip > running.config\n" > /tmp/guest.in
+sleep 5
+printf "cat running.config\n" > /tmp/guest.in
 
 rm -f /tmp/{guest,host}.{in,out}
 kill -9 $pid
