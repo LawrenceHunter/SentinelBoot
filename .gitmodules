@@ -1,0 +1,3 @@
+[submodule "tftp/buildroot"]
+	path = tftp/buildroot
+	url = https://github.com/buildroot/buildroot.git
