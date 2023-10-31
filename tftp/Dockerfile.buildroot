@@ -20,4 +20,5 @@
 
  ADD .defconfig /src/buildroot/.defconfig
  ADD .config /src/buildroot/.config
+ ADD .linux-config /src/buildroot/board/qemu/.config
  RUN make
