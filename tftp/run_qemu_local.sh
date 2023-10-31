@@ -20,9 +20,8 @@ rm -f /tmp/{guest,host}.{in,out} && mkfifo /tmp/{guest,host}.{in,out}
 set +x
 
 rm -f /srv/tftp/*
-cp ./{Image.gz.tar.gz,rootfs.cpio.gz.tar.gz,qemu.dtb} /srv/tftp/
+cp ./{Image.gz,rootfs.cpio.gz,qemu.dtb} /srv/tftp/
 cp ../bootloader /srv/tftp/
-(cd /srv/tftp && tar xvf Image.gz.tar.gz && tar xvf rootfs.cpio.gz.tar.gz)
 (cd /srv/tftp && mkimage -A riscv -T ramdisk -d rootfs.cpio.gz initrd.img)
 
 printf -v QEMU_CMDLINE '%s' 'qemu-system-riscv64 -M virt ' \
