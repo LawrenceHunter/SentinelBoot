@@ -21,6 +21,8 @@ mod helper;
 mod panic_wait;
 mod run_time_checks;
 
+use core::arch::asm;
+
 use console::{console, println};
 use global_allocator::Allocator;
 
@@ -110,6 +112,14 @@ fn loader_main() {
     unsafe {
         let func_ptr: usize = 0x80200000;
         let func: extern "C" fn() = core::mem::transmute(func_ptr);
+        // https://github.com/torvalds/linux/blob/master/Documentation/riscv/boot.rst
+        // SATP expected to be 0
+        asm!("li t0, 0");
+        asm!("csrw satp, t0");
+        // HARTID of current core needs to be in a0
+        asm!("li a0, 1");
+        // FDT address needs to be in a1
+        asm!("li a1, 0x82a00000");
         func();
     }
 
