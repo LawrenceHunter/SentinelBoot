@@ -20,8 +20,11 @@ mod cpu;
 mod helper;
 mod panic_wait;
 mod run_time_checks;
+
 use console::{console, println};
 use global_allocator::Allocator;
+
+static TEST: bool = false;
 
 /// Early init code.
 ///
@@ -72,17 +75,43 @@ fn loader_main() {
 
     println!("Chars written: {}", console().chars_written());
 
-    run_time_checks::suite();
-
-    println!("EXECUTION DONE");
+    if TEST {
+        run_time_checks::suite();
+    }
 
     unsafe {
         let mut data: u128;
-        let mut address: usize = 0x80100000;
+        let mut address: usize = 0x80200000;
         for _ in 0..10 {
             data = core::ptr::read(address as *mut u128);
             println!("{:#010x}: {:>#034x}", address, data);
             address = address + 0x10;
         }
     }
+    unsafe {
+        let mut data: u128;
+        let mut address: usize = 0x82a00000;
+        for _ in 0..10 {
+            data = core::ptr::read(address as *mut u128);
+            println!("{:#010x}: {:>#034x}", address, data);
+            address = address + 0x10;
+        }
+    }
+    unsafe {
+        let mut data: u128;
+        let mut address: usize = 0x83000000;
+        for _ in 0..10 {
+            data = core::ptr::read(address as *mut u128);
+            println!("{:#010x}: {:>#034x}", address, data);
+            address = address + 0x10;
+        }
+    }
+
+    unsafe {
+        let func_ptr: usize = 0x80200000;
+        let func: extern "C" fn() = core::mem::transmute(func_ptr);
+        func();
+    }
+
+    println!("EXECUTION DONE");
 }
