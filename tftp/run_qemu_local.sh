@@ -58,19 +58,23 @@ printf "ping 10.8.8.1\n" > /tmp/guest.in
 
 wait_for_line "is alive" /tmp/guest.out
 echo "✅ TFTP Alive"
+printf "tftp 0x80100000 \${serverip}:bootloader\n" > /tmp/guest.in
+
+wait_for_line "Bytes transferred" /tmp/guest.out
+echo "✅ Kernel transferred"
 printf "tftp 0x80200000 \${serverip}:Image\n" > /tmp/guest.in
 
 wait_for_line "Bytes transferred" /tmp/guest.out
 echo "✅ Kernel transferred"
-printf "tftp 0x86a00000 \${serverip}:qemu.dtb\n" > /tmp/guest.in
+printf "tftp 0x82a00000 \${serverip}:qemu.dtb\n" > /tmp/guest.in
 
 wait_for_line "Bytes transferred" /tmp/guest.out
 echo "✅ DTB transferred"
-printf "tftp 0x87000000 \${serverip}:initrd.img\n" > /tmp/guest.in
+printf "tftp 0x83000000 \${serverip}:initrd.img\n" > /tmp/guest.in
 
 wait_for_line "Bytes transferred" /tmp/guest.out
 echo "✅ RAM disk transferred"
-printf "booti 0x80200000 0x87000000 0x86a00000\n" > /tmp/guest.in
+printf "booti 0x80200000 0x83000000 0x82a00000\n" > /tmp/guest.in
 
 wait_for_line "OpenThesis version" /tmp/guest.out
 echo "✅ Got 'OpenThesis version'"
