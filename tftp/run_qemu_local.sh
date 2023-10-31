@@ -22,6 +22,7 @@ set +x
 rm -f /srv/tftp/*
 cp ./{Image.gz,rootfs.cpio.gz,qemu.dtb} /srv/tftp/
 cp ../bootloader /srv/tftp/
+(cd /srv/tftp && gzip --decompress Image.gz)
 (cd /srv/tftp && mkimage -A riscv -T ramdisk -d rootfs.cpio.gz initrd.img)
 
 printf -v QEMU_CMDLINE '%s' 'qemu-system-riscv64 -M virt ' \
@@ -57,7 +58,7 @@ printf "ping 10.8.8.1\n" > /tmp/guest.in
 
 wait_for_line "is alive" /tmp/guest.out
 echo "✅ TFTP Alive"
-printf "tftp 0x84000000 \${serverip}:Image.gz\n" > /tmp/guest.in
+printf "tftp 0x80200000 \${serverip}:Image\n" > /tmp/guest.in
 
 wait_for_line "Bytes transferred" /tmp/guest.out
 echo "✅ Kernel transferred"
@@ -69,7 +70,7 @@ printf "tftp 0x87000000 \${serverip}:initrd.img\n" > /tmp/guest.in
 
 wait_for_line "Bytes transferred" /tmp/guest.out
 echo "✅ RAM disk transferred"
-printf "booti 0x84000000 0x87000000 0x86a00000\n" > /tmp/guest.in
+printf "booti 0x80200000 0x87000000 0x86a00000\n" > /tmp/guest.in
 
 wait_for_line "OpenThesis version" /tmp/guest.out
 echo "✅ Got 'OpenThesis version'"
