@@ -20,9 +20,9 @@ rm -f /tmp/{guest,host}.{in,out} && mkfifo /tmp/{guest,host}.{in,out}
 set +x
 
 rm -f /srv/tftp/*
-cp ./{Image.gz,rootfs.cpio.gz,qemu.dtb} /srv/tftp/
+cp ./{Image,rootfs.cpio.gz,qemu.dtb} /srv/tftp/
 cp ../bootloader /srv/tftp/
-(cd /srv/tftp && gzip --decompress Image.gz)
+# (cd /srv/tftp && gzip --decompress Image.gz)
 (cd /srv/tftp && mkimage -A riscv -T ramdisk -d rootfs.cpio.gz initrd.img)
 
 printf -v QEMU_CMDLINE '%s' 'qemu-system-riscv64 -M virt ' \
@@ -66,20 +66,29 @@ printf "tftp 0x80200000 \${serverip}:Image\n" > /tmp/guest.in
 
 wait_for_line "Bytes transferred" /tmp/guest.out
 echo "✅ Kernel transferred"
-printf "tftp 0x82a00000 \${serverip}:qemu.dtb\n" > /tmp/guest.in
+printf "tftp 0x84a00000 \${serverip}:qemu.dtb\n" > /tmp/guest.in
 
 wait_for_line "Bytes transferred" /tmp/guest.out
 echo "✅ DTB transferred"
-printf "tftp 0x83000000 \${serverip}:initrd.img\n" > /tmp/guest.in
+printf "tftp 0x85000000 \${serverip}:initrd.img\n" > /tmp/guest.in
 
 wait_for_line "Bytes transferred" /tmp/guest.out
 echo "✅ RAM disk transferred"
-# printf "booti 0x80200000 0x83000000 0x82a00000\n" > /tmp/guest.in
-printf "go 0x80100000\n" > /tmp/guest.in
+printf "booti 0x80200000 0x85000000 0x84a00000\n" > /tmp/guest.in
+# printf "go 0x80100000\n" > /tmp/guest.in
 
-wait_for_line "OpenThesis version" /tmp/guest.out
-echo "✅ Got 'OpenThesis version'"
-wait_for_line "EXECUTION DONE" /tmp/guest.out
+wait_for_line "Bytes transferred" /tmp/guest.out
+echo "✅ RAM disk transferred"
+printf "booti 0x80200000 0x85000000 0x84a00000\n" > /tmp/guest.in
+
+sleep 10
+printf "root\n" > /tmp/guest.in
+sleep 2
+printf "root\n" > /tmp/guest.in
+sleep 2
+printf "cat /proc/config.gz | gunzip > running.config\n" > /tmp/guest.in
+sleep 5
+printf "cat running.config\n" > /tmp/guest.in
 
 rm -f /tmp/{guest,host}.{in,out}
 kill -9 $pid
