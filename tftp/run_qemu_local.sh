@@ -50,7 +50,7 @@ pid=$!
 wait_for_line "eth0" /tmp/guest.out
 printf "a\n" > /tmp/guest.in
 wait_for_line "=>" /tmp/guest.out
-printf "setenv serverip 10.8.8.1; setenv ipaddr 10.8.8.2; setenv netmask 255.255.255.0; setenv devicetree_image qemu.dtb; setenv bootargs \"console=ttyS0,115200n8 earlycon=uart16550,mmio32,0x10000000 debug rootwait earlyprintk\"\n" > /tmp/guest.in
+printf "setenv serverip 10.8.8.1; setenv ipaddr 10.8.8.2; setenv netmask 255.255.255.0; setenv devicetree_image qemu.dtb\n" > /tmp/guest.in
 
 wait_for_line "=>" /tmp/guest.out
 echo "✅ Got input prompt"
