@@ -20,6 +20,7 @@ rm -f /tmp/{guest,host}.{in,out} && mkfifo /tmp/{guest,host}.{in,out}
 set +x
 
 rm -f /srv/tftp/*
+cp .gdbinit /home/l/.gdbinit
 cp ./{Image,rootfs.cpio.gz,qemu.dtb} /srv/tftp/
 cp ../bootloader /srv/tftp/
 # (cd /srv/tftp && gzip --decompress Image.gz)
@@ -30,7 +31,7 @@ printf -v QEMU_CMDLINE '%s' 'qemu-system-riscv64 -M virt ' \
     '-display none -serial pipe:/tmp/guest -s ' \
     '-netdev tap,id=mynet0,ifname=tap0,script=no,downscript=no ' \
     '-device e1000,netdev=mynet0,mac=52:55:00:d1:55:01 ' \
-    '-kernel u-boot.bin'
+    '-kernel u-boot.bin -S'
 
 wait_for_line () {
     local expected_line_pattern="$1"
@@ -74,21 +75,24 @@ printf "tftp 0x85000000 \${serverip}:initrd.img\n" > /tmp/guest.in
 
 wait_for_line "Bytes transferred" /tmp/guest.out
 echo "✅ RAM disk transferred"
-printf "booti 0x80200000 0x85000000 0x84a00000\n" > /tmp/guest.in
-# printf "go 0x80100000\n" > /tmp/guest.in
+# printf "booti 0x80200000 0x85000000 0x84a00000\n" > /tmp/guest.in
+printf "go 0x80100000\n" > /tmp/guest.in
 
-wait_for_line "Bytes transferred" /tmp/guest.out
-echo "✅ RAM disk transferred"
-printf "booti 0x80200000 0x85000000 0x84a00000\n" > /tmp/guest.in
+# wait_for_line "Bytes transferred" /tmp/guest.out
+# echo "✅ RAM disk transferred"
+# printf "booti 0x80200000 0x85000000 0x84a00000\n" > /tmp/guest.in
 
-sleep 10
-printf "root\n" > /tmp/guest.in
-sleep 2
-printf "root\n" > /tmp/guest.in
-sleep 2
-printf "cat /proc/config.gz | gunzip > running.config\n" > /tmp/guest.in
-sleep 5
-printf "cat running.config\n" > /tmp/guest.in
+# sleep 10
+# printf "root\n" > /tmp/guest.in
+# sleep 2
+# printf "root\n" > /tmp/guest.in
+# sleep 2
+# printf "cat /proc/config.gz | gunzip > running.config\n" > /tmp/guest.in
+# sleep 5
+# printf "cat running.config\n" > /tmp/guest.in
+
+
+wait_for_line "EXECUTION DONE" /tmp/guest.out
 
 rm -f /tmp/{guest,host}.{in,out}
 kill -9 $pid

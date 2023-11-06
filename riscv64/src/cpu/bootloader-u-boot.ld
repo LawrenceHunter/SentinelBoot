@@ -51,7 +51,7 @@ telling the linker script here that we have one pool of RAM.
 */
 MEMORY
 {
-  ram  (wxa) : ORIGIN = 0x80300000, LENGTH = 128M
+  ram  (wxa) : ORIGIN = 0x80100000, LENGTH = 1M
 }
 
 /*
@@ -230,7 +230,7 @@ SECTIONS
 	 When we go to allocate from the stack, we'll subtract the number of bytes we need.
   */
   PROVIDE(_stack_start = _bss_end);
-  PROVIDE(_stack = _stack_start + 0x80000);
+  PROVIDE(_stack = _stack_start + 0x8000);
   PROVIDE(_memory_end = ORIGIN(ram) + LENGTH(ram));
 
   /*
