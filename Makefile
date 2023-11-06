@@ -90,7 +90,7 @@ DOCKER_CMD  = docker build --tag bootloader --file Dockerfile . && \
 				docker run -v $(shell pwd):$(shell pwd) \
 				-w $(shell pwd) bootloader:latest
 QEMU_ARGS   = $(QEMU_RELEASE_ARGS) -nographic -display none -serial mon:stdio \
-				-bios tftp/u-boot.bin -drive format=raw,file=sdcard.img -s \
+				-bios bootloader -s \
 				-monitor unix:qemu-monitor-socket,server,nowait
 ##-----------------------------------------------------------------------------
 ## Targets

@@ -32,3 +32,8 @@ global_asm!(include_str!("mem.s"));
 extern "C" fn main() {
     crate::loader_init()
 }
+
+#[no_mangle]
+extern "C" fn machine_mode_rs() {
+    crate::loader_machine()
+}

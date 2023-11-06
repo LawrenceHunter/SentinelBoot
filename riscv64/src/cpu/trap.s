@@ -7,5 +7,7 @@
 # handling interrupts.
 .align 4
 asm_trap_vector:
+	# Hacky but eh
+	j machine_mode_rs
 	wfi
 	j asm_trap_vector
