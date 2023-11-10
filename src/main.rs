@@ -69,7 +69,7 @@ fn loader_machine() {
             "csrw satp, t0",
             "li a0, 0",
             "li a1, 0x84a00000",
-            "li a2, 0x80202000",
+            "li a2, 0x80200000",
             "jalr x0, 0x0(a2)"
         );
     }
