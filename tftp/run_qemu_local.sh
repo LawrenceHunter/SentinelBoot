@@ -21,9 +21,9 @@ set +x
 
 rm -f /srv/tftp/*
 cp .gdbinit /home/l/.gdbinit
-cp ./{Image,rootfs.cpio.gz,qemu.dtb} /srv/tftp/
+cp ./{Image.gz,rootfs.cpio.gz,qemu.dtb} /srv/tftp/
 cp ../bootloader /srv/tftp/
-# (cd /srv/tftp && gzip --decompress Image.gz)
+(cd /srv/tftp && gzip --decompress Image.gz)
 (cd /srv/tftp && gzip --decompress rootfs.cpio.gz)
 # (cd /srv/tftp && mkimage -A riscv -T ramdisk -d rootfs.cpio.gz initrd.img)
 
@@ -92,7 +92,7 @@ printf "go 0x80100000\n" >/tmp/guest.in
 # sleep 5
 # printf "cat running.config\n" > /tmp/guest.in
 
-wait_for_line "EXECUTION DONE" /tmp/guest.out
+wait_for_line "Welcome" /tmp/guest.out
 
 rm -f /tmp/{guest,host}.{in,out}
 kill -9 $pid

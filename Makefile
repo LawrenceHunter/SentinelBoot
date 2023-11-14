@@ -20,7 +20,7 @@ ifeq ($(BSP),qemu)
     OBJDUMP_BINARY    = $(TOOLCHAIN)objdump
     NM_BINARY         = $(TOOLCHAIN)nm
     READELF_BINARY    = $(TOOLCHAIN)readelf
-	LD_PATH			  = riscv64/src/cpu/bootloader-raw.ld
+	LD_PATH			  = riscv64/src/cpu/bootloader-qemu.ld
 endif
 
 ifeq ($(BSP),qemu_tftp)
@@ -31,7 +31,7 @@ ifeq ($(BSP),qemu_tftp)
     OBJDUMP_BINARY    = $(TOOLCHAIN)objdump
     NM_BINARY         = $(TOOLCHAIN)nm
     READELF_BINARY    = $(TOOLCHAIN)readelf
-	LD_PATH			  = riscv64/src/cpu/bootloader-raw.ld
+	LD_PATH			  = riscv64/src/cpu/bootloader-qemu.ld
 endif
 
 ifeq ($(BSP),visionfive)

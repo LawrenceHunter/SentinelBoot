@@ -51,7 +51,7 @@ telling the linker script here that we have one pool of RAM.
 */
 MEMORY
 {
-  ram  (wxa) : ORIGIN = 0x80100000, LENGTH = 1M
+  ram  (wxa) : ORIGIN = 0x40100000, LENGTH = 1M
 }
 
 /*

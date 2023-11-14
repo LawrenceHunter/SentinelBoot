@@ -4,28 +4,28 @@
 
 #[cfg(feature = "qemu")]
 #[path = "qemu/mod.rs"]
-mod bsp;
+pub mod bsp;
 
 #[cfg(feature = "qemu")]
 pub use bsp::*;
 
 #[cfg(feature = "qemu_tftp")]
 #[path = "qemu/mod.rs"]
-mod bsp;
+pub mod bsp;
 
 #[cfg(feature = "qemu_tftp")]
 pub use bsp::*;
 
 #[cfg(feature = "visionfive")]
 #[path = "visionfive/mod.rs"]
-mod bsp;
+pub mod bsp;
 
 #[cfg(feature = "visionfive")]
 pub use bsp::*;
 
 #[cfg(feature = "unmatched")]
 #[path = "unmatched/mod.rs"]
-mod bsp;
+pub mod bsp;
 
 #[cfg(feature = "unmatched")]
 pub use bsp::*;
