@@ -23,6 +23,7 @@ mod run_time_checks;
 
 use core::arch::asm;
 
+use bsp::bsp;
 use console::{console, println};
 use global_allocator::Allocator;
 
@@ -67,10 +68,13 @@ fn loader_machine() {
         asm!(
             "li t0, 0",
             "csrw satp, t0",
-            "li a0, 0",
-            "li a1, 0x84a00000",
-            "li a2, 0x80200000",
-            "jalr x0, 0x0(a2)"
+            "li a0, {x}",
+            "li a1, {y}",
+            "li a2, {z}",
+            "jalr x0, 0x0(a2)",
+            x = const bsp::memory::map::kernel::HART,
+            y = const bsp::memory::map::kernel::DTB,
+            z = const bsp::memory::map::kernel::KERNEL
         );
     }
 }
@@ -101,33 +105,33 @@ fn loader_main() {
         run_time_checks::suite();
     }
 
-    // unsafe {
-    //     let mut data: u128;
-    //     let mut address: usize = 0x80200000;
-    //     for _ in 0..10 {
-    //         data = core::ptr::read(address as *mut u128);
-    //         println!("{:#010x}: {:>#034x}", address, data);
-    //         address = address + 0x10;
-    //     }
-    // }
-    // unsafe {
-    //     let mut data: u128;
-    //     let mut address: usize = 0x82A00000;
-    //     for _ in 0..10 {
-    //         data = core::ptr::read(address as *mut u128);
-    //         println!("{:#010x}: {:>#034x}", address, data);
-    //         address = address + 0x10;
-    //     }
-    // }
-    // unsafe {
-    //     let mut data: u128;
-    //     let mut address: usize = 0x83000000;
-    //     for _ in 0..10 {
-    //         data = core::ptr::read(address as *mut u128);
-    //         println!("{:#010x}: {:>#034x}", address, data);
-    //         address = address + 0x10;
-    //     }
-    // }
+    unsafe {
+        let mut data: u128;
+        let mut address: usize = bsp::memory::map::kernel::KERNEL;
+        for _ in 0..10 {
+            data = core::ptr::read(address as *mut u128);
+            println!("{:#010x}: {:>#034x}", address, data);
+            address += 0x10
+        }
+    }
+    unsafe {
+        let mut data: u128;
+        let mut address: usize = bsp::memory::map::kernel::DTB;
+        for _ in 0..10 {
+            data = core::ptr::read(address as *mut u128);
+            println!("{:#010x}: {:>#034x}", address, data);
+            address += 0x10
+        }
+    }
+    unsafe {
+        let mut data: u128;
+        let mut address: usize = bsp::memory::map::kernel::RAMFS;
+        for _ in 0..10 {
+            data = core::ptr::read(address as *mut u128);
+            println!("{:#010x}: {:>#034x}", address, data);
+            address += 0x10
+        }
+    }
 
     println!("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
     println!("X                          ENTERING MACHINE MODE                          X");

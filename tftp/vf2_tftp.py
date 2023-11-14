@@ -1,19 +1,21 @@
 import serial
 
-ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=0.5)
+ser = serial.Serial("/dev/ttyUSB0", 115200, timeout=0.5)
 
-tests = [("❕ Waiting for 'Hit any key to stop autoboot'...",
-          "✅ Got 'Hit any key to stop autoboot'",
-          "".encode(),
-          "Hit any key to stop autoboot"),
-          ("❕ Waiting for 'OpenThesis version'...",
-          "✅ Got 'OpenThesis version'",
-          "".encode(),
-          "OpenThesis version"),
-          ("❕ Waiting for 'Drivers loaded'...",
-          "✅ Got 'Drivers loaded'",
-          "".encode(),
-          "Drivers loaded")]
+tests = [
+    (
+        "❕ Waiting for 'Hit any key to stop autoboot'...",
+        "✅ Got 'Hit any key to stop autoboot'",
+        "".encode(),
+        "Hit any key to stop autoboot",
+    ),
+    (
+        "❕ Waiting for Kernel output...",
+        "✅ Got kernel output",
+        "".encode(),
+        "[    0.000000]",
+    ),
+]
 
 test = 0
 
