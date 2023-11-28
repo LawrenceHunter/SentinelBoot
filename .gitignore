@@ -21,3 +21,6 @@ src/helper.rs
 test.md
 
 vendor/
+
+*.pem
+bootloader*
