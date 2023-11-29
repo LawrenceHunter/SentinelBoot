@@ -3,8 +3,8 @@ from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_PSS
 from Crypto.Hash import SHA256
 
-# 4KiB blocks
-BUF_SIZE = 4096
+# 128 Byte blocks
+BUF_SIZE = 128
 sha256_hash = SHA256.new()
 
 if __name__ == "__main__":
@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     digest = sha256_hash
     print(
-        f"Digest: {digest.hexdigest()} with length {len(bytes.fromhex(digest.hexdigest()))}\n"
+        f"Digest: [{', '.join(hex(b) for b in bytes.fromhex(digest.hexdigest()))}] with length {len(bytes.fromhex(digest.hexdigest()))}\n"
     )
 
     print(public_key.export_key().decode() + "\n")

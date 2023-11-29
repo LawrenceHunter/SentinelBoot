@@ -21,9 +21,9 @@ set +x
 
 rm -f /srv/tftp/*
 cp .gdbinit /home/l/.gdbinit
-cp ./{Image.gz,rootfs.cpio.gz,qemu.dtb} /srv/tftp/
+cp ./{Image_signed.gz,rootfs.cpio.gz,qemu.dtb,public_key.pem} /srv/tftp/
 cp ../bootloader /srv/tftp/
-(cd /srv/tftp && gzip --decompress Image.gz)
+(cd /srv/tftp && gzip --decompress Image_signed.gz)
 (cd /srv/tftp && gzip --decompress rootfs.cpio.gz)
 # (cd /srv/tftp && mkimage -A riscv -T ramdisk -d rootfs.cpio.gz initrd.img)
 
@@ -38,7 +38,7 @@ wait_for_line() {
 	local expected_line_pattern="$1"
 	local fifo="$2"
 	while read line || [ -n "$line" ]; do
-		echo "  [$(date +"%T")] $line"
+		echo "$line"
 		if [[ $line == *$expected_line_pattern* ]]; then
 			break
 		fi
@@ -60,11 +60,15 @@ printf "ping 10.8.8.1\n" >/tmp/guest.in
 
 wait_for_line "is alive" /tmp/guest.out
 echo "✅ TFTP Alive"
+printf "tftp 0x800f0000 \${serverip}:public_key.pem\n" >/tmp/guest.in
+
+wait_for_line "Bytes transferred" /tmp/guest.out
+echo "✅ TFTP Alive"
 printf "tftp 0x80100000 \${serverip}:bootloader\n" >/tmp/guest.in
 
 wait_for_line "Bytes transferred" /tmp/guest.out
 echo "✅ Kernel transferred"
-printf "tftp 0x80200000 \${serverip}:Image\n" >/tmp/guest.in
+printf "tftp 0x80200000 \${serverip}:Image_signed\n" >/tmp/guest.in
 
 wait_for_line "Bytes transferred" /tmp/guest.out
 echo "✅ Kernel transferred"
