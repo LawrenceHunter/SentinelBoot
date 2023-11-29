@@ -16,16 +16,18 @@
 
 extern crate alloc;
 
+mod assert_hex;
 mod cpu;
 mod helper;
 mod panic_wait;
 mod run_time_checks;
 
-use core::arch::asm;
+use core::{arch::asm, slice};
 
 use bsp::bsp;
 use console::{console, println};
 use global_allocator::Allocator;
+use sha2::{Digest, Sha256};
 
 static TEST: bool = false;
 
@@ -107,6 +109,24 @@ fn loader_main() {
 
     unsafe {
         let mut data: u128;
+        let mut address: usize = bsp::memory::map::kernel::PUBK;
+        for _ in 0..10 {
+            data = core::ptr::read(address as *mut u128);
+            println!("{:#010x}: {:>#034x}", address, data);
+            address += 0x10
+        }
+    }
+    unsafe {
+        let mut data: u128;
+        let mut address: usize = bsp::memory::map::kernel::KERNEL - 0x100;
+        for _ in 0..10 {
+            data = core::ptr::read(address as *mut u128);
+            println!("{:#010x}: {:>#034x}", address, data);
+            address += 0x10
+        }
+    }
+    unsafe {
+        let mut data: u128;
         let mut address: usize = bsp::memory::map::kernel::KERNEL;
         for _ in 0..10 {
             data = core::ptr::read(address as *mut u128);
@@ -133,10 +153,45 @@ fn loader_main() {
         }
     }
 
-    println!("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-    println!("X                          ENTERING MACHINE MODE                          X");
-    println!("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-    unsafe {
-        asm!("mret");
+    // Hash kernel
+    let mut hasher = Sha256::new();
+    println!("Instantiated hasher.");
+
+    let mut offset = 0;
+    let buff_size = 128;
+    loop {
+        let data = unsafe {
+            slice::from_raw_parts(
+                (bsp::memory::map::kernel::KERNEL + (offset * buff_size))
+                    as *mut u8,
+                buff_size,
+            )
+        };
+        if data.iter().all(|&x| x == 0) {
+            break;
+        }
+        hasher.update(data);
+        offset += 1;
     }
+
+    println!("Hasher update finished.");
+    let hash = hasher.finalize();
+    println!("Binary hash: {:X?}", hash);
+    let expected: [u8; 32] = [
+        0x6A, 0xD, 0x64, 0x99, 0x6D, 0x62, 0x74, 0xBA, 0x39, 0x8B, 0x5B, 0x64,
+        0x18, 0x88, 0x5E, 0x9B, 0x2E, 0xF0, 0xA, 0x16, 0x45, 0xD7, 0xFB, 0x37,
+        0x6C, 0x75, 0x76, 0xCF, 0xA, 0xC4, 0xA9, 0x53,
+    ];
+    println!("Expected hash: {:X?}", expected);
+    assert_eq_hex!(expected, hash.as_slice());
+
+    loop {}
+
+    // println!("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+    // println!("X                          ENTERING MACHINE MODE
+    // X");
+    // println!("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+    // unsafe {
+    //     asm!("mret");
+    // }
 }

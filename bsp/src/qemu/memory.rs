@@ -15,8 +15,10 @@ pub mod map {
 
     /// Kernel entry point address
     pub mod kernel {
+        /// Server public key
+        pub const PUBK:  usize = 0x800f_0000;
         /// Kernel entry point
-        pub const KERNEL:  usize = 0x8020_0000;
+        pub const KERNEL:  usize = 0x8020_0100;
         /// Kernel dtb
         pub const DTB:  usize = 0x84a0_0000;
         /// Kernel ramfs
