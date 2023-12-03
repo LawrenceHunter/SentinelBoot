@@ -13,4 +13,5 @@ pub fn print_boot_logo() {
 	println!(r"              \/_/                                                           ");
 	println!(r"");
 }
-pub const SHA: &str = "818c07f3";
+pub const SHA: &str = "7895a3ab";
+pub const  PUBLIC_KEY: &'static [u8] = include_bytes!("../tftp/public_key.raw");

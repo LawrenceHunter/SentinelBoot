@@ -1,39 +1,53 @@
 import sys
-from Crypto.PublicKey import RSA
-from Crypto.Signature import PKCS1_PSS
+import base64
 from Crypto.Hash import SHA256
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.serialization import (
+    load_pem_private_key,
+    load_pem_public_key,
+)
 
-# 128 Byte blocks
-BUF_SIZE = 128
+# 4KiB blocks
+BUF_SIZE = 4096
 sha256_hash = SHA256.new()
 
 if __name__ == "__main__":
-    with open("private_key.pem", "r") as file:
-        private_key = RSA.importKey(file.read())
+    with open("private_key.pem", "rb") as file:
+        private_key = load_pem_private_key(file.read(), password=None)
+    privatePem = private_key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption(),
+    )
+    print("private key:\n", privatePem.decode())
 
-    with open("public_key.pem", "r") as file:
-        public_key = RSA.importKey(file.read())
+    with open("public_key.pem", "rb") as file:
+        public_key = load_pem_public_key(file.read())
+    publicPem = public_key.public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo,
+    )
+    print("Public key:\n", publicPem.decode())
 
+    byte_count = 0
     with open(sys.argv[1], "rb") as binary:
         while True:
             data = binary.read(BUF_SIZE)
             if not data:
                 break
+            byte_count += len(data)
             sha256_hash.update(data)
 
-    digest = sha256_hash
-    print(
-        f"Digest: [{', '.join(hex(b) for b in bytes.fromhex(digest.hexdigest()))}] with length {len(bytes.fromhex(digest.hexdigest()))}\n"
-    )
+    print(f"Processed {byte_count} bytes\n")
+    hashed_data = sha256_hash.digest()
+    print(f"Digest: [{', '.join(hex(b) for b in hashed_data)}]")
+    print(f"Length: {len(hashed_data)}\n")
 
-    print(public_key.export_key().decode() + "\n")
-    print(private_key.export_key().decode() + "\n")
-
-    signature = PKCS1_PSS.new(private_key).sign(digest)
-    print(f"Signature: {signature}")
+    signature = private_key.sign(hashed_data)
+    print(f"Signature: {signature}\n")
 
     try:
-        PKCS1_PSS.new(public_key).verify(digest, signature)
+        public_key.verify(signature, hashed_data)
         print("Signature is valid.")
     except (ValueError, TypeError):
         print("Signature is invalid or key mismatch.")

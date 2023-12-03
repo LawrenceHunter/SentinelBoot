@@ -60,10 +60,6 @@ printf "ping 10.8.8.1\n" >/tmp/guest.in
 
 wait_for_line "is alive" /tmp/guest.out
 echo "✅ TFTP Alive"
-printf "tftp 0x800f0000 \${serverip}:public_key.pem\n" >/tmp/guest.in
-
-wait_for_line "Bytes transferred" /tmp/guest.out
-echo "✅ TFTP Alive"
 printf "tftp 0x80100000 \${serverip}:bootloader\n" >/tmp/guest.in
 
 wait_for_line "Bytes transferred" /tmp/guest.out
