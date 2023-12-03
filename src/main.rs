@@ -178,17 +178,20 @@ fn loader_main() {
     assert_eq_hex!(expected, hash.as_slice());
     println!();
 
+    println!("Public key: {:X?}\n", crate::helper::PUBLIC_KEY);
     let public_key = ed25519_compact::PublicKey::from_slice(crate::helper::PUBLIC_KEY).unwrap();
-    println!("{:?}\n", public_key);
+    println!("{:X?}\n", public_key);
+
     let signature_bytes = unsafe { slice::from_raw_parts(
         (bsp::memory::map::kernel::KERNEL - 0x100)
             as *mut u8,
         64,
     ) };
     let signature = ed25519_compact::Signature::from_slice(signature_bytes).unwrap();
-    println!("Signature {:?}\n", signature);
+    println!("Signature {:X?}\n", signature);
+
     let verified = public_key.verify(hash.as_slice(), &signature);
-    println!("Verified: {:?}", verified);
+    println!("Verified: {:X?}", verified);
 
     // println!("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
     // println!("X                          ENTERING MACHINE MODE

@@ -2,9 +2,9 @@ import sys
 import base64
 from Crypto.Hash import SHA256
 from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.serialization import (
-    load_pem_private_key,
-    load_pem_public_key,
+from cryptography.hazmat.primitives.asymmetric.ed25519 import (
+    Ed25519PrivateKey,
+    Ed25519PublicKey,
 )
 
 # 4KiB blocks
@@ -13,21 +13,27 @@ sha256_hash = SHA256.new()
 
 if __name__ == "__main__":
     with open("private_key.pem", "rb") as file:
-        private_key = load_pem_private_key(file.read(), password=None)
+        private_key = Ed25519PrivateKey.from_private_bytes(file.read())
     privatePem = private_key.private_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.PKCS8,
+        encoding=serialization.Encoding.Raw,
+        format=serialization.PrivateFormat.Raw,
         encryption_algorithm=serialization.NoEncryption(),
     )
-    print("private key:\n", privatePem.decode())
+    print("Private key:", end=" ")
+    for item in privatePem:
+        print(hex(item)[2:], end=" ")
+    print()
 
     with open("public_key.pem", "rb") as file:
-        public_key = load_pem_public_key(file.read())
+        public_key = Ed25519PublicKey.from_public_bytes(file.read())
     publicPem = public_key.public_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PublicFormat.SubjectPublicKeyInfo,
+        encoding=serialization.Encoding.Raw,
+        format=serialization.PublicFormat.Raw,
     )
-    print("Public key:\n", publicPem.decode())
+    print("Public key:", end=" ")
+    for item in publicPem:
+        print(hex(item)[2:], end=" ")
+    print()
 
     byte_count = 0
     with open(sys.argv[1], "rb") as binary:
@@ -38,13 +44,20 @@ if __name__ == "__main__":
             byte_count += len(data)
             sha256_hash.update(data)
 
-    print(f"Processed {byte_count} bytes\n")
+    print(f"\nProcessed {byte_count} bytes\n")
     hashed_data = sha256_hash.digest()
-    print(f"Digest: [{', '.join(hex(b) for b in hashed_data)}]")
+    print("Hash:", end=" ")
+    for item in hashed_data:
+        print(hex(item)[2:], end=" ")
+    print()
     print(f"Length: {len(hashed_data)}\n")
 
     signature = private_key.sign(hashed_data)
-    print(f"Signature: {signature}\n")
+    print("Signature:", end=" ")
+    for item in signature:
+        print(hex(item)[2:], end=" ")
+    print()
+    print()
 
     try:
         public_key.verify(signature, hashed_data)

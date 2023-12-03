@@ -41,8 +41,8 @@ def generate_version():
 
 
 def add_public_key():
-    file_path = "../tftp/public_key.raw"
-    return f'pub const  PUBLIC_KEY: &\'static [u8] = include_bytes!("{file_path}");'
+    file_path = "../tftp/public_key.pem"
+    return f'pub const  PUBLIC_KEY: &\'static [u8] = include_bytes!("{file_path}");\n'
 
 
 if __name__ == "__main__":
