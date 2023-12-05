@@ -13,6 +13,7 @@
 #![feature(format_args_nl)]
 #![no_main]
 #![no_std]
+// #![allow(dead_code)]
 
 extern crate alloc;
 

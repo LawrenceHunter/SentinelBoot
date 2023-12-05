@@ -64,7 +64,7 @@ printf "tftp 0x80100000 \${serverip}:bootloader\n" >/tmp/guest.in
 
 wait_for_line "Bytes transferred" /tmp/guest.out
 echo "✅ Kernel transferred"
-printf "tftp 0x80200000 \${serverip}:Image_signed\n" >/tmp/guest.in
+printf "tftp 0x801fff00 \${serverip}:Image_signed\n" >/tmp/guest.in
 
 wait_for_line "Bytes transferred" /tmp/guest.out
 echo "✅ Kernel transferred"
@@ -97,4 +97,5 @@ wait_for_line "Welcome" /tmp/guest.out
 
 rm -f /tmp/{guest,host}.{in,out}
 kill -9 $pid
+python3 kill_hanging_qemu.py
 exit
