@@ -15,6 +15,8 @@ pub mod map {
 
     /// Kernel entry point address
     pub mod kernel {
+        /// Kernel signature
+        pub const SIGNATURE:  usize = 0x4020_0000;
         /// Kernel entry point
         pub const KERNEL:  usize = 0x4020_0100;
         /// Kernel dtb

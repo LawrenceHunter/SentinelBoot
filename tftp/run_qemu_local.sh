@@ -24,8 +24,8 @@ cp .gdbinit /home/l/.gdbinit
 cp ./{Image_signed.gz,rootfs.cpio.gz,qemu.dtb,public_key.pem} /srv/tftp/
 cp ../bootloader /srv/tftp/
 (cd /srv/tftp && gzip --decompress Image_signed.gz)
-# (cd /srv/tftp && gzip --decompress rootfs.cpio.gz)
-(cd /srv/tftp && mkimage -A riscv -T ramdisk -d rootfs.cpio.gz initrd.img)
+(cd /srv/tftp && gzip --decompress rootfs.cpio.gz)
+# (cd /srv/tftp && mkimage -A riscv -T ramdisk -d rootfs.cpio.gz initrd.img)
 
 printf -v QEMU_CMDLINE '%s' 'qemu-system-riscv64 -M virt ' \
 	'-cpu rv64 -smp 1 -m 512 -nographic ' \
@@ -72,13 +72,13 @@ printf "tftp 0x84a00000 \${serverip}:qemu.dtb\n" >/tmp/guest.in
 
 wait_for_line "Bytes transferred" /tmp/guest.out
 echo "✅ DTB transferred"
-# printf "tftp 0x85000000 \${serverip}:rootfs.cpio\n" >/tmp/guest.in
-printf "tftp 0x85000000 \${serverip}:initrd.img\n" >/tmp/guest.in
+printf "tftp 0x85000000 \${serverip}:rootfs.cpio\n" >/tmp/guest.in
+# printf "tftp 0x85000000 \${serverip}:initrd.img\n" >/tmp/guest.in
 
 wait_for_line "Bytes transferred" /tmp/guest.out
 echo "✅ RAM disk transferred"
-printf "booti 0x80200100 0x85000000 0x84a00000\n" >/tmp/guest.in
-# printf "go 0x80100000\n" >/tmp/guest.in
+# printf "booti 0x80200100 0x84a00000\n" >/tmp/guest.in
+printf "go 0x80100000\n" >/tmp/guest.in
 
 # wait_for_line "Bytes transferred" /tmp/guest.out
 # echo "✅ RAM disk transferred"
