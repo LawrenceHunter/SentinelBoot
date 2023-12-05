@@ -16,3 +16,4 @@ debug = []
 console = { path = "../console", version = "*"  }
 riscv64 = { path = "../riscv64", version = "*"  }
 synchronisation = { path = "../synchronisation", version = "*"  }
+bsp = { path = "../bsp", version = "*" }
