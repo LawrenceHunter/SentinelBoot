@@ -103,22 +103,16 @@ fn loader_main() {
         run_time_checks::suite();
     }
 
-    verification::dump_bsp_memory();
-
     match verification::verify_kernel() {
         Ok(_) => {
             println!("Loaded kernel hash matches signed hash proceeding...");
-        },
+        }
         Err(_) => {
             println!("! -- LOADED KERNEL HASH DOES NOT MATCH SIGNED HASH");
             println!("! -- ABORTING BOOT");
-            loop {
-
-            }
-        },
+            loop {}
+        }
     }
-
-    verification::dump_bsp_memory();
 
     unsafe {
         asm!("mret");
