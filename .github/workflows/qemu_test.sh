@@ -20,9 +20,9 @@ rm -f /tmp/{guest,host}.{in,out} && mkfifo /tmp/{guest,host}.{in,out}
 set +x
 
 rm -f /tftpboot/boot/*
-cp ./tftp/{Image.gz,rootfs.cpio.gz,qemu.dtb} /tftpboot/boot
+cp ./tftp/{Image_signed.gz,rootfs.cpio.gz,qemu.dtb} /tftpboot/boot
 cp ./bootloader /tftpboot/boot
-(cd /tftpboot/boot && gzip --decompress Image.gz)
+(cd /tftpboot/boot && gzip --decompress Image_signed.gz)
 (cd /tftpboot/boot && gzip --decompress rootfs.cpio.gz)
 
 printf -v QEMU_CMDLINE '%s' 'qemu-system-riscv64 -M virt ' \
@@ -58,7 +58,7 @@ printf "tftp 0x80100000 \${serverip}:bootloader\n" >/tmp/guest.in
 
 wait_for_line "Bytes transferred" /tmp/guest.out
 echo "✅ Kernel transferred"
-printf "tftp 0x80200000 \${serverip}:Image\n" >/tmp/guest.in
+printf "tftp 0x801fff00 \${serverip}:Image_signed\n" >/tmp/guest.in
 
 wait_for_line "Bytes transferred" /tmp/guest.out
 echo "✅ Kernel transferred"

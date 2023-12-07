@@ -6,6 +6,8 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import (
     Ed25519PrivateKey,
     Ed25519PublicKey,
 )
+import pefile
+import pprint
 
 # 4KiB blocks
 BUF_SIZE = 4096
@@ -35,9 +37,13 @@ if __name__ == "__main__":
         print(hex(item)[2:], end=" ")
     print()
 
+    pe = pefile.PE(sys.argv[1])
+    pprint.pprint(pe.OPTIONAL_HEADER.dump_dict())
+    size = pe.OPTIONAL_HEADER.dump_dict()["AddressOfEntryPoint"]["Value"]
+    print(hex(size))
     byte_count = 0
     with open(sys.argv[1], "rb") as binary:
-        while True:
+        while byte_count < size:
             data = binary.read(BUF_SIZE)
             if not data:
                 break

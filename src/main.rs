@@ -109,9 +109,7 @@ fn loader_main() {
             println!("Loaded kernel hash matches signed hash proceeding...");
         }
         Err(_) => {
-            println!("! -- LOADED KERNEL HASH DOES NOT MATCH SIGNED HASH");
-            println!("! -- ABORTING BOOT");
-            loop {}
+            panic!("! -- LOADED KERNEL HASH DOES NOT MATCH SIGNED HASH")
         }
     }
 

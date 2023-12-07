@@ -42,10 +42,10 @@ jobs:
           BSP=visionfive make
           rm /tftpboot/boot/*
           mv bootloader /tftpboot/boot
-          cp tftp/{Image-vf2.gz,rootfs.cpio.gz,jh7110-visionfive-v2.dtb,boot.scr,mkimage.sh,power_vf2.sh,vf2_tftp.py} /tftpboot/boot
+          cp tftp/{Image_vf2_signed.gz,rootfs.cpio.gz,jh7110-visionfive-v2.dtb,boot.scr,mkimage.sh,power_vf2.sh,vf2_tftp.py} /tftpboot/boot
           cd /tftpboot/boot
-          mv Image-vf2.gz Image.gz
-          gzip --decompress Image.gz
+          mv Image_vf2_signed.gz Image_signed.gz
+          gzip --decompress Image_signed.gz
           gzip --decompress rootfs.cpio.gz
           chmod +x *.sh
           ./mkimage.sh
