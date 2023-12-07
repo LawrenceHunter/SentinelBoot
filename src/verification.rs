@@ -44,21 +44,7 @@ fn get_kernel_size() -> usize {
         )
     };
     let pe = pe64::PeFile::from_bytes(data).unwrap();
-    let mut kernel_size: usize = pe.optional_header().SizeOfImage as usize;
-    loop {
-        let data = unsafe {
-            slice::from_raw_parts(
-                (bsp::memory::map::kernel::KERNEL + kernel_size) as *mut u128,
-                256,
-            )
-        };
-        if data.iter().all(|&x| x == 0) {
-            kernel_size -= 4096;
-        } else {
-            break;
-        }
-    }
-    kernel_size += 4096;
+    let kernel_size: usize = pe.optional_header().AddressOfEntryPoint as usize;
     println!("Kernel size: 0x{:X?}", kernel_size);
     kernel_size
 }
@@ -67,6 +53,7 @@ fn hash_kernel(hasher: &mut Sha256) {
     let mut offset = 0;
     let buff_size = 4096;
     let kernel_size = get_kernel_size();
+    println!("Kernel range: 0x{:X?} -> 0x{:X?}", bsp::memory::map::kernel::KERNEL, bsp::memory::map::kernel::KERNEL + kernel_size);
     loop {
         let data = unsafe {
             slice::from_raw_parts(
@@ -75,7 +62,6 @@ fn hash_kernel(hasher: &mut Sha256) {
                 buff_size,
             )
         };
-        // This is the problem how at runtime do I detect 13365248 bytes
         if (offset * buff_size) >= kernel_size {
             break;
         }
@@ -88,12 +74,12 @@ fn pretty_print_slice(bytes: &[u8]) {
     let mut counter = 0;
     let mut lines = 0;
     let column_limit = 16;
-    print!("{:#04x} | ", lines * column_limit);
+    print!("\r\n{:#04x} | ", lines * column_limit);
     for byte in bytes {
         if counter == column_limit {
             counter = 0;
             lines += 1;
-            print!("\n{:#04x} | ", lines * column_limit);
+            print!("\r\n{:#04x} | ", lines * column_limit);
         }
         counter += 1;
         print!("{:#04x} ", byte);

@@ -7,10 +7,12 @@ def generate_header():
 
 def generate_boot_logo():
     # Fonts: http://www.figlet.org/examples.html
-    logo = pyfiglet.figlet_format("OpenThesis", font="larry3d", width=80).split(
+    logo = pyfiglet.figlet_format("OpenThesis", font="banner", width=80).split(
         "\n"
     )
     text = "pub fn print_boot_logo() {\n"
+    text += "\tprintln!();\n"
+    text += "\tprintln!();\n"
     for line in logo:
         text += f'\tprintln!(r"{line}");\n'
     text += "}"
@@ -42,7 +44,7 @@ def generate_version():
 
 def add_public_key():
     file_path = "../tftp/public_key.pem"
-    return f'pub const  PUBLIC_KEY: &\'static [u8] = include_bytes!("{file_path}");\n'
+    return f'pub const PUBLIC_KEY: &[u8] = include_bytes!("{file_path}");\n'
 
 
 if __name__ == "__main__":

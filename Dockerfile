@@ -26,4 +26,4 @@ RUN cargo install -j1 cargo-expand
 RUN apt update -y && \
     apt install -y qemu-system make wget graphviz python3-pip && \
     apt clean
-RUN pip3 install pyfiglet
+RUN pip3 install pyfiglet pycryptodome

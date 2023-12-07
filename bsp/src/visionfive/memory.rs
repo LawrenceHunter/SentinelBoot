@@ -19,9 +19,9 @@ pub mod map {
         /// Kernel entry point
         pub const KERNEL: usize = 0x4020_0000;
         /// Kernel dtb
-        pub const DTB: usize = 0x43A0_0000;
+        pub const DTB: usize = 0x44A0_0000;
         /// Kernel ramfs
-        pub const RAMFS: usize = 0x4400_0000;
+        pub const RAMFS: usize = 0x4500_0000;
         /// Kernel HART
         pub const HART: usize = 1;
     }
