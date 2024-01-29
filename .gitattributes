@@ -1,0 +1,7 @@
+tftp/rootfs.cpio.gz filter=lfs diff=lfs merge=lfs -text
+tftp/u-boot.bin filter=lfs diff=lfs merge=lfs -text
+tftp/jh7110-visionfive-v2.dtb filter=lfs diff=lfs merge=lfs -text
+tftp/Image.gz filter=lfs diff=lfs merge=lfs -text
+tftp/Image_signed.gz filter=lfs diff=lfs merge=lfs -text
+tftp/Image_vf2_signed.gz filter=lfs diff=lfs merge=lfs -text
+tftp/Image-vf2.gz filter=lfs diff=lfs merge=lfs -text
