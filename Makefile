@@ -19,7 +19,6 @@ ifeq ($(BSP),qemu)
     NM_BINARY         = $(TOOLCHAIN)nm
     READELF_BINARY    = $(TOOLCHAIN)readelf
 	LD_PATH			  = riscv64/src/cpu/bootloader-qemu.ld
-	EXTENSION		  = gcv
 endif
 
 ifeq ($(BSP),qemu_tftp)
@@ -31,7 +30,6 @@ ifeq ($(BSP),qemu_tftp)
     NM_BINARY         = $(TOOLCHAIN)nm
     READELF_BINARY    = $(TOOLCHAIN)readelf
 	LD_PATH			  = riscv64/src/cpu/bootloader-qemu.ld
-	EXTENSION		  = gcv
 endif
 
 ifeq ($(BSP),visionfive)
@@ -43,7 +41,6 @@ ifeq ($(BSP),visionfive)
     NM_BINARY         = $(TOOLCHAIN)nm
     READELF_BINARY    = $(TOOLCHAIN)readelf
 	LD_PATH           = riscv64/src/cpu/bootloader-u-boot.ld
-	EXTENSION		  = gc
 endif
 
 ifeq ($(BSP),unmatched)
@@ -55,7 +52,6 @@ ifeq ($(BSP),unmatched)
     NM_BINARY         = $(TOOLCHAIN)nm
     READELF_BINARY    = $(TOOLCHAIN)readelf
 	LD_PATH			  = riscv64/src/cpu/bootloader-u-boot.ld
-	EXTENSION		  = gc
 endif
 
 # ---------------------------------------------------------------------------- #
@@ -64,7 +60,7 @@ endif
 LOADER_MANIFEST      = Cargo.toml
 LAST_BUILD_CONFIG    = target/$(BSP).build_config
 
-LOADER_ELF      = target/riscv64$(EXTENSION)-unknown-none-elf/release/bootloader
+LOADER_ELF      = target/riscv64gc-unknown-none-elf/release/bootloader
 # This parses cargo's dep-info file.
 # https://doc.rust-lang.org/cargo/guide/build-cache.html#dep-info-files
 LOADER_ELF_DEPS = $(filter-out %: ,$(file < $(LOADER_ELF).d)) \
@@ -251,11 +247,11 @@ test: $(LOADER_BIN)
 call_stack:
 ifeq ($(DOCKER),y)
 	$(DOCKER_FULL_CMD) cargo +nightly call-stack --bin bootloader --features \
-	$(BSP) --target riscv64$(EXTENSION)-unknown-none-elf > cg.dot ; \
+	$(BSP) --target riscv64gc-unknown-none-elf > cg.dot ; \
 	dot -Tsvg cg.dot > cg.svg && rm cg.dot
 else
 	cargo +nightly call-stack --bin bootloader --features $(BSP) --target \
-	riscv64$(EXTENSION)-unknown-none-elf > cg.dot ; \
+	riscv64gc-unknown-none-elf > cg.dot ; \
 	dot -Tsvg cg.dot > cg.svg && rm cg.dot
 endif
 
@@ -266,11 +262,11 @@ geiger:
 	echo "# Safety Report" > .github/workflows/geiger.md
 ifeq ($(DOCKER),y)
 	$(DOCKER_FULL_CMD) cargo geiger \
-		--target riscv64$(EXTENSION)-unknown-none-elf \
+		--target riscv64gc-unknown-none-elf \
 		--features $(BSP) --output-format GitHubMarkdown \
 		--update-readme --readme-path .github/workflows/geiger.md
 else
-	cargo geiger --target riscv64$(EXTENSION)-unknown-none-elf \
+	cargo geiger --target riscv64gc-unknown-none-elf \
 	--features $(BSP) --output-format GitHubMarkdown --update-readme \
 	--readme-path .github/workflows/geiger.md
 endif
@@ -299,7 +295,7 @@ endif
 expand:
 ifeq ($(DOCKER),y)
 	$(DOCKER_FULL_CMD) cargo expand \
-		--target riscv64$(EXTENSION)-unknown-none-elf --features $(BSP)
+		--target riscv64gc-unknown-none-elf --features $(BSP)
 else
-	cargo expand --target riscv64$(EXTENSION)-unknown-none-elf --features $(BSP)
+	cargo expand --target riscv64gc-unknown-none-elf --features $(BSP)
 endif

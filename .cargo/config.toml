@@ -5,9 +5,6 @@ target = "riscv64gc-unknown-none-elf"
 [target.riscv64gc-unknown-none-elf]
 rustflags = ["-C", "link-arg=--script=bootloader.ld", "-D", "warnings", "-D", "missing_docs", "-C", "link-arg=--library-path=./"]
 
-[target.riscv64gv-unknown-none-elf]
-rustflags = ["-C", "link-arg=--script=bootloader.ld", "-D", "warnings", "-D", "missing_docs", "-C", "link-arg=--library-path=./"]
-
 [source.crates-io]
 replace-with = "vendored-sources"
 
