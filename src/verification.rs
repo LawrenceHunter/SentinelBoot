@@ -1,14 +1,15 @@
 use console::{print, println};
 use core::slice;
 use pelite::pe64::{self, Pe};
+#[cfg(not(feature = "qemu"))]
 use sha2::{Digest, Sha256};
+use core::arch::global_asm;
 
 pub fn verify_kernel() -> Result<(), ed25519_compact::Error> {
-    let mut hasher = Sha256::new();
-
     println!("Hashing stored kernel...");
-    hash_kernel(&mut hasher);
-    let hash = hasher.finalize();
+
+    let hash = hash_kernel();
+
     println!("Stored kernel hashed:");
     pretty_print_slice(hash.as_slice());
 
@@ -49,7 +50,9 @@ fn get_kernel_size() -> usize {
     kernel_size
 }
 
-fn hash_kernel(hasher: &mut Sha256) {
+#[cfg(not(feature = "qemu"))]
+fn hash_kernel() -> [u8; 32] {
+    let mut hasher = Sha256::new();
     let mut offset = 0;
     let buff_size = 4096;
     let kernel_size = get_kernel_size();
@@ -68,6 +71,23 @@ fn hash_kernel(hasher: &mut Sha256) {
         hasher.update(data);
         offset += 1;
     }
+    hasher.finalize().into()
+}
+
+#[cfg(feature = "qemu")]
+global_asm!(include_str!("vector_hash.s"));
+
+#[cfg(feature = "qemu")]
+extern "C" {
+    fn hash_kernel_asm();
+}
+
+#[cfg(feature = "qemu")]
+fn hash_kernel() -> [u8; 32] {
+    let kernel_size = get_kernel_size();
+    println!("Kernel range: 0x{:X?} -> 0x{:X?}", bsp::memory::map::kernel::KERNEL, bsp::memory::map::kernel::KERNEL + kernel_size);
+    unsafe { hash_kernel_asm() };
+    todo!()
 }
 
 fn pretty_print_slice(bytes: &[u8]) {
