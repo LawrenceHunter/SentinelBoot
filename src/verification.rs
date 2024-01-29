@@ -75,7 +75,7 @@ fn hash_kernel() -> [u8; 32] {
 }
 
 #[cfg(feature = "qemu")]
-global_asm!(include_str!("vector_hash.s"));
+global_asm!(include_str!("vector_hash_intermediate.s"));
 
 #[cfg(feature = "qemu")]
 extern "C" {

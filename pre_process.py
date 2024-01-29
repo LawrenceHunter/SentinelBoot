@@ -1,81 +1,79 @@
+import sys
+
 undefined_opcodes = ["vsetvli", "vle64.v", "vsha2ms.vv"]
-
-vle = [0x0205F007, 0x0205F407, 0x0205F807]
-vle_counter = 0
-
-vsetvli = 0x018572D7
 
 
 def register_map(reg_mnemonic):
     if reg_mnemonic[0] == "x":
         return int(reg_mnemonic[1:])
-    if reg_mnemonic[0] == "v":
+    elif reg_mnemonic[0] == "v":
         return int(reg_mnemonic[1:])
-    match reg_mnemonic:
-        case "zero":
-            return 0
-        case "ra":
-            return 1
-        case "sp":
-            return 2
-        case "gp":
-            return 3
-        case "tp":
-            return 4
-        case "t0":
-            return 5
-        case "t1":
-            return 6
-        case "t2":
-            return 7
-        case "s0":
-            return 8
-        case "s1":
-            return 9
-        case "a0":
-            return 10
-        case "a1":
-            return 11
-        case "a2":
-            return 12
-        case "a3":
-            return 13
-        case "a4":
-            return 14
-        case "a5":
-            return 15
-        case "a6":
-            return 16
-        case "a7":
-            return 17
-        case "s2":
-            return 18
-        case "s3":
-            return 19
-        case "s4":
-            return 20
-        case "s5":
-            return 21
-        case "s6":
-            return 22
-        case "s7":
-            return 23
-        case "s8":
-            return 24
-        case "s9":
-            return 25
-        case "s10":
-            return 26
-        case "s11":
-            return 27
-        case "t3":
-            return 28
-        case "t4":
-            return 29
-        case "t5":
-            return 30
-        case "t6":
-            return 31
+    elif reg_mnemonic == "zero":
+        return 0
+    elif reg_mnemonic == "ra":
+        return 1
+    elif reg_mnemonic == "sp":
+        return 2
+    elif reg_mnemonic == "gp":
+        return 3
+    elif reg_mnemonic == "tp":
+        return 4
+    elif reg_mnemonic == "t0":
+        return 5
+    elif reg_mnemonic == "t1":
+        return 6
+    elif reg_mnemonic == "t2":
+        return 7
+    elif reg_mnemonic == "s0":
+        return 8
+    elif reg_mnemonic == "s1":
+        return 9
+    elif reg_mnemonic == "a0":
+        return 10
+    elif reg_mnemonic == "a1":
+        return 11
+    elif reg_mnemonic == "a2":
+        return 12
+    elif reg_mnemonic == "a3":
+        return 13
+    elif reg_mnemonic == "a4":
+        return 14
+    elif reg_mnemonic == "a5":
+        return 15
+    elif reg_mnemonic == "a6":
+        return 16
+    elif reg_mnemonic == "a7":
+        return 17
+    elif reg_mnemonic == "s2":
+        return 18
+    elif reg_mnemonic == "s3":
+        return 19
+    elif reg_mnemonic == "s4":
+        return 20
+    elif reg_mnemonic == "s5":
+        return 21
+    elif reg_mnemonic == "s6":
+        return 22
+    elif reg_mnemonic == "s7":
+        return 23
+    elif reg_mnemonic == "s8":
+        return 24
+    elif reg_mnemonic == "s9":
+        return 25
+    elif reg_mnemonic == "s10":
+        return 26
+    elif reg_mnemonic == "s11":
+        return 27
+    elif reg_mnemonic == "t3":
+        return 28
+    elif reg_mnemonic == "t4":
+        return 29
+    elif reg_mnemonic == "t5":
+        return 30
+    elif reg_mnemonic == "t6":
+        return 31
+    else:
+        raise ValueError("Invalid register mnemonic")
 
 
 def encode_vtypei(e, m, tu, mu):
@@ -102,7 +100,7 @@ def encode_vtypei(e, m, tu, mu):
 
 
 if __name__ == "__main__":
-    with open("vector_hash.s", "r") as f:
+    with open(sys.argv[1], "r") as f:
         instructions = []
         for line in f.readlines():
             if "#" in line:
@@ -136,14 +134,6 @@ if __name__ == "__main__":
                     + format(register_map(split_instruction[1]), "05b")
                     + "1010111"
                 )
-                try:
-                    assert format(vsetvli, "#034b") == "0b" + instruction
-                except AssertionError:
-                    print("vsetvli error")
-                    print(split_instruction)
-                    print(f"Expected: {format(vsetvli, '#034b')}")
-                    print(f"Got:      0b{instruction}")
-                    exit(1)
             elif split_instruction[0] == "vle64.v":
                 # "vle64.v": {
                 #     "nf": bin(0),
@@ -173,17 +163,6 @@ if __name__ == "__main__":
                     + format(register_map(split_instruction[1]), "05b")
                     + "0000111"
                 )
-                try:
-                    assert (
-                        format(vle[vle_counter], "#034b") == "0b" + instruction
-                    )
-                except AssertionError:
-                    print("vle64.v error")
-                    print(split_instruction)
-                    print(f"Expected: {format(vle[vle_counter], '#034b')}")
-                    print(f"Got:      0b{instruction}")
-                    exit(1)
-                vle_counter += 1
             elif split_instruction[0] == "vsha2ms.vv":
                 # "vsha2ms.vv": {
                 #     "opcode": bin(101101),
@@ -206,6 +185,8 @@ if __name__ == "__main__":
 
             instruction = ".word 0x" + str(hex(int(instruction, 2))).upper()[2:]
             processed_instructions.append(instruction)
-    with open("vector_hash_processed.s", "w") as f:
+    split = sys.argv[1].split(".")
+    with open("." + split[1] + "_intermediate.s", "w") as f:
+        f.write("# AUTOGENERATED DO NOT EDIT")
         for instruction in processed_instructions:
             f.write(f"{instruction}\n")

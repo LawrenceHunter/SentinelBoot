@@ -128,11 +128,13 @@ ifeq ($(DOCKER),y)
 	$(call color_header, "Compiling bootloader ELF - $(BSP)")
 	$(DOCKER_MINIMAL_CMD) cargo vendor
 	$(DOCKER_MINIMAL_CMD) python3 gen_helper.py
+	$(DOCKER_MINIMAL_CMD) python3 pre_process.py ./src/vector_hash.s
 	$(DOCKER_MINIMAL_CMD) $(RUSTC_CMD)
 else
 	$(call color_header, "Compiling bootloader ELF - $(BSP)")
 	cargo vendor > .cargo/config
 	python3 gen_helper.py
+	python3 pre_process.py ./src/vector_hash.s
 	$(RUSTC_CMD)
 endif
 	rm ./bootloader.ld
