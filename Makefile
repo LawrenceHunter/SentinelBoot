@@ -130,7 +130,7 @@ endif
 	cp $(LD_PATH) ./bootloader.ld
 ifeq ($(DOCKER),y)
 	$(call color_header, "Compiling bootloader ELF - $(BSP)")
-	$(DOCKER_MINIMAL_CMD) cargo vendor > .cargo/config
+	$(DOCKER_MINIMAL_CMD) cargo vendor
 	$(DOCKER_MINIMAL_CMD) python3 gen_helper.py
 	$(DOCKER_MINIMAL_CMD) $(RUSTC_CMD)
 else
