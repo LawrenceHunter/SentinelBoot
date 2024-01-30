@@ -13,6 +13,8 @@
 #![feature(format_args_nl)]
 #![no_main]
 #![no_std]
+
+#![allow(named_asm_labels)]
 // #![allow(dead_code)]
 
 extern crate alloc;
@@ -23,6 +25,9 @@ mod helper;
 mod panic_wait;
 mod run_time_checks;
 mod verification;
+
+#[cfg(feature = "qemu")]
+mod vector_hash;
 
 use core::arch::asm;
 

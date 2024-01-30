@@ -3,7 +3,6 @@ use core::slice;
 use pelite::pe64::{self, Pe};
 #[cfg(not(feature = "qemu"))]
 use sha2::{Digest, Sha256};
-use core::arch::global_asm;
 
 pub fn verify_kernel() -> Result<(), ed25519_compact::Error> {
     println!("Hashing stored kernel...");
@@ -56,7 +55,11 @@ fn hash_kernel() -> [u8; 32] {
     let mut offset = 0;
     let buff_size = 4096;
     let kernel_size = get_kernel_size();
-    println!("Kernel range: 0x{:X?} -> 0x{:X?}", bsp::memory::map::kernel::KERNEL, bsp::memory::map::kernel::KERNEL + kernel_size);
+    println!(
+        "Kernel range: 0x{:X?} -> 0x{:X?}",
+        bsp::memory::map::kernel::KERNEL,
+        bsp::memory::map::kernel::KERNEL + kernel_size
+    );
     loop {
         let data = unsafe {
             slice::from_raw_parts(
@@ -75,18 +78,15 @@ fn hash_kernel() -> [u8; 32] {
 }
 
 #[cfg(feature = "qemu")]
-global_asm!(include_str!("vector_hash_intermediate.s"));
-
-#[cfg(feature = "qemu")]
-extern "C" {
-    fn hash_kernel_asm();
-}
-
-#[cfg(feature = "qemu")]
 fn hash_kernel() -> [u8; 32] {
     let kernel_size = get_kernel_size();
-    println!("Kernel range: 0x{:X?} -> 0x{:X?}", bsp::memory::map::kernel::KERNEL, bsp::memory::map::kernel::KERNEL + kernel_size);
-    unsafe { hash_kernel_asm() };
+    println!(
+        "Kernel range: 0x{:X?} -> 0x{:X?}",
+        bsp::memory::map::kernel::KERNEL,
+        bsp::memory::map::kernel::KERNEL + kernel_size
+    );
+    let mut result: [u64; 4] = [0, 0, 0, 0];
+    unsafe { crate::vector_hash::hash_kernel_vcrypto(kernel_size as u64, bsp::memory::map::kernel::KERNEL as u64, &mut result) };
     todo!()
 }
 

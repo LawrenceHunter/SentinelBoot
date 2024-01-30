@@ -5,3 +5,4 @@ tftp/Image.gz filter=lfs diff=lfs merge=lfs -text
 tftp/Image_signed.gz filter=lfs diff=lfs merge=lfs -text
 tftp/Image_vf2_signed.gz filter=lfs diff=lfs merge=lfs -text
 tftp/Image-vf2.gz filter=lfs diff=lfs merge=lfs -text
+tftp/qemu.dtb filter=lfs diff=lfs merge=lfs -text
