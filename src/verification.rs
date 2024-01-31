@@ -79,15 +79,53 @@ fn hash_kernel() -> [u8; 32] {
 
 #[cfg(feature = "qemu")]
 fn hash_kernel() -> [u8; 32] {
-    let kernel_size = get_kernel_size();
+    use core::arch::asm;
+
+    let mut kernel_size = get_kernel_size();
     println!(
         "Kernel range: 0x{:X?} -> 0x{:X?}",
         bsp::memory::map::kernel::KERNEL,
         bsp::memory::map::kernel::KERNEL + kernel_size
     );
     let mut result: [u64; 4] = [0, 0, 0, 0];
-    println!("Attempting vector hashing...");
-    unsafe { crate::vector_hash::hash_kernel_vcrypto(kernel_size as u64, bsp::memory::map::kernel::KERNEL as u64, &mut result) };
+    result[0] = unsafe { core::ptr::read(bsp::memory::map::kernel::KERNEL as *const u64) };
+    result[1] = unsafe { core::ptr::read((bsp::memory::map::kernel::KERNEL + 8) as *const u64) };
+    result[2] = unsafe { core::ptr::read((bsp::memory::map::kernel::KERNEL + 16) as *const u64) };
+    result[3] = unsafe { core::ptr::read((bsp::memory::map::kernel::KERNEL + 24) as *const u64) };
+    let mut loop_count = 1;
+    kernel_size = 256;
+    println!("Attempting vector hashing - kernel size: {}B", kernel_size);
+    while kernel_size >= 32 {
+        let kernel_pointer = bsp::memory::map::kernel::KERNEL + (loop_count * 32);
+        unsafe {
+            asm!(
+                "li a0, 4",
+                "addi a2, a2, 1",
+                "addi a3, a3, -32",
+                ".word 0x18572D7", // vsetvli t0, a0, e64, m1, tu, mu
+                ".word 0xE00033", // vle64.v v0, (a1)
+                ".word 0xF08033", // mv v0, a4
+                ".word 0x1010033", // mv v1, a5
+                ".word 0x1118033", // mv v2, a6
+                ".word 0x205F207", // mv v3, a7
+                ".word 0x205F407", // vle64.v v8, (a1)
+                ".word 0xB6822077", // vsha2ms.vv v0, v8, v4
+                ".word 0x70033", // mv a4, v0
+                ".word 0x178033", // mv a5, v1
+                ".word 0x280033", // mv a6, v2
+                ".word 0x388033", // mv a7, v3
+                out("a0") _,
+                inout("a1") kernel_pointer => _,
+                inout("a2") loop_count => loop_count,
+                inout("a3") kernel_size => kernel_size,
+                inout("a4") result[0] => result[0],
+                inout("a5") result[1] => result[1],
+                inout("a6") result[2] => result[2],
+                inout("a7") result[3] => result[3],
+            );
+        }
+        println!("Loop performed: {}B, {}", kernel_size, loop_count);
+    }
     println!("Returned from vector hashing");
     panic!("HALT");
 }

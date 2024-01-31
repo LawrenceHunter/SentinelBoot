@@ -26,9 +26,6 @@ mod panic_wait;
 mod run_time_checks;
 mod verification;
 
-#[cfg(feature = "qemu")]
-mod vector_hash;
-
 use core::arch::asm;
 
 use bsp::bsp;
