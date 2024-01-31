@@ -26,7 +26,8 @@ cp ./bootloader /srv/tftp
 (cd /srv/tftp && gzip --decompress rootfs.cpio.gz)
 
 printf -v QEMU_CMDLINE '%s' 'qemu-system-riscv64 -M virt ' \
-	'-cpu rv64 -smp 1 -m 512 -nographic ' \
+	'-cpu rv64,v=true,vlen=1024,rvv_ma_all_1s=true,rvv_ta_all_1s=true,x-zvbb=true,x-zvbc=true,x-zvknhb=true '\
+	'-smp 1 -m 512 -nographic ' \
 	'-display none -serial pipe:/tmp/guest -s ' \
 	'-netdev tap,id=mynet0,ifname=tap0,script=no,downscript=no ' \
 	'-device e1000,netdev=mynet0,mac=52:55:00:d1:55:01 ' \
@@ -36,7 +37,7 @@ wait_for_line() {
 	local expected_line_pattern="$1"
 	local fifo="$2"
 	while read line || [ -n "$line" ]; do
-		echo "  [$(date +"%T")] $line"
+		echo "$line"
 		if [[ $line == *$expected_line_pattern* ]]; then
 			break
 		fi

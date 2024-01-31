@@ -7,6 +7,8 @@
 li a0, 4
 add a1, {KERNEL_POINTER}, zero
 add a2, {kernel_size}, zero
+# Sanity check forms a loop counter
+li a3, 0
 hash_kernel_asm:
     # Set vector length to 4 64 bit elements
     vsetvli t0, a0, e64, m1, tu, mu
@@ -17,6 +19,7 @@ hash_kernel_asm:
     # Decrement a2 to reduce remaining size by 64 bytes
     addi a2, a2, -64
     hash_kernel_asm_internal_loop:
+        add a3, a3, 1
         # Load 4 consecutive 64 bit values into v8-v15
         vle64.v v4, (a1)
         # Increment a1 to point to the next 32 byte chunk
@@ -33,6 +36,7 @@ hash_kernel_asm:
         # 101101 1 10000 01000 010 00000 1110111
         # .word 0xB7042077
     bnez a2, hash_kernel_asm_internal_loop
+add {counter}, a3, zero
 mv a0, v0
 mv a1, v1
 mv a2, v2

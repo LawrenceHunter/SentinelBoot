@@ -36,6 +36,7 @@ use console::println;
 use global_allocator::Allocator;
 
 static TEST: bool = false;
+static BOOTABLE: bool = false;
 
 /// Early init code.
 ///
@@ -65,6 +66,9 @@ extern "C" fn main_hart(_hartid: usize) {
 }
 
 fn loader_machine() {
+    if !crate::BOOTABLE {
+        panic!("REACHED KERNEL BOOT WITHOUT FLAG SET");
+    }
     println!("Handing execution to the kernel...");
     unsafe {
         // https://github.com/torvalds/linux/blob/master/Documentation/riscv/boot.rst

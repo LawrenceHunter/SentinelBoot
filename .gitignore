@@ -17,7 +17,8 @@ Cargo.lock
 *.svg
 
 .github/workflows/*.md
-src/helper.rs
+**/src/helper.rs
+**/src/vector_hash.rs
 test.md
 
 vendor/

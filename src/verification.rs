@@ -86,8 +86,10 @@ fn hash_kernel() -> [u8; 32] {
         bsp::memory::map::kernel::KERNEL + kernel_size
     );
     let mut result: [u64; 4] = [0, 0, 0, 0];
+    println!("Attempting vector hashing...");
     unsafe { crate::vector_hash::hash_kernel_vcrypto(kernel_size as u64, bsp::memory::map::kernel::KERNEL as u64, &mut result) };
-    todo!()
+    println!("Returned from vector hashing");
+    panic!("HALT");
 }
 
 fn pretty_print_slice(bytes: &[u8]) {
