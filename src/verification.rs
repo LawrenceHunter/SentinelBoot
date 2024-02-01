@@ -96,34 +96,26 @@ fn hash_kernel() -> [u8; 32] {
     kernel_size = 256;
     println!("Attempting vector hashing - kernel size: {}B", kernel_size);
     while kernel_size >= 32 {
-        let kernel_pointer = bsp::memory::map::kernel::KERNEL + (loop_count * 32);
+        let kernel_pointer = bsp::memory::map::kernel::KERNEL + (loop_count * 64);
         unsafe {
             asm!(
                 "li a0, 4",
                 "addi a2, a2, 1",
-                "addi a3, a3, -32",
-                ".word 0x18572D7", // vsetvli t0, a0, e64, m1, tu, mu
-                ".word 0xE00033", // vle64.v v0, (a1)
-                ".word 0xF08033", // mv v0, a4
-                ".word 0x1010033", // mv v1, a5
-                ".word 0x1118033", // mv v2, a6
-                ".word 0x205F207", // mv v3, a7
-                ".word 0x205F407", // vle64.v v8, (a1)
-                ".word 0xB6822077", // vsha2ms.vv v0, v8, v4
-                ".word 0x70033", // mv a4, v0
-                ".word 0x178033", // mv a5, v1
-                ".word 0x280033", // mv a6, v2
-                ".word 0x388033", // mv a7, v3
+                // ".word 0x018572D7", // vsetvli t0, a0, e64, m1, tu, mu
+                // ".word 0x0206f007", // vle64.v v0, (a3)
+                // ".word 0x0205f207", // vle64.v v4, (a1)
+                "add a1, a1, 32",
+                // ".word 0x0205f407", // vle64.v v8, (a1)
+                // ".word 0xB6822077", // vsha2ms.vv v0, v8, v4
+                // ".word 0x0206f027", // vse64.v v0, (a3)
                 out("a0") _,
-                inout("a1") kernel_pointer => _,
+                in("a1") kernel_pointer,
+                // Could be handled in rust but this is largely a sanity check
                 inout("a2") loop_count => loop_count,
-                inout("a3") kernel_size => kernel_size,
-                inout("a4") result[0] => result[0],
-                inout("a5") result[1] => result[1],
-                inout("a6") result[2] => result[2],
-                inout("a7") result[3] => result[3],
+                in("a3") result.as_mut_ptr(),
             );
         }
+        kernel_size -= 64;
         println!("Loop performed: {}B, {}", kernel_size, loop_count);
     }
     println!("Returned from vector hashing");
