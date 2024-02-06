@@ -25,8 +25,8 @@ cp ./bootloader /srv/tftp
 (cd /srv/tftp && gzip --decompress Image_signed.gz)
 (cd /srv/tftp && gzip --decompress rootfs.cpio.gz)
 
-printf -v QEMU_CMDLINE '%s' '/home/l/qemu_bin/bin/qemu-system-riscv64 -M virt ' \
-	'-cpu rv64,v=true,vlen=1024,rvv_ma_all_1s=true,rvv_ta_all_1s=true,zvbb=true,zvbc=true,zvknhb=true '\
+printf -v QEMU_CMDLINE '%s' '/mnt/bootloader/tftp/qemu_bin/bin/qemu-system-riscv64 -M virt ' \
+	'-cpu rv64,v=true,vlen=1024,rvv_ma_all_1s=true,rvv_ta_all_1s=true,zvbb=true,zvbc=true,zvknha=true '\
 	'-smp 1 -m 512 -nographic ' \
 	'-display none -serial pipe:/tmp/guest -s ' \
 	'-netdev tap,id=mynet0,ifname=tap0,script=no,downscript=no ' \
@@ -37,7 +37,7 @@ wait_for_line() {
 	local expected_line_pattern="$1"
 	local fifo="$2"
 	while read line || [ -n "$line" ]; do
-		echo "$line"
+		echo "$line" >&2 || true
 		if [[ $line == *$expected_line_pattern* ]]; then
 			break
 		fi
@@ -45,7 +45,7 @@ wait_for_line() {
 }
 
 echo "❕ Running QEMU in the background..."
-eval "$QEMU_CMDLINE" &
+eval "timeout 1m $QEMU_CMDLINE" &
 pid=$!
 
 wait_for_line "eth0" /tmp/guest.out
