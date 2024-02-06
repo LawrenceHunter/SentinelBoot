@@ -1,7 +1,7 @@
 use console::{print, println};
 use core::slice;
 use pelite::pe64::{self, Pe};
-#[cfg(not(feature = "qemu"))]
+// #[cfg(not(feature = "qemu"))]
 use sha2::{Digest, Sha256};
 
 pub fn verify_kernel() -> Result<(), ed25519_compact::Error> {
@@ -77,6 +77,34 @@ fn hash_kernel() -> [u8; 32] {
     hasher.finalize().into()
 }
 
+fn hash_kernel_serial() -> [u8; 32] {
+    let mut hasher = Sha256::new();
+    let mut offset = 0;
+    let buff_size = 4096;
+    let kernel_size = get_kernel_size();
+    println!(
+        "Kernel range: 0x{:X?} -> 0x{:X?}",
+        bsp::memory::map::kernel::KERNEL,
+        bsp::memory::map::kernel::KERNEL + kernel_size
+    );
+    loop {
+        let data = unsafe {
+            slice::from_raw_parts(
+                (bsp::memory::map::kernel::KERNEL + (offset * buff_size))
+                    as *mut u8,
+                buff_size,
+            )
+        };
+        if (offset * buff_size) >= kernel_size {
+            break;
+        }
+        hasher.update(data);
+        offset += 1;
+    }
+    hasher.finalize().into()
+}
+
+
 #[cfg(feature = "qemu")]
 fn hash_kernel() -> [u8; 32] {
     use core::arch::asm;
@@ -127,9 +155,13 @@ fn hash_kernel() -> [u8; 32] {
             );
         }
         kernel_size -= 64;
-        println!("Loop performed: {}B, {}", kernel_size, loop_count - 1);
-        println!("\tResult: {:?}", result);
+        // println!("Loop performed: {}B, {}", kernel_size, loop_count - 1);
     }
+
+    println!("Result: ");
+    pretty_print_slice(unsafe { slice::from_raw_parts(result.as_ptr() as *mut u8, 32) });
+    println!("Serial result: ");
+    pretty_print_slice(&hash_kernel_serial());
     println!("Returned from vector hashing");
     panic!("HALT");
 }
