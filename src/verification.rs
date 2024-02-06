@@ -4,9 +4,9 @@ use pelite::pe64::{self, Pe};
 // #[cfg(not(feature = "qemu"))]
 use sha2::{Digest, Sha256};
 
-/* -------------------------------------------------------------------------- */
-/*                            Serial Implementation                           */
-/* -------------------------------------------------------------------------- */
+// --------------------------------------------------------------------------
+// Serial Implementation
+// --------------------------------------------------------------------------
 
 #[cfg(not(feature = "qemu"))]
 fn hash_kernel() -> [u8; 32] {
@@ -36,10 +36,9 @@ fn hash_kernel() -> [u8; 32] {
     hasher.finalize().into()
 }
 
-
-/* -------------------------------------------------------------------------- */
-/*                     Vector Cryptography Implementation                     */
-/* -------------------------------------------------------------------------- */
+// --------------------------------------------------------------------------
+// Vector Cryptography Implementation
+// --------------------------------------------------------------------------
 
 // Temporary
 #[cfg(feature = "qemu")]
@@ -72,22 +71,22 @@ fn hash_kernel_serial() -> [u8; 32] {
 
 #[cfg(feature = "qemu")]
 const SHA256_ROUND_CONSTANTS: [u32; 64] = [
-    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, // 0-3
-    0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, // 4-7
-    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, // 8-11
-    0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, // 12-15
-    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, // 16-19
-    0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da, // 20-23
-    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, // 24-27
-    0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, // 28-31
-    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, // 32-35
-    0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, // 36-39
-    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, // 40-43
-    0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, // 44-47
-    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, // 48-51
-    0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3, // 52-55
-    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, // 56-59
-    0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2, // 60-63
+    0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5, // 0-3
+    0x3956C25B, 0x59F111F1, 0x923F82A4, 0xAB1C5ED5, // 4-7
+    0xD807AA98, 0x12835B01, 0x243185BE, 0x550C7DC3, // 8-11
+    0x72BE5D74, 0x80DEB1FE, 0x9BDC06A7, 0xC19BF174, // 12-15
+    0xE49B69C1, 0xEFBE4786, 0x0FC19DC6, 0x240CA1CC, // 16-19
+    0x2DE92C6F, 0x4A7484AA, 0x5CB0A9DC, 0x76F988DA, // 20-23
+    0x983E5152, 0xA831C66D, 0xB00327C8, 0xBF597FC7, // 24-27
+    0xC6E00BF3, 0xD5A79147, 0x06CA6351, 0x14292967, // 28-31
+    0x27B70A85, 0x2E1B2138, 0x4D2C6DFC, 0x53380D13, // 32-35
+    0x650A7354, 0x766A0ABB, 0x81C2C92E, 0x92722C85, // 36-39
+    0xA2BFE8A1, 0xA81A664B, 0xC24B8B70, 0xC76C51A3, // 40-43
+    0xD192E819, 0xD6990624, 0xF40E3585, 0x106AA070, // 44-47
+    0x19A4C116, 0x1E376C08, 0x2748774C, 0x34B0BCB5, // 48-51
+    0x391C0CB3, 0x4ED8AA4A, 0x5B9CCA4F, 0x682E6FF3, // 52-55
+    0x748F82EE, 0x78A5636F, 0x84C87814, 0x8CC70208, // 56-59
+    0x90BEFFFA, 0xA4506CEB, 0xBEF9A3F7, 0xC67178F2, // 60-63
 ];
 
 #[cfg(feature = "qemu")]
@@ -140,183 +139,181 @@ fn hash_kernel() -> [u8; 32] {
 
                 /* ------------------------- Setup -------------------------- */
                 // Set vector configuration
-                // vsetivli x0, 4, e32, m1, ta, ma
+                .word 0xcd027057, // vsetivli zero,4,e32,m1,ta,ma
+
 
                 // Load 512 bits of the message block into v10-v13 endian swaping
-                // vle32.v v10, (a1)
+                .word 0x0205e507, // vle32.v v10,(a1)
                 // vrev8.v v10, v10
                 add a1, a1, 16,
-                // vle32.v v11, (a1)
+                .word 0x0205e587, // vle32.v v11,(a1)
                 // vrev8.v v11, v11
                 add a1, a1, 16,
-                // vle32.v v12, (a1)
+                .word 0x0205e607, // vle32.v v12,(a1)
                 // vrev8.v v12, v12
                 add a1, a1, 16,
-                // vle32.v v13, (a1)
+                .word 0x0205e687, // vle32.v v13,(a1)
                 // vrev8.v v13, v13
 
                 // Load H[0..8]
                 // v26 = v16 = {a[t],b[t],e[t],f[t]}
                 // v27 = v17 = {c[t],d[t],g[t],h[t]}
-                // vle32.v v16, (a0)
+                .word 0x02056807, // vle32.v v16,(a0)
                 addi a0, a0, 16,
-                // vle32.v v17, (a0)
+                .word 0x02056887, // vle32.v v17,(a0)
 
                 // Capture initial H to allow computing H'
-                // vmv.v.v v26, v16
-                // vmv.v.v v27, v17
+                .word 0x5e080d57, // vmv.v.v v26,v16
+                .word 0x5e088dd7, // vmv.v.v v27,v17
 
                 // Set v0 for vmerge that replaces first word
                 // v0.mask[i] = (i == 0 ? 1 : 0)
-                // vid.v v0
-                // vmseq.vi v0, v0, 0x0
+                .word 0x5208a057, // vid.v v0
+                .word 0x62003057, // vmseq.vi v0,v0,0
 
                 /* ----------------------- Quad rounds ---------------------- */
                 // Round 0
-                // vle32.v v15, (a2)
+                .word 0x02066787, // vle32.v v15,(a2)
                 addi a2, a2, 16,
-                // vadd.vv v14, v15, v10
+                .word 0x02f50757, // vadd.vv v14,v15,v10
                 // vsha2cl.vv v17, v16, v14
                 // vsha2ch.vv v16, v17, v14
-                // vmerge.vvm v14, v12, v11, v0
+                .word 0x5cc58757, // vmerge.vvm v14,v12,v11,v0
                 // vsha2ms.vv v10, v14, v13
 
                 // Round 1
-                // vle32.v v15, (a2)
+                .word 0x02066787, // vle32.v v15,(a2)
                 addi a2, a2, 16,
-                // vadd.vv v14, v15, v11
+                .word 0x02f58757, // vadd.vv v14,v15,v11
                 // vsha2cl.vv v17, v16, v14
                 // vsha2ch.vv v16, v17, v14
-                // vmerge.vvm v14, v13, v12, v0
+                .word 0x5cd60757, // vmerge.vvm v14,v13,v12,v0
                 // vsha2ms.vv v11, v14, v10
 
                 // Round 2
-                // vle32.v v15, (a2)
+                .word 0x02066787, // vle32.v v15,(a2)
                 addi a2, a2, 16,
-                // vadd.vv v14, v15, v12
+                .word 0x02f60757, // vadd.vv v14,v15,v12
                 // vsha2cl.vv v17, v16, v14
                 // vsha2ch.vv v16, v17, v14
-                // vmerge.vvm v14, v10, v13, v0
+                .word 0x5ca68757, // vmerge.vvm v14,v10,v13,v0
                 // vsha2ms.vv v12, v14, v11
 
                 // Round 3
-                // vle32.v v15, (a2)
+                .word 0x02066787, // vle32.v v15,(a2)
                 addi a2, a2, 16,
-                // vadd.vv v14, v15, v13
+                .word 0x02f68757, // vadd.vv v14,v15,v13
                 // vsha2cl.vv v17, v16, v14
                 // vsha2ch.vv v16, v17, v14
-                // vmerge.vvm v14, v11, v10, v0
-                // vsha2ms.vv v13, v14, v12
+                .word 0x5cb50757, // vmerge.vvm v14,v11,v10,v0
 
                 // Round 4
-                // vle32.v v15, (a2)
+                .word 0x02066787, // vle32.v v15,(a2)
                 addi a2, a2, 16,
-                // vadd.vv v14, v15, v10
+                .word 0x02f50757, // vadd.vv v14,v15,v10
                 // vsha2cl.vv v17, v16, v14
                 // vsha2ch.vv v16, v17, v14
-                // vmerge.vvm v14, v12, v11, v0
+                .word 0x5cc58757, // vmerge.vvm v14,v12,v11,v0
                 // vsha2ms.vv v10, v14, v13
 
                 // Round 5
-                // vle32.v v15, (a2)
+                .word 0x02066787, // vle32.v v15,(a2)
                 addi a2, a2, 16,
-                // vadd.vv v14, v15, v11
+                .word 0x02f58757, // vadd.vv v14,v15,v11
                 // vsha2cl.vv v17, v16, v14
                 // vsha2ch.vv v16, v17, v14
-                // vmerge.vvm v14, v13, v12, v0
+                .word 0x5cd60757, // vmerge.vvm v14,v13,v12,v0
                 // vsha2ms.vv v11, v14, v10
 
                 // Round 6
-                // vle32.v v15, (a2)
+                .word 0x02066787, // vle32.v v15,(a2)
                 addi a2, a2, 16,
-                // vadd.vv v14, v15, v12
+                .word 0x02f60757, // vadd.vv v14,v15,v12
                 // vsha2cl.vv v17, v16, v14
                 // vsha2ch.vv v16, v17, v14
-                // vmerge.vvm v14, v10, v13, v0
+                .word 0x5ca68757, // vmerge.vvm v14,v10,v13,v0
                 // vsha2ms.vv v12, v14, v11
 
                 // Round 7
-                // vle32.v v15, (a2)
+                .word 0x02066787, // vle32.v v15,(a2)
                 addi a2, a2, 16,
-                // vadd.vv v14, v15, v13
+                .word 0x02f68757, // vadd.vv v14,v15,v13
                 // vsha2cl.vv v17, v16, v14
                 // vsha2ch.vv v16, v17, v14
-                // vmerge.vvm v14, v11, v10, v0
+                .word 0x5cb50757, // vmerge.vvm v14,v11,v10,v0
                 // vsha2ms.vv v13, v14, v12
 
                 // Round 8
-                // vle32.v v15, (a2)
+                .word 0x02066787, // vle32.v v15,(a2)
                 addi a2, a2, 16,
-                // vadd.vv v14, v15, v10
+                .word 0x02f50757, // vadd.vv v14,v15,v10
                 // vsha2cl.vv v17, v16, v14
                 // vsha2ch.vv v16, v17, v14
-                // vmerge.vvm v14, v12, v11, v0
+                .word 0x5cc58757, // vmerge.vvm v14,v12,v11,v0
                 // vsha2ms.vv v10, v14, v13
 
                 // Round 9
-                // vle32.v v15, (a2)
+                .word 0x02066787, // vle32.v v15,(a2)
                 addi a2, a2, 16,
-                // vadd.vv v14, v15, v11
+                .word 0x02f58757, // vadd.vv v14,v15,v11
                 // vsha2cl.vv v17, v16, v14
                 // vsha2ch.vv v16, v17, v14
-                // vmerge.vvm v14, v13, v12, v0
+                .word 0x5cd60757, // vmerge.vvm v14,v13,v12,v0
                 // vsha2ms.vv v11, v14, v10
 
                 // Round 10
-                // vle32.v v15, (a2)
+                .word 0x02066787, // vle32.v v15,(a2)
                 addi a2, a2, 16,
-                // vadd.vv v14, v15, v12
+                .word 0x02f60757, // vadd.vv v14,v15,v12
                 // vsha2cl.vv v17, v16, v14
                 // vsha2ch.vv v16, v17, v14
-                // vmerge.vvm v14, v10, v13, v0
+                .word 0x5ca68757, // vmerge.vvm v14,v10,v13,v0
                 // vsha2ms.vv v12, v14, v11
 
                 // Round 11
-                // vle32.v v15, (a2)
+                .word 0x02066787, // vle32.v v15,(a2)
                 addi a2, a2, 16,
-                // vadd.vv v14, v15, v13
+                .word 0x02f68757, // vadd.vv v14,v15,v13
                 // vsha2cl.vv v17, v16, v14
                 // vsha2ch.vv v16, v17, v14
-                // vmerge.vvm v14, v11, v10, v0
+                .word 0x5cb50757, // vmerge.vvm v14,v11,v10,v0
                 // vsha2ms.vv v13, v14, v12
 
                 // Round 12
                 // We no longer generate new message schedules
-                // vle32.v v15, (a2)
+                .word 0x02066787, // vle32.v v15,(a2)
                 addi a2, a2, 16,
-                // vadd.vv v14, v15, v10
+                .word 0x02f50757, // vadd.vv v14,v15,v10
                 // vsha2cl.vv v17, v16, v14
                 // vsha2ch.vv v16, v17, v14
 
                 // Round 13
-                // vle32.v v15, (a2)
+                .word 0x02066787, // vle32.v v15,(a2)
                 addi a2, a2, 16,
-                // vadd.vv v14, v15, v11
+                .word 0x02f58757, // vadd.vv v14,v15,v11
                 // vsha2cl.vv v17, v16, v14
                 // vsha2ch.vv v16, v17, v14
 
                 // Round 14
-                // vle32.v v15, (a2)
+                .word 0x02066787, // vle32.v v15,(a2)
                 addi a2, a2, 16,
-                // vadd.vv v14, v15, v12
+                .word 0x02f60757, // vadd.vv v14,v15,v12
                 // vsha2cl.vv v17, v16, v14
                 // vsha2ch.vv v16, v17, v14
 
                 // Round 15
                 // a2 increment not needed
-                // vle32.v v15, (a2)
-                // vadd.vv v14, v15, v13
+                .word 0x02066787, // vle32.v v15,(a2)
+                .word 0x02f68757, // vadd.vv v14,v15,v13
                 // vsha2cl.vv v17, v16, v14
                 // vsha2ch.vv v16, v17, v14
 
-                /* --------------------- Update the hash -------------------- */
-                // vadd.vv v16, v26, v16
-                // vadd.vv v17, v27, v17
+                .word 0x03a80857, // vadd.vv v16, v26, v16
+                .word 0x03b888d7, // vadd.vv v17, v27, v17
 
-                /* ---------------------- Save the hash --------------------- */
-                // vse32.v v17, (a0)
+                .word 0x020568a7, // vse32.v v17,(a0)
                 addi a0, a0, -16,
-                // vse32.v v16, (a0)
+                .word 0x02056827, // vse32.v v16,(a0)
                 in("a0") bsp::memory::map::kernel::KERNEL + ((loops + 1) * 64),
                 in("a1") result.as_mut_ptr(),
                 in("a2") SHA256_ROUND_CONSTANTS.as_ptr(),
@@ -329,20 +326,18 @@ fn hash_kernel() -> [u8; 32] {
     println!("Result: ({} iterations)", loops);
 
     // Temporary for comparison to known
-    pretty_print_slice(
-        unsafe {
-            slice::from_raw_parts(result.as_ptr() as *mut u8, 32)
-        }
-    );
+    pretty_print_slice(unsafe {
+        slice::from_raw_parts(result.as_ptr() as *mut u8, 32)
+    });
     println!("Serial result: ");
     pretty_print_slice(&hash_kernel_serial());
     println!("Returned from vector hashing");
     panic!("HALT");
 }
 
-/* -------------------------------------------------------------------------- */
-/*                                Unified code                                */
-/* -------------------------------------------------------------------------- */
+// --------------------------------------------------------------------------
+// Unified code
+// --------------------------------------------------------------------------
 fn pretty_print_slice(bytes: &[u8]) {
     let mut counter = 0;
     let mut lines = 0;
