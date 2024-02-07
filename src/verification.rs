@@ -45,8 +45,10 @@ fn hash_kernel() -> [u8; 32] {
 fn hash_kernel_serial() -> [u8; 32] {
     let mut hasher = Sha256::new();
     let mut offset = 0;
-    let buff_size = 4096;
-    let kernel_size = get_kernel_size();
+    // let buff_size = 4096;
+    // let kernel_size = get_kernel_size();
+    let buff_size = 64;
+    let kernel_size = 64;
     println!(
         "Kernel range: 0x{:X?} -> 0x{:X?}",
         bsp::memory::map::kernel::KERNEL,
@@ -131,7 +133,13 @@ fn hash_kernel() -> [u8; 32] {
     // See: https://github.com/riscv/riscv-crypto/blob/
     //  6589bcd6edb5abd91e758a67b28ae05b347c0470/doc/vector/code-samples/zvknh.s
 
-    while kernel_size >= 32 {
+    kernel_size = 64;
+        println!(
+        "Kernel range: 0x{:X?} -> 0x{:X?}",
+        bsp::memory::map::kernel::KERNEL,
+        bsp::memory::map::kernel::KERNEL + kernel_size
+    );
+    while kernel_size >= 64 {
         unsafe {
             asm!(
                 /* ------------------------- Sanity ------------------------- */
@@ -140,7 +148,6 @@ fn hash_kernel() -> [u8; 32] {
                 /* ------------------------- Setup -------------------------- */
                 // Set vector configuration
                 ".word 0xcd027057", // vsetivli zero,4,e32,m1,ta,ma
-
 
                 // Load 512 bits of the message block into v10-v13 endian swaping
                 ".word 0x0205e507", // vle32.v v10,(a1)
@@ -315,8 +322,8 @@ fn hash_kernel() -> [u8; 32] {
                 ".word 0x020568a7", // vse32.v v17,(a0)
                 "addi a0, a0, -16",
                 ".word 0x02056827", // vse32.v v16,(a0)
-                in("a0") bsp::memory::map::kernel::KERNEL + ((loops + 1) * 64),
-                in("a1") result.as_mut_ptr(),
+                in("a0") result.as_mut_ptr(),
+                in("a1") bsp::memory::map::kernel::KERNEL + (loops * 64),
                 in("a2") SHA256_ROUND_CONSTANTS.as_ptr(),
                 inout("a3") loops => loops,
             );
@@ -324,15 +331,17 @@ fn hash_kernel() -> [u8; 32] {
         kernel_size -= 64;
     }
 
-    println!("Result: ({} iterations)", loops);
+    println!("Returned from vector hashing");
+    println!("\nResult: ({} iterations)", loops);
 
     // Temporary for comparison to known
     pretty_print_slice(unsafe {
         slice::from_raw_parts(result.as_ptr() as *mut u8, 32)
     });
-    println!("Serial result: ");
+
+    println!("\nSerial result: ");
     pretty_print_slice(&hash_kernel_serial());
-    println!("Returned from vector hashing");
+
     panic!("HALT");
 }
 
@@ -343,15 +352,15 @@ fn pretty_print_slice(bytes: &[u8]) {
     let mut counter = 0;
     let mut lines = 0;
     let column_limit = 16;
-    print!("\r\n{:#04x} | ", lines * column_limit);
+    print!("\r{:#04x} | ", lines * column_limit);
     for byte in bytes {
         if counter == column_limit {
             counter = 0;
             lines += 1;
-            print!("\r\n{:#04x} | ", lines * column_limit);
+            print!("\r\n{:#04X} | ", lines * column_limit);
         }
         counter += 1;
-        print!("{:#04x} ", byte);
+        print!("{:#04X} ", byte);
     }
     println!();
 }
