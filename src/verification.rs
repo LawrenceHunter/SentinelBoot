@@ -47,28 +47,21 @@ fn hash_kernel() -> [u8; 32] {
 fn hash_kernel_serial() -> [u8; 32] {
     let mut hasher = Sha256::new();
     let mut offset = 0;
-    // let buff_size = 4096;
-    // let kernel_size = get_kernel_size();
-    let buff_size = 64;
-    let kernel_size = 64;
-    println!(
-        "Kernel range: 0x{:X?} -> 0x{:X?}",
-        bsp::memory::map::kernel::KERNEL,
-        bsp::memory::map::kernel::KERNEL + kernel_size
-    );
+    let kernel_size: usize = get_kernel_size();
+    let mut buff_size = min(4096, kernel_size);
     loop {
         let data = unsafe {
             slice::from_raw_parts(
-                (bsp::memory::map::kernel::KERNEL + (offset * buff_size))
-                    as *mut u8,
+                (bsp::memory::map::kernel::KERNEL + offset) as *mut u8,
                 buff_size,
             )
         };
-        if (offset * buff_size) >= kernel_size {
+        hasher.update(data);
+        offset += buff_size;
+        buff_size = min(4096, kernel_size - offset);
+        if buff_size == 0 {
             break;
         }
-        hasher.update(data);
-        offset += 1;
     }
     hasher.finalize().into()
 }
@@ -288,8 +281,7 @@ fn asm_hash(a0: *mut usize, a1: *mut usize, a2: *mut usize) {
 
 #[cfg(feature = "qemu")]
 fn hash_kernel() -> [u8; 32] {
-    let mut kernel_size = get_kernel_size();
-    kernel_size += kernel_size % 64;
+    let kernel_size = get_kernel_size();
 
     println!(
         "Kernel range: 0x{:X?} -> 0x{:X?}",
@@ -341,7 +333,6 @@ fn hash_kernel() -> [u8; 32] {
     // See: https://github.com/riscv/riscv-crypto/blob/
     //  6589bcd6edb5abd91e758a67b28ae05b347c0470/doc/vector/code-samples/zvknh.s
 
-    kernel_size = 64;
     let mut size_left = kernel_size;
     println!(
         "Kernel range: 0x{:X?} -> 0x{:X?}",
@@ -349,6 +340,11 @@ fn hash_kernel() -> [u8; 32] {
         bsp::memory::map::kernel::KERNEL + kernel_size
     );
     while size_left >= 64 {
+        println!(
+            "\r Hashing kernel range: 0x{:X?} -> 0x{:X?}",
+            (bsp::memory::map::kernel::KERNEL + (loops * 64)),
+            (bsp::memory::map::kernel::KERNEL + (loops + 1 * 64))
+        );
         asm_hash(
             result.as_mut_ptr() as *mut usize,
             (bsp::memory::map::kernel::KERNEL + (loops * 64)) as *mut usize,
@@ -358,11 +354,19 @@ fn hash_kernel() -> [u8; 32] {
         size_left -= 64;
     }
 
+    println!("\nResult: ({} iterations)", loops);
+
     // Padding step
     let unaligned_size = kernel_size % 64;
     let mut final_bytes: [u8; 64] = [0; 64];
     for i in 0..unaligned_size {
-        final_bytes[i] = unsafe { core::ptr::read(((bsp::memory::map::kernel::KERNEL % 64) + i) as *mut u8) };
+        final_bytes[i] = unsafe {
+            core::ptr::read(
+                (bsp::memory::map::kernel::KERNEL
+                    + (64 * (kernel_size / 64))
+                    + i) as *mut u8,
+            )
+        };
     }
     final_bytes[unaligned_size] = 0x80;
     let final_size: u64 = (kernel_size as u64) * 8;
@@ -371,6 +375,7 @@ fn hash_kernel() -> [u8; 32] {
         final_bytes[index] = byte;
         index += 1;
     }
+
     asm_hash(
         result.as_mut_ptr() as *mut usize,
         final_bytes.as_ptr() as *mut usize,
@@ -379,7 +384,10 @@ fn hash_kernel() -> [u8; 32] {
     loops += 1;
 
     result = result.map(|x: u32| x.swap_bytes());
-    result = [result[3], result[2], result[7], result[6], result[1], result[0], result[5], result[4]];
+    result = [
+        result[3], result[2], result[7], result[6], result[1], result[0],
+        result[5], result[4],
+    ];
 
     println!("Returned from vector hashing");
     println!("\nResult: ({} iterations)", loops);
@@ -459,4 +467,11 @@ fn get_kernel_size() -> usize {
     let kernel_size: usize = pe.optional_header().AddressOfEntryPoint as usize;
     println!("Kernel size: 0x{:X?}", kernel_size);
     kernel_size
+}
+
+fn min(a: usize, b: usize) -> usize {
+    if a < b {
+        return a;
+    }
+    b
 }
