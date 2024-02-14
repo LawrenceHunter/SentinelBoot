@@ -13,7 +13,6 @@
 #![feature(format_args_nl)]
 #![no_main]
 #![no_std]
-// #![allow(dead_code)]
 
 extern crate alloc;
 
@@ -29,8 +28,10 @@ use core::arch::asm;
 use bsp::bsp;
 use console::println;
 use global_allocator::Allocator;
+use synchronisation::{interface::Mutex, NullLock};
 
 static TEST: bool = false;
+static BOOTABLE: NullLock<bool> = NullLock::new(false);
 
 /// Early init code.
 ///
@@ -60,6 +61,10 @@ extern "C" fn main_hart(_hartid: usize) {
 }
 
 fn loader_machine() {
+    if !BOOTABLE.lock(|x| *x) {
+        panic!("REACHED KERNEL BOOT WITHOUT FLAG SET");
+    }
+
     println!("Handing execution to the kernel...");
     unsafe {
         // https://github.com/torvalds/linux/blob/master/Documentation/riscv/boot.rst
@@ -113,6 +118,7 @@ fn loader_main() {
         }
     }
 
+    BOOTABLE.lock(|x| *x = true);
     unsafe {
         asm!("mret");
     }
