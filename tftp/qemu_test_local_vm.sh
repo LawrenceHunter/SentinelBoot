@@ -45,7 +45,7 @@ wait_for_line() {
 }
 
 echo "❕ Running QEMU in the background..."
-eval "timeout 1m $QEMU_CMDLINE" &
+eval "timeout 30s $QEMU_CMDLINE" &
 pid=$!
 
 wait_for_line "eth0" /tmp/guest.out
