@@ -4,7 +4,6 @@
 #![feature(alloc_error_handler)]
 #![feature(strict_provenance)]
 #![feature(allocator_api)]
-#![feature(ptr_from_ref)]
 
 use console::logln;
 use core::alloc::*;
