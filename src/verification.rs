@@ -50,24 +50,25 @@ fn get_kernel_size() -> usize {
 }
 
 fn hash_kernel(hasher: &mut Sha256) {
+    let mut hasher = Sha256::new();
     let mut offset = 0;
-    let buff_size = 4096;
-    let kernel_size = get_kernel_size();
-    println!("Kernel range: 0x{:X?} -> 0x{:X?}", bsp::memory::map::kernel::KERNEL, bsp::memory::map::kernel::KERNEL + kernel_size);
+    let kernel_size: usize = get_kernel_size();
+    let mut buff_size = min(4096, kernel_size);
     loop {
         let data = unsafe {
             slice::from_raw_parts(
-                (bsp::memory::map::kernel::KERNEL + (offset * buff_size))
-                    as *mut u8,
+                (bsp::memory::map::kernel::KERNEL + offset) as *mut u8,
                 buff_size,
             )
         };
-        if (offset * buff_size) >= kernel_size {
+        hasher.update(data);
+        offset += buff_size;
+        buff_size = min(4096, kernel_size - offset);
+        if buff_size == 0 {
             break;
         }
-        hasher.update(data);
-        offset += 1;
     }
+    hasher.finalize().into()
 }
 
 fn pretty_print_slice(bytes: &[u8]) {
