@@ -30,6 +30,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: |
+          git lfs pull
           BSP=qemu make
           timeout 5m tftp/qemu_test.sh
 
@@ -39,6 +40,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: |
+          git lfs pull
           BSP=visionfive make
           rm /tftpboot/boot/*
           mv bootloader /tftpboot/boot
@@ -59,6 +61,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: |
+          git lfs pull
           BSP=qemu_vector make
           cd tftp
           if [ ! -f ./qemu_bin/bin/qemu-system-riscv64 ]; then
@@ -70,6 +73,7 @@ jobs:
           fi
           cd ..
           timeout 5m tftp/qemu_vector_test.sh
+
   # hyperfine:
   #   needs: vf2_tftp
   #   runs-on: [self-hosted, vf2]
