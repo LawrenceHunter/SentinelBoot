@@ -18,7 +18,7 @@ global_asm!(include_str!("boot-u-boot.s"));
 #[cfg(feature = "unmatched")]
 global_asm!(include_str!("boot-u-boot.s"));
 
-#[cfg(feature = "qemu_tftp")]
+#[cfg(feature = "qemu_vector")]
 global_asm!(include_str!("boot-u-boot.s"));
 
 global_asm!(include_str!("trap.s"));
