@@ -9,11 +9,11 @@ pub mod bsp;
 #[cfg(feature = "qemu")]
 pub use bsp::*;
 
-#[cfg(feature = "qemu_tftp")]
+#[cfg(feature = "qemu_vector")]
 #[path = "qemu/mod.rs"]
 pub mod bsp;
 
-#[cfg(feature = "qemu_tftp")]
+#[cfg(feature = "qemu_vector")]
 pub use bsp::*;
 
 #[cfg(feature = "visionfive")]

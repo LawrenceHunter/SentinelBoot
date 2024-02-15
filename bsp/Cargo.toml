@@ -12,6 +12,6 @@ console = { path = "../console", version = "*"  }
 [features]
 default = []
 qemu = ["driver/qemu"]
-qemu_tftp = ["driver/qemu"]
+qemu_vector = ["driver/qemu"]
 visionfive = ["driver/visionfive"]
 unmatched = ["driver/unmatched"]

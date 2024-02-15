@@ -10,7 +10,7 @@ CLEAR ?= y
 # ---------------------------------------------------------------------------- #
 #                       BSP-specific configuration values                      #
 # ---------------------------------------------------------------------------- #
-ifeq ($(BSP),qemu)
+ifeq ($(BSP),qemu_vector)
     LOADER_BIN        = bootloader
     QEMU_BINARY       = qemu-system-riscv64
     QEMU_MACHINE_TYPE = virt
@@ -21,7 +21,7 @@ ifeq ($(BSP),qemu)
 	LD_PATH			  = riscv64/src/cpu/bootloader-qemu.ld
 endif
 
-ifeq ($(BSP),qemu_tftp)
+ifeq ($(BSP),qemu)
     LOADER_BIN        = bootloader
     QEMU_BINARY       = qemu-system-riscv64
     QEMU_MACHINE_TYPE = virt

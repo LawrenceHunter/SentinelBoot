@@ -30,7 +30,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: |
-          BSP=qemu_tftp make
+          BSP=qemu make
           timeout 5m tftp/qemu_test.sh
 
   vf2_tftp:

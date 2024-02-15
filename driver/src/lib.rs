@@ -8,10 +8,10 @@ mod virt16550_a_uart;
 #[cfg(feature = "qemu")]
 pub use virt16550_a_uart::*;
 
-#[cfg(feature = "qemu_tftp")]
+#[cfg(feature = "qemu_vector")]
 mod virt16550_a_uart;
 
-#[cfg(feature = "qemu_tftp")]
+#[cfg(feature = "qemu_vector")]
 pub use virt16550_a_uart::*;
 
 #[cfg(feature = "visionfive")]
