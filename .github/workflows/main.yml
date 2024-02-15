@@ -53,6 +53,23 @@ jobs:
           timeout 5m python3 board_serial_test.py
           ./power_cycle_board.sh off
 
+  qemu_vector_tftp:
+    needs: vf2_tftp
+    runs-on: [self-hosted, qemu]
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          BSP=qemu_vector make
+          cd tftp
+          if [ ! -f ./qemu_bin/bin/qemu-system-riscv64 ]; then
+            git clone https://github.com/qemu/qemu.git
+            mkdir qemu_bin
+            cd qemu
+            ./configure --target-list=riscv64-softmmu --prefix=$(pwd)../qemu_bin --cross-prefix=aarch64-linux-gnu-
+            make -j$(nproc) && make install
+          fi
+          cd ..
+          timeout 5m tftp/qemu_vector_test.sh
   # hyperfine:
   #   needs: vf2_tftp
   #   runs-on: [self-hosted, vf2]
@@ -65,14 +82,14 @@ jobs:
   #         hyperfine-v1.18.0-aarch64-unknown-linux-gnu/hyperfine --warmup 1 --show-output tftp/qemu_test.sh
 
   clippy:
-    needs: vf2_tftp
+    needs: qemu_vector_tftp
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
       - run: make clippy
 
   Doc:
-    needs: vf2_tftp
+    needs: qemu_vector_tftp
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
@@ -84,7 +101,7 @@ jobs:
           path: ./doc.tar.gz
 
   Geiger:
-    needs: vf2_tftp
+    needs: qemu_vector_tftp
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
