@@ -1,0 +1,29 @@
+From b9137a17a0ee1f04a35a7f8a5f1de030585b3c12 Mon Sep 17 00:00:00 2001
+From: Lawrence Hunter <lawrence.hunter@outlook.com>
+Date: Thu, 15 Feb 2024 10:27:08 +0000
+Subject: [PATCH] Disable rvv check
+
+Needed as u-boot does not support vector cryptography so when used to
+prevent the need to implement an ethernet driver it disables the rvv
+flag
+---
+ target/riscv/insn_trans/trans_rvv.c.inc | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/target/riscv/insn_trans/trans_rvv.c.inc b/target/riscv/insn_trans/trans_rvv.c.inc
+index 9e101ab434..d2fa8eb6ca 100644
+--- a/target/riscv/insn_trans/trans_rvv.c.inc
++++ b/target/riscv/insn_trans/trans_rvv.c.inc
+@@ -29,7 +29,8 @@ static inline bool is_overlapped(const int8_t astart, int8_t asize,
+ 
+ static bool require_rvv(DisasContext *s)
+ {
+-    return s->mstatus_vs != EXT_STATUS_DISABLED;
++    // return s->mstatus_vs != EXT_STATUS_DISABLED;
++    return true;
+ }
+ 
+ static bool require_rvf(DisasContext *s)
+-- 
+2.42.0
+
