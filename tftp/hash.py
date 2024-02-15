@@ -10,7 +10,7 @@ import pefile
 import pprint
 
 # 4KiB blocks
-BUF_SIZE = 4096
+buffer_size = 4096
 sha256_hash = SHA256.new()
 
 if __name__ == "__main__":
@@ -40,14 +40,16 @@ if __name__ == "__main__":
     pe = pefile.PE(sys.argv[1])
     pprint.pprint(pe.OPTIONAL_HEADER.dump_dict())
     size = pe.OPTIONAL_HEADER.dump_dict()["AddressOfEntryPoint"]["Value"]
+    buffer_size = min(buffer_size, size)
     print(hex(size))
     byte_count = 0
     with open(sys.argv[1], "rb") as binary:
-        while byte_count < size:
-            data = binary.read(BUF_SIZE)
+        while buffer_size != 0:
+            data = binary.read(buffer_size)
             if not data:
                 break
-            byte_count += len(data)
+            byte_count += buffer_size
+            buffer_size = min(buffer_size, size - byte_count)
             sha256_hash.update(data)
 
     print(f"\nProcessed {byte_count} bytes\n")
