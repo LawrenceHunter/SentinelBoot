@@ -63,16 +63,7 @@ jobs:
       - run: |
           git lfs pull
           BSP=qemu_vector make
-          cd tftp
-          if [ ! -f ./qemu_bin/bin/qemu-system-riscv64 ]; then
-            git clone https://github.com/qemu/qemu.git
-            mkdir qemu_bin
-            cd qemu
-            ./configure --target-list=riscv64-softmmu --prefix=$(pwd)../qemu_bin --cross-prefix=aarch64-linux-gnu-
-            make -j$(nproc) && make install
-          fi
-          cd ..
-          timeout 5m tftp/qemu_vector_test.sh
+          timeout 5m tftp/qemu_test.sh
 
   # hyperfine:
   #   needs: vf2_tftp
