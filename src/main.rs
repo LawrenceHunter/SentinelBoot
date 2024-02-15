@@ -120,7 +120,6 @@ fn loader_main() {
 
     BOOTABLE.lock(|x| *x = true);
     unsafe {
-        crate::BOOTABLE = true;
         asm!("mret");
     }
 }
