@@ -7,6 +7,7 @@
 //! `kernel_init()`.
 
 #![allow(clippy::upper_case_acronyms)]
+#![allow(clippy::needless_range_loop)]
 #![feature(naked_functions, asm_const, type_ascription)]
 #![feature(panic_info_message)]
 #![feature(trait_alias)]

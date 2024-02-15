@@ -81,14 +81,14 @@ jobs:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
-      - run: make clippy
+      - run: make && make clippy
 
   Doc:
     needs: qemu_vector_tftp
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
-      - run: make doc
+      - run: make && make doc
       - run: tar -zcvf doc.tar.gz target/riscv64gc-unknown-none-elf/doc/
       - uses: actions/upload-artifact@v3
         with:
@@ -101,5 +101,5 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: |
-          make geiger || true
+          make && make geiger || true
           cat .github/workflows/geiger.md >> $GITHUB_STEP_SUMMARY
