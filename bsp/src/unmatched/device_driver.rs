@@ -8,7 +8,8 @@ use driver::{driver_manager, DeviceDriverDescriptor, UnmatchedUart};
 // Global instances
 //--------------------------------------------------------------------------------------------------
 
-/// Unsafe instantiation of Unmatched UART
+/// Instantiation of Unmatched UART
+/// Safe as the MMIO is known for this board satisfying the safety warning
 static UNMATCHED_UART: UnmatchedUart = unsafe { UnmatchedUart::new(mmio::UNMATCHED_UART_START) };
 
 //--------------------------------------------------------------------------------------------------

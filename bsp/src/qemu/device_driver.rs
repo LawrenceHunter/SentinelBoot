@@ -8,7 +8,8 @@ use driver::{driver_manager, DeviceDriverDescriptor, VIRT16550AUart};
 // Global instances
 //--------------------------------------------------------------------------------------------------
 
-/// Unsafe instantiation of VIRT16550A
+/// Instantiation of VIRT16550A
+/// Safe as the MMIO is known for this board satisfying the safety warning
 static VIRT16550A_UART: VIRT16550AUart =
     unsafe { VIRT16550AUart::new(mmio::VIRT16550A_UART_START) };
 
