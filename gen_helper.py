@@ -7,7 +7,7 @@ def generate_header():
 
 def generate_boot_logo():
     # Fonts: http://www.figlet.org/examples.html
-    logo = pyfiglet.figlet_format("OpenThesis", font="banner", width=80).split(
+    logo = pyfiglet.figlet_format("SentinelBoot", font="doom", width=80).split(
         "\n"
     )
     text = "pub fn print_boot_logo() {\n"

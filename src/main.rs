@@ -1,6 +1,6 @@
-//! The `bootloader` binary.
+//! The `SentinelBoot` binary.
 //!
-//! 1. The bootloader's entry point is the function
+//! 1. SentinelBoot's entry point is the function
 //! `cpu::boot::arch_boot::_start()`.
 //!     - It is implemented in `src/_arch/__arch_name__/cpu/boot.s`.
 //! 2. Once finished with architectural setup, the arch code calls

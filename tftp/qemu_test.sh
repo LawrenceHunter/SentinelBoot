@@ -21,7 +21,7 @@ set +x
 
 rm -f /tftpboot/boot/*
 cp ./tftp/{Image_signed.gz,rootfs.cpio.gz,qemu.dtb} /tftpboot/boot
-cp ./bootloader /tftpboot/boot
+cp ./sentinel_boot /tftpboot/boot
 (cd /tftpboot/boot && gzip --decompress Image_signed.gz)
 (cd /tftpboot/boot && gzip --decompress rootfs.cpio.gz)
 
@@ -55,7 +55,7 @@ printf "setenv serverip 192.168.0.1; setenv ipaddr 192.168.0.3; setenv netmask 2
 
 wait_for_line "=>" /tmp/guest.out
 echo "✅ Got input prompt"
-printf "tftp 0x80100000 \${serverip}:bootloader\n" >/tmp/guest.in
+printf "tftp 0x80100000 \${serverip}:sentinel_boot\n" >/tmp/guest.in
 
 wait_for_line "Bytes transferred" /tmp/guest.out
 echo "✅ Kernel transferred"

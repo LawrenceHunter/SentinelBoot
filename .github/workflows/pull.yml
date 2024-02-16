@@ -13,8 +13,8 @@ jobs:
       - run: make
       - uses: actions/upload-artifact@v3
         with:
-          name: bootloader
-          path: ./bootloader
+          name: sentinel_boot
+          path: ./sentinel_boot
   build_vector:
     name: Build project for qemu_vector
     runs-on: self-hosted
@@ -66,7 +66,7 @@ jobs:
           git lfs pull
           BSP=visionfive make
           rm /tftpboot/boot/*
-          mv bootloader /tftpboot/boot
+          mv sentinel_boot /tftpboot/boot
           cp tftp/{Image_vf2_signed.gz,rootfs.cpio.gz,jh7110-visionfive-v2.dtb,boot.scr,power_cycle_board.sh,board_serial_test.py} /tftpboot/boot
           cd /tftpboot/boot
           mv Image_vf2_signed.gz Image_signed.gz
