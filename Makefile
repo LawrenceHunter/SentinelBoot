@@ -11,7 +11,7 @@ CLEAR ?= y
 #                       BSP-specific configuration values                      #
 # ---------------------------------------------------------------------------- #
 ifeq ($(BSP),qemu_vector)
-    LOADER_BIN        = bootloader
+    LOADER_BIN        = sentinel_boot
     QEMU_BINARY       = qemu-system-riscv64
     QEMU_MACHINE_TYPE = virt
     QEMU_RELEASE_ARGS = -smp 4 -m 256M
@@ -22,7 +22,7 @@ ifeq ($(BSP),qemu_vector)
 endif
 
 ifeq ($(BSP),qemu)
-    LOADER_BIN        = bootloader
+    LOADER_BIN        = sentinel_boot
     QEMU_BINARY       = qemu-system-riscv64
     QEMU_MACHINE_TYPE = virt
     QEMU_RELEASE_ARGS = -smp 4 -m 256M
@@ -33,7 +33,7 @@ ifeq ($(BSP),qemu)
 endif
 
 ifeq ($(BSP),qemu_alloc)
-    LOADER_BIN        = bootloader
+    LOADER_BIN        = sentinel_boot
     QEMU_BINARY       = qemu-system-riscv64
     QEMU_MACHINE_TYPE = virt
     QEMU_RELEASE_ARGS = -smp 4 -m 256M
@@ -44,7 +44,7 @@ ifeq ($(BSP),qemu_alloc)
 endif
 
 ifeq ($(BSP),visionfive)
-    LOADER_BIN        = bootloader
+    LOADER_BIN        = sentinel_boot
     QEMU_BINARY       = qemu-system-riscv64
     QEMU_MACHINE_TYPE = virt
     QEMU_RELEASE_ARGS = -smp 4 -m 128M
@@ -55,7 +55,7 @@ ifeq ($(BSP),visionfive)
 endif
 
 ifeq ($(BSP),unmatched)
-    LOADER_BIN        = bootloader
+    LOADER_BIN        = sentinel_boot
     QEMU_BINARY       = qemu-system-riscv64
     QEMU_MACHINE_TYPE = sifive_u
     QEMU_RELEASE_ARGS = -smp 4 -m 128M
@@ -71,7 +71,7 @@ endif
 LOADER_MANIFEST      = Cargo.toml
 LAST_BUILD_CONFIG    = target/$(BSP).build_config
 
-LOADER_ELF      = target/riscv64gc-unknown-none-elf/release/bootloader
+LOADER_ELF      = target/riscv64gc-unknown-none-elf/release/sentinel_boot
 # This parses cargo's dep-info file.
 # https://doc.rust-lang.org/cargo/guide/build-cache.html#dep-info-files
 LOADER_ELF_DEPS = $(filter-out %: ,$(file < $(LOADER_ELF).d)) \
@@ -108,7 +108,7 @@ QEMU_CPU_FLAGS  = -cpu rv64,v=true,vlen=1024,rvv_ma_all_1s=true,\
 						rvv_ta_all_1s=true,x-zvbb=true,x-zvbc=true,x-zvknhb=true
 QEMU_ARGS   	= $(QEMU_CPU_FLAGS) $(QEMU_RELEASE_ARGS) -nographic \
 					-display none -serial mon:stdio \
-					-bios bootloader -s \
+					-bios sentinel_boot -s \
 					-monitor unix:qemu-monitor-socket,server,nowait
 
 # ---------------------------------------------------------------------------- #
@@ -128,7 +128,7 @@ $(LAST_BUILD_CONFIG):
 	@touch $(LAST_BUILD_CONFIG)
 
 # ---------------------------------------------------------------------------- #
-#                          Compile the bootloader ELF                          #
+#                         Compile the SentinelBoot ELF                         #
 # ---------------------------------------------------------------------------- #
 $(LOADER_ELF): $(LOADER_ELF_DEPS)
 ifeq ($(CLEAR),y)
@@ -136,12 +136,12 @@ ifeq ($(CLEAR),y)
 endif
 	cp $(LD_PATH) ./bootloader.ld
 ifeq ($(DOCKER),y)
-	$(call color_header, "Compiling bootloader ELF - $(BSP)")
+	$(call color_header, "Compiling SentinelBoot ELF - $(BSP)")
 	$(DOCKER_MINIMAL_CMD) cargo vendor
 	$(DOCKER_MINIMAL_CMD) python3 gen_helper.py
 	$(DOCKER_MINIMAL_CMD) $(RUSTC_CMD)
 else
-	$(call color_header, "Compiling bootloader ELF - $(BSP)")
+	$(call color_header, "Compiling SentinelBoot ELF - $(BSP)")
 	cargo vendor
 	python3 gen_helper.py
 	$(RUSTC_CMD)
@@ -149,7 +149,7 @@ endif
 	rm ./bootloader.ld
 
 # ---------------------------------------------------------------------------- #
-#                    Generate the stripped bootloader binary                   #
+#                   Generate the stripped SentinelBoot binary                  #
 # ---------------------------------------------------------------------------- #
 $(LOADER_BIN): $(LOADER_ELF)
 ifeq ($(DOCKER),y)
@@ -181,7 +181,7 @@ else
 endif
 
 # ---------------------------------------------------------------------------- #
-#                          Run the bootloader in QEMU                          #
+#                           Run SentinelBoot in QEMU                           #
 # ---------------------------------------------------------------------------- #
 # -- This is no longer used due to the need for tftp (likely to be removed) -- #
 qemu: $(LOADER_BIN)
@@ -257,11 +257,11 @@ test: $(LOADER_BIN)
 # ---------------------------------------------------------------------------- #
 call_stack:
 ifeq ($(DOCKER),y)
-	$(DOCKER_FULL_CMD) cargo +nightly call-stack --bin bootloader --features \
-	$(BSP) --target riscv64gc-unknown-none-elf > cg.dot ; \
+	$(DOCKER_FULL_CMD) cargo +nightly call-stack --bin sentinel_boot \
+	 --features $(BSP) --target riscv64gc-unknown-none-elf > cg.dot ; \
 	dot -Tsvg cg.dot > cg.svg && rm cg.dot
 else
-	cargo +nightly call-stack --bin bootloader --features $(BSP) --target \
+	cargo +nightly call-stack --bin sentinel_boot --features $(BSP) --target \
 	riscv64gc-unknown-none-elf > cg.dot ; \
 	dot -Tsvg cg.dot > cg.svg && rm cg.dot
 endif

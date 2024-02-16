@@ -1,5 +1,5 @@
 setenv devicetree_image jh7110-visionfive-v2.dtb;
-tftpboot 0x40100000 ${serverip}:bootloader;
+tftpboot 0x40100000 ${serverip}:sentinel_boot;
 tftpboot 0x401fff00 ${serverip}:Image_signed;
 tftpboot 0x44a00000 ${serverip}:jh7110-visionfive-v2.dtb;
 tftpboot 0x45000000 ${serverip}:rootfs.cpio;

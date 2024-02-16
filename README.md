@@ -1,9 +1,9 @@
 
-# Secure Bootloader
+# SentinelBoot - A demonstrative secure bootloader
 
-This repository is the basis for a final year project at The University of Manchester. The bootloader is a demonstrative project to improve memory safety through both safe principles and the Rust programming language; additionally, the bootloader uses public-key cryptography to verify the kernel's hash before booting.
+This repository is the basis for a final year project at The University of Manchester. SentinelBoot is a demonstrative project to improve memory safety through both safe principles and the Rust programming language; additionally, SentinelBoot uses public-key cryptography to verify the kernel's hash before booting.
 
-The bootloader also supports the use of the [RISC-V vector cryptography extension](https://github.com/riscv/riscv-crypto).
+SentinelBoot also supports the use of the [RISC-V vector cryptography extension](https://github.com/riscv/riscv-crypto).
 
 
 ## Build
@@ -25,7 +25,7 @@ To build locally the use of the Docker container is recommended and will automat
 
 ## Setup
 
-To run the bootloader involves some setup due to the need for a tftp server; however, setup may include the following. After which QEMU will be able to pull the bootloader binary, keys, linux binary, dtb, and rootfs from the server.
+To run SentinelBoot involves some setup due to the need for a tftp server; however, setup may include the following. After which QEMU will be able to pull the SentinelBoot binary, keys, linux binary, dtb, and rootfs from the server.
 
 ### Setup dhcpd
 ```bash
@@ -94,7 +94,7 @@ systemctl restart isc-dhcp-server
 ```
 ## Run
 
-To run the bootloader we need to specify a known MAC address to QEMU such that the DHCP is able to recognise it and give it a fixed ip address. After which we need to request the binaries from the server before jumping to the bootloader. It is important to note here U-boot handles the initial work of handling tftp this is a deliberate decision to reduce the scope of the project and prevent too much time being spent on driver development.
+To run SentinelBoot we need to specify a known MAC address to QEMU such that the DHCP is able to recognise it and give it a fixed ip address. After which we need to request the binaries from the server before jumping to the SentinelBoot. It is important to note here U-boot handles the initial work of handling tftp this is a deliberate decision to reduce the scope of the project and prevent too much time being spent on driver development.
 
 ### Run QEMU
 ```bash
@@ -113,7 +113,7 @@ qemu-system-riscv64 -M virt \
 => setenv serverip 10.8.8.1; setenv ipaddr 10.8.8.2
 => setenv netmask 255.255.255.0
 => setenv devicetree_image qemu.dtb
-=> tftp 0x80100000 ${serverip}:bootloader
+=> tftp 0x80100000 ${serverip}:sentinel_boot
 ...
 => tftp 0x801fff00 ${serverip}:Image_signed
 ...
@@ -124,7 +124,7 @@ qemu-system-riscv64 -M virt \
 => go 0x80100000
 ...
 ```
-After `go 0x80100000` execution is handed to the bootloader and will continue as expected.
+After `go 0x80100000` execution is handed to SentinelBoot and will continue as expected.
 ## Documentation
 
 As this is a Rust project we can make use of the built in documentation handling as such the docs can be built by `make doc`.

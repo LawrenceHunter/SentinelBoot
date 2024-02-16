@@ -21,11 +21,11 @@ set +x
 
 rm -f /srv/tftp/*
 cp ./tftp/{Image_signed.gz,rootfs.cpio.gz,qemu.dtb} /srv/tftp
-cp ./bootloader /srv/tftp
+cp ./sentinel_boot /srv/tftp
 (cd /srv/tftp && gzip --decompress Image_signed.gz)
 (cd /srv/tftp && gzip --decompress rootfs.cpio.gz)
 
-printf -v QEMU_CMDLINE '%s' '/mnt/bootloader/tftp/qemu_bin/bin/qemu-system-riscv64 -M virt ' \
+printf -v QEMU_CMDLINE '%s' '/mnt/SentinelBoot/tftp/qemu_bin/bin/qemu-system-riscv64 -M virt ' \
 	'-cpu rv64,v=true,vlen=1024,rvv_ma_all_1s=true,rvv_ta_all_1s=true,zvbb=true,zvbc=true,zvknha=true '\
 	'-smp 1 -m 512 -nographic ' \
 	'-display none -serial pipe:/tmp/guest -s ' \
@@ -55,7 +55,7 @@ printf "setenv serverip 10.8.8.1; setenv ipaddr 10.8.8.2; setenv netmask 255.255
 
 wait_for_line "=>" /tmp/guest.out
 echo "✅ Got input prompt"
-printf "tftp 0x80100000 \${serverip}:bootloader\n" >/tmp/guest.in
+printf "tftp 0x80100000 \${serverip}:sentinel_boot\n" >/tmp/guest.in
 
 wait_for_line "Bytes transferred" /tmp/guest.out
 echo "✅ Kernel transferred"
