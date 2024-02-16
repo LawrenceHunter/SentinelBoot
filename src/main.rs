@@ -52,6 +52,11 @@ extern "C" fn loader_init() {
     };
     // println! usable from here
 
+    #[cfg(feature = "qemu_alloc")]
+    unsafe {
+        Allocator::init()
+    };
+
     // Transition from unsafe to safe
     loader_main()
 }
@@ -89,12 +94,7 @@ fn loader_machine() {
 
 // Main function running after early init
 fn loader_main() {
-    // ########################################################################
-    // ENSURE THESE LINES ARE FIRST
     crate::helper::print_boot_logo();
-    #[cfg(feature = "qemu_alloc")]
-    Allocator::init();
-    // ########################################################################
 
     println!(
         "{} version {} ({})",
