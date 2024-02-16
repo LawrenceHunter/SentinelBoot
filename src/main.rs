@@ -73,21 +73,19 @@ fn loader_machine() {
     }
 
     println!("Handing execution to the kernel...");
+    //
     unsafe {
         // https://github.com/torvalds/linux/blob/master/Documentation/riscv/boot.rst
         // SATP expected to be 0
         // HARTID of current core needs to be in a0
         // FDT address needs to be in a1
         asm!(
-            "li t0, 0",
             "csrw satp, t0",
-            "li a0, {x}",
-            "li a1, {y}",
-            "li a2, {z}",
             "jalr x0, 0x0(a2)",
-            x = const bsp::memory::map::kernel::HART,
-            y = const bsp::memory::map::kernel::DTB,
-            z = const bsp::memory::map::kernel::KERNEL
+            in("t0") 0,
+            in("a0") bsp::memory::map::kernel::HART,
+            in("a1") bsp::memory::map::kernel::DTB,
+            in("a2") bsp::memory::map::kernel::KERNEL
         );
     }
 }
@@ -122,6 +120,7 @@ fn loader_main() {
     }
 
     BOOTABLE.lock(|x| *x = true);
+    // Safe but all assembly is unsafe this will send us to the trap vector
     unsafe {
         asm!("mret");
     }
