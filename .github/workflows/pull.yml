@@ -117,12 +117,3 @@ jobs:
         with:
           name: docs
           path: ./doc.tar.gz
-
-  Geiger:
-    needs: qemu_vector_tftp
-    runs-on: self-hosted
-    steps:
-      - uses: actions/checkout@v3
-      - run: |
-          make && make geiger || true
-          cat .github/workflows/geiger.md >> $GITHUB_STEP_SUMMARY
