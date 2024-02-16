@@ -32,6 +32,17 @@ ifeq ($(BSP),qemu)
 	LD_PATH			  = riscv64/src/cpu/bootloader-qemu.ld
 endif
 
+ifeq ($(BSP),qemu_alloc)
+    LOADER_BIN        = bootloader
+    QEMU_BINARY       = qemu-system-riscv64
+    QEMU_MACHINE_TYPE = virt
+    QEMU_RELEASE_ARGS = -smp 4 -m 256M
+    OBJDUMP_BINARY    = $(TOOLCHAIN)objdump
+    NM_BINARY         = $(TOOLCHAIN)nm
+    READELF_BINARY    = $(TOOLCHAIN)readelf
+	LD_PATH			  = riscv64/src/cpu/bootloader-qemu.ld
+endif
+
 ifeq ($(BSP),visionfive)
     LOADER_BIN        = bootloader
     QEMU_BINARY       = qemu-system-riscv64

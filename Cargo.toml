@@ -39,6 +39,7 @@ members = ["bsp", "riscv64", "synchronisation", "console", "driver", "global_all
 [features]
 default = []
 qemu = ["bsp/qemu", "driver/qemu"]
+qemu_alloc = ["bsp/qemu", "driver/qemu"]
 qemu_vector = ["bsp/qemu", "driver/qemu"]
 visionfive = ["bsp/visionfive", "driver/visionfive"]
 unmatched = ["bsp/unmatched", "driver/unmatched"]

@@ -28,6 +28,7 @@ use core::arch::asm;
 
 use bsp::bsp;
 use console::println;
+#[cfg(feature = "qemu_alloc")]
 use global_allocator::Allocator;
 use synchronisation::{interface::Mutex, NullLock};
 
@@ -91,6 +92,7 @@ fn loader_main() {
     // ########################################################################
     // ENSURE THESE LINES ARE FIRST
     crate::helper::print_boot_logo();
+    #[cfg(feature = "qemu_alloc")]
     Allocator::init();
     // ########################################################################
 
