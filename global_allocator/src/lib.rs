@@ -61,53 +61,52 @@ pub struct Alloc {
 
 impl Display for Alloc {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        unsafe {
-            write!(
-                f,
-                "\n| Allocated:     {:?}\n| Start Address: {:#018x}\n| End \
-                 Address:   {:#018x}\n| Previous:      {:#018x} ({:#018x} -> \
-                 {:#018x})\n| Next:          {:#018x} ({:#018x} -> \
-                 {:#018x})\n| Size:          {} bytes\n",
-                self.get_flag(),
-                self.get_start_address(),
-                self.get_end_address(),
-                if self.get_prev().is_some() {
-                    self.get_prev().unwrap()
-                } else {
-                    usize::MAX
-                },
-                if self.get_prev().is_some() {
-                    (*(self.get_prev().unwrap() as *mut Alloc))
-                        .get_start_address()
-                } else {
-                    usize::MAX
-                },
-                if self.get_prev().is_some() {
-                    (*(self.get_prev().unwrap() as *mut Alloc))
-                        .get_end_address()
-                } else {
-                    usize::MAX
-                },
-                if self.get_next().is_some() {
-                    self.get_next().unwrap()
-                } else {
-                    usize::MAX
-                },
-                if self.get_next().is_some() {
-                    (*(self.get_next().unwrap() as *mut Alloc))
-                        .get_start_address()
-                } else {
-                    usize::MAX
-                },
-                if self.get_next().is_some() {
-                    (*(self.get_next().unwrap() as *mut Alloc))
-                        .get_end_address()
-                } else {
-                    usize::MAX
-                },
-                self.get_size()
-            )
+        let mut prev_pointers: (usize, usize) = (usize::MAX, usize::MAX);
+        if self.get_prev().is_some() {
+            let prev = self.get_prev_deref();
+            unsafe {
+                prev_pointers = (
+                    (*(prev)).get_start_address(),
+                    (*(prev)).get_end_address(),
+                );
+            }
         }
+
+        let mut next_pointers: (usize, usize) = (usize::MAX, usize::MAX);
+        if self.get_next().is_some() {
+            let next = self.get_next_deref();
+            unsafe {
+                next_pointers = (
+                    (*(next)).get_start_address(),
+                    (*(next)).get_end_address(),
+                );
+            }
+        }
+        write!(
+            f,
+            "\n| Allocated:     {:?}\n| Start Address: {:#018x}\n| End \
+             Address:   {:#018x}\n| Previous:      {:#018x} ({:#018x} -> \
+             {:#018x})\n| Next:          {:#018x} ({:#018x} -> {:#018x})\n| \
+             Size:          {} bytes\n",
+            self.get_flag(),
+            self.get_start_address(),
+            self.get_end_address(),
+            if self.get_prev().is_some() {
+                self.get_prev().unwrap()
+            } else {
+                usize::MAX
+            },
+            prev_pointers.0,
+            prev_pointers.1,
+            if self.get_next().is_some() {
+                self.get_next().unwrap()
+            } else {
+                usize::MAX
+            },
+            next_pointers.0,
+            next_pointers.1,
+            self.get_size()
+        )
     }
 }
 
@@ -116,14 +115,13 @@ impl Alloc {
     pub fn find_alloc_space() -> *mut Alloc {
         let mut ptr = HEAP_START;
         while ptr < (HEAP_PUBLIC_START) {
-            unsafe {
-                // A reasonable guess it's not used
-                if core::ptr::read(ptr as *mut u128) == 0
+            // A reasonable guess it's not used
+            if unsafe {
+                core::ptr::read(ptr as *mut u128) == 0
                     || core::ptr::read(ptr as *mut Alloc).get_flag()
                         == AllocFlags::Dead
-                {
-                    return ptr as *mut Alloc;
-                }
+            } {
+                return ptr as *mut Alloc;
             }
             ptr += size_of::<Alloc>();
         }
@@ -140,22 +138,18 @@ impl Alloc {
         prev: Option<usize>,
         next: Option<usize>,
     ) -> *mut Alloc {
-        let new_alloc_ptr: *mut Alloc;
+        assert!(CURR_ALLOC_OFFSET < ALLOC_HEAP_SIZE, "OUT OF HEAP!");
+        let new_alloc_ptr = Alloc::find_alloc_space();
 
-        unsafe {
-            assert!(CURR_ALLOC_OFFSET < ALLOC_HEAP_SIZE);
-            new_alloc_ptr = Alloc::find_alloc_space();
+        (*(new_alloc_ptr)).set_flag(flag);
+        (*(new_alloc_ptr)).set_start_address(curr);
+        (*(new_alloc_ptr)).set_prev(prev);
+        (*(new_alloc_ptr)).set_next(next);
 
-            (*(new_alloc_ptr)).set_flag(flag);
-            (*(new_alloc_ptr)).set_start_address(curr);
-            (*(new_alloc_ptr)).set_prev(prev);
-            (*(new_alloc_ptr)).set_next(next);
-
-            logln!(
-                "(new) CREATED ALLOC:     {}",
-                new_alloc_ptr.as_ref().unwrap_unchecked()
-            );
-        };
+        logln!(
+            "(new) CREATED ALLOC:     {}",
+            new_alloc_ptr.as_ref().unwrap_unchecked()
+        );
 
         new_alloc_ptr
     }
@@ -205,34 +199,54 @@ impl Alloc {
         if self.get_next().is_none() {
             return HEAP_PUBLIC_START + HEAP_SIZE;
         }
-
+        // Safe as we just checked the pointer exists
         let next = self.get_next_deref();
         unsafe { (*(next)).get_start_address() }
     }
 
     /// Sets the value of a byte in the Alloc's control
     pub fn set_value(&self, address: usize, value: u8) {
-        assert!(address >= self.get_start_address());
-        assert!(address < self.get_end_address());
+        assert!(
+            address >= self.get_start_address(),
+            "get_value on pointer before allocation start."
+        );
+        assert!(
+            address < self.get_end_address(),
+            "get_value on pointer after allocation start."
+        );
+        // Previous checks ensure the pointer is valid
         unsafe { core::ptr::write(address as *mut u8, value) };
     }
 
     /// Gets the value of a byte in the Alloc's control
     pub fn get_value(&self, address: usize) -> u8 {
-        assert!(address >= self.get_start_address());
-        assert!(address < self.get_end_address());
+        assert!(
+            address >= self.get_start_address(),
+            "get_value on pointer before allocation start."
+        );
+        assert!(
+            address < self.get_end_address(),
+            "get_value on pointer after allocation start."
+        );
+        // Previous checks ensure the pointer is valid
         unsafe { core::ptr::read(address as *mut u8) }
     }
 
     /// Returns the Alloc of next
     pub fn get_next_deref(&self) -> *mut Alloc {
-        assert!(self.get_next().is_some());
+        assert!(
+            self.get_next().is_some(),
+            "get_next_deref on Alloc with no next."
+        );
         self.get_next().unwrap() as *mut Alloc
     }
 
     /// Returns the Alloc of prev
     pub fn get_prev_deref(&self) -> *mut Alloc {
-        assert!(self.get_next().is_some());
+        assert!(
+            self.get_prev().is_some(),
+            "get_prev_deref on Alloc with no next."
+        );
         self.get_prev().unwrap() as *mut Alloc
     }
 
@@ -244,18 +258,19 @@ impl Alloc {
 
 impl Allocator {
     /// Initialise the allocation system
-    pub fn init() {
-        unsafe {
-            let root_alloc =
-                Alloc::new(AllocFlags::Root, HEAP_PUBLIC_START, None, None);
-            let temp_alloc = Alloc::new(
-                AllocFlags::Free,
-                HEAP_PUBLIC_START,
-                Some(root_alloc as usize),
-                None,
-            );
-            (*(root_alloc)).set_next(Some(temp_alloc as usize));
-        };
+    /// # Safety
+    /// Programmer must ensure HEAP space exists and the pointer is correct for
+    /// the board.
+    pub unsafe fn init() {
+        let root_alloc =
+            Alloc::new(AllocFlags::Root, HEAP_PUBLIC_START, None, None);
+        let temp_alloc = Alloc::new(
+            AllocFlags::Free,
+            HEAP_PUBLIC_START,
+            Some(root_alloc as usize),
+            None,
+        );
+        (*(root_alloc)).set_next(Some(temp_alloc as usize));
     }
 
     /// Returns the number of addresses marked taken
@@ -263,6 +278,7 @@ impl Allocator {
         let mut temp_alloc =
             Allocator::get_ptr_alloc(HEAP_PUBLIC_START as *mut u8);
         let mut count: usize = 0;
+        // Checks ensure this is safe
         unsafe {
             while (*(temp_alloc)).get_next().is_some() {
                 if (*(temp_alloc)).get_flag() == AllocFlags::Allocated {
@@ -289,6 +305,7 @@ impl Allocator {
 
         // Need to reason about this line but works for now
         let mut temp_alloc = HEAP_START as *mut Alloc;
+        // This is safe due to pointer checks
         unsafe {
             logln!("(get_ptr_alloc) ROOT ALLOC: {}", (*(temp_alloc)));
             while (((*(temp_alloc)).get_start_address() != (ptr as usize))
