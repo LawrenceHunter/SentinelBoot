@@ -8,7 +8,8 @@ use driver::{driver_manager, DeviceDriverDescriptor, DW8250Uart};
 // Global instances
 //--------------------------------------------------------------------------------------------------
 
-/// Unsafe instantiation of DW8250Uart UART
+/// Instantiation of DW8250Uart UART
+/// Safe as the MMIO is known for this board satisfying the safety warning
 static DW8250_UART: DW8250Uart =
     unsafe { DW8250Uart::new(mmio::DW8250_UART_START) };
 
