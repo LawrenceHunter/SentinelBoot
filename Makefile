@@ -174,7 +174,7 @@ endif
 doc:
 ifeq ($(DOCKER),y)
 	$(call color_header, "Generating docs")
-	$(DOCKER_MINIMAL_CMD) $(DOC_CMD)
+	$(DOCKER_MINIMAL_CMD) $(DOC_CMD) --open
 else
 	$(call color_header, "Generating docs")
 	$(DOC_CMD)
