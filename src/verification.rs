@@ -1,8 +1,8 @@
 use console::{print, println};
-use core::slice;
-use pelite::pe64::{self, Pe};
 #[cfg(feature = "qemu_vector")]
 use core::arch::asm;
+use core::slice;
+use pelite::pe64::{self, Pe};
 #[cfg(not(feature = "qemu_vector"))]
 use sha2::{Digest, Sha256};
 
@@ -21,6 +21,9 @@ fn hash_kernel() -> [u8; 32] {
     let kernel_size: usize = get_kernel_size();
     let mut buff_size = min(4096, kernel_size);
     loop {
+        // We have to form a data structure from the raw pointer as this pointer
+        // is defined by the MMIO we are forced to trust it; however, the slice
+        // is immutable so we can only read it.
         let data = unsafe {
             slice::from_raw_parts(
                 (bsp::memory::map::kernel::KERNEL + offset) as *mut u8,
@@ -60,6 +63,21 @@ const SHA256_ROUND_CONSTANTS: [u32; 64] = [
 #[cfg(feature = "qemu_vector")]
 #[inline(never)]
 fn asm_hash(a0: *mut usize, a1: *mut usize, a2: *mut usize) {
+    // Only unsafe as assembly code the assembly is an implementation of SHA256
+    // as per RISC-V Crypto
+
+    // Reference: RISC-V Cryptographic Extensions Vector Code Sample
+    // The code sample is part of the riscv-crypto project on GitHub
+    // commit 6589bcd6edb5abd91e758a67b28ae05b347c0470.
+    // See: https://github.com/riscv/riscv-crypto/blob/
+    //  6589bcd6edb5abd91e758a67b28ae05b347c0470/doc/vector/code-samples/zvknh.s
+
+    // ? Rust's RISC-V targets do not support vector operations nor vector
+    // ? cryptography operations as such the instructions are pre-assembled
+    // ? into their binary equivalents and hardcoded the comments represent
+    // ? the assembled instruction this solely bypasses the assembler and does
+    // ? not further negate security guarantees.
+
     unsafe {
         asm!(
             /* ------------------------- Sanity ------------------------- */
@@ -293,18 +311,6 @@ fn hash_kernel() -> [u8; 32] {
     //     )
     // }
 
-    // ? Rust's RISC-V targets do not support vector operations nor vector
-    // ? cryptography operations as such the instructions are pre-assembled
-    // ? into their binary equivalents and hardcoded the comments represent
-    // ? the assembled instruction this solely bypasses the assembler and does
-    // ? not further negate security guarantees.
-
-    // Reference: RISC-V Cryptographic Extensions Vector Code Sample
-    // The code sample is part of the riscv-crypto project on GitHub
-    // commit 6589bcd6edb5abd91e758a67b28ae05b347c0470.
-    // See: https://github.com/riscv/riscv-crypto/blob/
-    //  6589bcd6edb5abd91e758a67b28ae05b347c0470/doc/vector/code-samples/zvknh.s
-
     let mut size_left = kernel_size;
     while size_left >= 64 {
         asm_hash(
@@ -320,6 +326,10 @@ fn hash_kernel() -> [u8; 32] {
     let unaligned_size = kernel_size % 64;
     let mut final_bytes: [u8; 64] = [0; 64];
     for i in 0..unaligned_size {
+        // We have to get the final bytes of the kernel so raw pointer read
+        // is unavoidable but follows the safety logic that this pointer is
+        // defined by the MMIO we are forced to trust it; however, the slice
+        // is immutable so we can only read it.
         final_bytes[i] = unsafe {
             core::ptr::read(
                 (bsp::memory::map::kernel::KERNEL
@@ -348,7 +358,12 @@ fn hash_kernel() -> [u8; 32] {
         result[5], result[4],
     ];
 
-    unsafe { core::mem::transmute(result) }
+    let mut byte_result: [u8; 32] = [0; 32];
+    for i in 0..result.len() {
+        byte_result[4 * i..][..4]
+            .copy_from_slice(&result[i].to_le_bytes());
+    }
+    byte_result
 }
 
 // --------------------------------------------------------------------------
@@ -374,6 +389,9 @@ fn pretty_print_slice(bytes: &[u8]) {
 
 fn get_kernel_size() -> usize {
     println!("Determining kernel size...");
+    // We have to form a data structure from the raw pointer as this pointer
+    // is defined by the MMIO we are forced to trust it; however, the slice
+    // is immutable so we can only read it.
     let data = unsafe {
         slice::from_raw_parts(
             (bsp::memory::map::kernel::KERNEL) as *mut u8,
@@ -400,6 +418,9 @@ pub fn verify_kernel() -> Result<(), ed25519_compact::Error> {
     pretty_print_slice(public_key.as_slice());
 
     println!("Loading kernel signature...");
+    // We have to form a data structure from the raw pointer as this pointer
+    // is defined by the MMIO we are forced to trust it; however, the slice
+    // is immutable so we can only read it.
     let signature_bytes = unsafe {
         slice::from_raw_parts(
             (bsp::memory::map::kernel::SIGNATURE) as *mut u8,
