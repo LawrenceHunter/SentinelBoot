@@ -328,6 +328,23 @@ impl Allocator {
         }
         temp_alloc
     }
+
+    /// For all allocations deallocates them and zeroes their memory
+    pub fn flush() {
+        let mut temp_alloc =
+            Allocator::get_ptr_alloc(HEAP_PUBLIC_START as *mut u8);
+        unsafe {
+            while (*(temp_alloc)).get_next().is_some() {
+                if (*(temp_alloc)).get_flag() == AllocFlags::Allocated {
+                    (*(temp_alloc)).set_flag(AllocFlags::Free);
+                    for i in (*(temp_alloc)).get_start_address()..(*(temp_alloc)).get_end_address() {
+                        core::ptr::write(i as *mut usize, 0usize);
+                    }
+                }
+                temp_alloc = (*(temp_alloc)).get_next_deref();
+            }
+        }
+    }
 }
 
 /// Embedded implementation for heap memory allocation
