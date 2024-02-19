@@ -44,7 +44,10 @@ pub unsafe fn init() -> Result<(), &'static str> {
         return Err("Device already initialised");
     }
 
-    driver_uart()?;
+    match driver_uart() {
+        Ok(_) => {}
+        Err(_) => return Err("UART Initialisation fail!")
+    }
 
     INIT_DONE.store(true, Ordering::Relaxed);
     Ok(())
