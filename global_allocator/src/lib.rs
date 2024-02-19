@@ -92,6 +92,7 @@ impl Display for Alloc {
             self.get_start_address(),
             self.get_end_address(),
             if self.get_prev().is_some() {
+                // Known good value so unwrap is okay
                 self.get_prev().unwrap()
             } else {
                 usize::MAX
@@ -99,6 +100,7 @@ impl Display for Alloc {
             prev_pointers.0,
             prev_pointers.1,
             if self.get_next().is_some() {
+                // Known good value so unwrap is okay
                 self.get_next().unwrap()
             } else {
                 usize::MAX
@@ -238,6 +240,7 @@ impl Alloc {
             self.get_next().is_some(),
             "get_next_deref on Alloc with no next."
         );
+        // Known good value so unwrap is okay
         self.get_next().unwrap() as *mut Alloc
     }
 
@@ -247,6 +250,7 @@ impl Alloc {
             self.get_prev().is_some(),
             "get_prev_deref on Alloc with no next."
         );
+        // Known good value so unwrap is okay
         self.get_prev().unwrap() as *mut Alloc
     }
 
@@ -293,7 +297,7 @@ impl Allocator {
     /// Performs pointer checks and returns the Alloc for it
     pub fn get_ptr_alloc(ptr: *mut u8) -> *mut Alloc {
         // Ensure we don't free a null pointer.
-        assert!(!ptr.is_null());
+        assert!(!ptr.is_null(), "Received null pointer!");
 
         logln!("(get_ptr_alloc) FINDING ALLOC FOR {:#018x}", ptr as usize);
 
@@ -358,7 +362,7 @@ static mut GLOBAL_ALLOCATOR: Allocator = Allocator;
 /// Allocate a byte or multiple bytes
 unsafe impl GlobalAlloc for Allocator {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        assert!(layout.size() > 0);
+        assert!(layout.size() > 0, "Received allocation for 0 bytes!");
         logln!("(alloc) ALLOCATING {} BYTES", layout.size());
 
         // Find an alloc with enough bytes which is marked free
@@ -448,7 +452,7 @@ unsafe impl GlobalAlloc for Allocator {
         let mut temp_alloc = Allocator::get_ptr_alloc(ptr);
 
         // Make sure dealloc makes sense
-        assert!((*(temp_alloc)).get_size() == layout.size());
+        assert!((*(temp_alloc)).get_size() == layout.size(), "Alloc size does not match layour size!");
 
         logln!("(dealloc) GOT ALLOC: {}", (*(temp_alloc)));
 
@@ -521,7 +525,7 @@ unsafe impl GlobalAlloc for Allocator {
     }
 
     unsafe fn alloc_zeroed(&self, layout: Layout) -> *mut u8 {
-        assert!(layout.size() > 0);
+        assert!(layout.size() > 0, "Received allocation for 0 bytes!");
         logln!("(alloc_zeroed) ALLOCATING {} BYTES", layout.size());
 
         // Find an alloc with enough bytes which is marked free
@@ -620,7 +624,7 @@ unsafe impl GlobalAlloc for Allocator {
         layout: Layout,
         new_size: usize,
     ) -> *mut u8 {
-        assert!(new_size > 0);
+        assert!(new_size > 0, "Realloc requested for negative bytes!");
 
         logln!(
             "(realloc) REALLOCATING {:#018x} FROM {} BYTES TO {} BYTES",
