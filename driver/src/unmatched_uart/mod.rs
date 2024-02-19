@@ -269,9 +269,10 @@ impl console::interface::Write for UnmatchedUart {
 
 impl console::interface::Read for UnmatchedUart {
     /// Blocking reads char from UART guarded by mutex
+    /// Upon a read error ¿ will be printed
     fn read_char(&self) -> char {
         self.inner.lock(|inner| {
-            inner.read_char_converting(BlockingMode::Blocking).unwrap()
+            inner.read_char_converting(BlockingMode::Blocking).unwrap_or('¿')
         })
     }
 
