@@ -410,6 +410,7 @@ pub fn verify_kernel() -> Result<(), ed25519_compact::Error> {
     println!("Stored kernel hashed:");
     pretty_print_slice(hash.as_slice());
 
+    // For the key access the libraries own error message is more useful
     println!("Loading server public key...");
     let public_key =
         ed25519_compact::PublicKey::from_slice(crate::helper::PUBLIC_KEY)
@@ -427,6 +428,7 @@ pub fn verify_kernel() -> Result<(), ed25519_compact::Error> {
             64,
         )
     };
+
     let signature =
         ed25519_compact::Signature::from_slice(signature_bytes).unwrap();
     println!("Loaded kernel signature:");
