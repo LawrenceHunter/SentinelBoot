@@ -19,7 +19,6 @@ To build locally the use of the Docker container is recommended and will automat
 |---------------|------------------------|--------------------------|
 | `qemu`        | QEMU                   |                          |
 | `qemu_vector` | QEMU                   | Vector Cryptography      |
-| `qemu_alloc`  | QEMU                   | Global memory allocation |
 | `unmatched`   | HiFive Unmatched Rev B |                          |
 | `visionfive`  | StarFive VisionFive 2  |                          |
 

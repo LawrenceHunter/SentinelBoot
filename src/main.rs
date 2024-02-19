@@ -28,7 +28,6 @@ use core::arch::asm;
 
 use bsp::bsp;
 use console::println;
-#[cfg(feature = "qemu_alloc")]
 use global_allocator::Allocator;
 use synchronisation::{interface::Mutex, NullLock};
 
@@ -52,7 +51,6 @@ extern "C" fn loader_init() {
     };
     // println! usable from here
 
-    #[cfg(feature = "qemu_alloc")]
     unsafe {
         Allocator::init()
     };

@@ -21,12 +21,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: BSP=qemu_vector make
-  build_alloc:
-    name: Build project for qemu_allow
-    runs-on: self-hosted
-    steps:
-      - uses: actions/checkout@v3
-      - run: BSP=qemu_alloc make
   build_vf2:
     name: Build project for VisionFive 2
     runs-on: self-hosted
@@ -48,7 +42,7 @@ jobs:
   #     - run: make test
 
   qemu_tftp:
-    needs: [build, build_vector, build_alloc, build_vf2, build_unmatched]
+    needs: [build, build_vector, build_vf2, build_unmatched]
     runs-on: [self-hosted, qemu]
     steps:
       - uses: actions/checkout@v3
