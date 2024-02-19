@@ -70,6 +70,8 @@ fn loader_machine() {
         panic!("REACHED KERNEL BOOT WITHOUT FLAG SET");
     }
 
+    Allocator::flush();
+
     println!("Handing execution to the kernel...");
     //
     unsafe {
