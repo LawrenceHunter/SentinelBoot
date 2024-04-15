@@ -1,7 +1,7 @@
 
 # SentinelBoot - A demonstrative secure bootloader
 
-This repository is the basis for a final year project at The University of Manchester. SentinelBoot is a demonstrative project to improve memory safety through both safe principles and the Rust programming language; additionally, SentinelBoot uses public-key cryptography to verify the kernel's hash before booting.
+This repository is the basis for a final year project at The University of Manchester, see [thesis](https://github.com/LawrenceHunter/SentinelBoot-Thesis). SentinelBoot is a demonstrative project to improve memory safety through both safe principles and the Rust programming language; additionally, SentinelBoot uses public-key cryptography to verify the kernel's hash before booting.
 
 SentinelBoot also supports the use of the [RISC-V vector cryptography extension](https://github.com/riscv/riscv-crypto).
 
