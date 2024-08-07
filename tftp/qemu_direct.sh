@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Copyright (c) 2023-2024 Lawrence Hunter <lawrence.hunter@outlook.com
+
 qemu-system-riscv64 -M virt \
     -cpu rv64 -smp 2 -m 512 -nographic \
     -display none -serial mon:stdio -s \

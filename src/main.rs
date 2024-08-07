@@ -1,3 +1,6 @@
+// Copyright (c) 2018-2023 Andre Richter <andre.o.richter@gmail.com>
+// Copyright (c) 2023-2024 Lawrence Hunter <lawrence.hunter@outlook.com>
+
 //! The `SentinelBoot` binary.
 //!
 //! 1. SentinelBoot's entry point is the function

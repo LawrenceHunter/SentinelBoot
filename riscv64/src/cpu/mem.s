@@ -1,3 +1,5 @@
+// Copyright (c) 2019 Stephen Marz <sgm@utk.edu>
+
 // mem.S
  // Importation of linker symbols
 

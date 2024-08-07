@@ -1,3 +1,5 @@
+# Copyright (c) 2023-2024 Lawrence Hunter <lawrence.hunter@outlook.com
+
 import serial
 
 ser = serial.Serial("/dev/ttyUSB0", 115200, timeout=0.5)

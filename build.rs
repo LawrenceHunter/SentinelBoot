@@ -1,3 +1,5 @@
+// Copyright (c) 2018-2023 Andre Richter <andre.o.richter@gmail.com>
+
 use std::{env, fs, process};
 
 fn main() {

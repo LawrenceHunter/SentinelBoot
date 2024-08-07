@@ -1,3 +1,5 @@
+# Copyright (c) 2023-2024 Lawrence Hunter <lawrence.hunter@outlook.com
+
 import sys
 import base64
 from Crypto.Hash import SHA256

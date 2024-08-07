@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Copyright (c) 2023-2024 Lawrence Hunter <lawrence.hunter@outlook.com
+
 if [ "$EUID" -ne 0 ]
   then echo "Please run as root"
   exit

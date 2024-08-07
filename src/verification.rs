@@ -1,3 +1,5 @@
+// Copyright (c) 2023-2024 Lawrence Hunter <lawrence.hunter@outlook.com>
+
 use console::{print, println};
 #[cfg(feature = "qemu_vector")]
 use core::arch::asm;

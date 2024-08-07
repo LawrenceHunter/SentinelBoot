@@ -1,3 +1,5 @@
+// Copyright (c) 2018-2023 Andre Richter <andre.o.richter@gmail.com>
+// Copyright (c) 2023-2024 Lawrence Hunter <lawrence.hunter@outlook.com>
 #![no_std]
 
 //! Architectural processor code.

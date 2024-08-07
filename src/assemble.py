@@ -1,3 +1,5 @@
+# Copyright (c) 2023-2024 Lawrence Hunter <lawrence.hunter@outlook.com
+
 ops = ["vsha2ms.vv", "vsha2cl.vv", "vsha2ch.vv", "vrev8.v"]
 
 

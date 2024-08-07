@@ -1,3 +1,5 @@
+// Copyright (c) 2023-2024 Lawrence Hunter <lawrence.hunter@outlook.com>
+
 use console::{logln, print};
 use alloc::{vec::Vec, format};
 use global_allocator::Allocator;

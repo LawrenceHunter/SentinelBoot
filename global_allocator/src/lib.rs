@@ -1,3 +1,6 @@
+// Copyright (c) 2019 Stephen Marz <sgm@utk.edu>
+// Copyright (c) 2023-2024 Lawrence Hunter <lawrence.hunter@outlook.com>
+
 //! Global Allocator
 #![no_std]
 #![feature(format_args_nl)]
