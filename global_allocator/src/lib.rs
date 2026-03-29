@@ -341,7 +341,9 @@ impl Allocator {
             while (*(temp_alloc)).get_next().is_some() {
                 if (*(temp_alloc)).get_flag() == AllocFlags::Allocated {
                     (*(temp_alloc)).set_flag(AllocFlags::Free);
-                    for i in (*(temp_alloc)).get_start_address()..(*(temp_alloc)).get_end_address() {
+                    for i in (*(temp_alloc)).get_start_address()
+                        ..(*(temp_alloc)).get_end_address()
+                    {
                         core::ptr::write(i as *mut usize, 0usize);
                     }
                 }
@@ -452,7 +454,10 @@ unsafe impl GlobalAlloc for Allocator {
         let mut temp_alloc = Allocator::get_ptr_alloc(ptr);
 
         // Make sure dealloc makes sense
-        assert!((*(temp_alloc)).get_size() == layout.size(), "Alloc size does not match layour size!");
+        assert!(
+            (*(temp_alloc)).get_size() == layout.size(),
+            "Alloc size does not match layour size!"
+        );
 
         logln!("(dealloc) GOT ALLOC: {}", (*(temp_alloc)));
 

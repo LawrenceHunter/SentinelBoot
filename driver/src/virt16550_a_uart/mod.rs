@@ -7,7 +7,8 @@ pub use riscv64::nop;
 use synchronisation::interface::Mutex;
 use tock_registers::{
     interfaces::{Readable, Writeable},
-    register_bitfields, register_structs,
+    register_bitfields,
+    register_structs,
     registers::{Aliased, ReadWrite},
 };
 
@@ -85,8 +86,7 @@ impl VIRT16550AUartInner {
     }
 
     // Setup baudrate and characteristics
-    pub fn init(&mut self) {
-    }
+    pub fn init(&mut self) {}
 
     /// Send a char
     fn write_char(&mut self, c: char) {
@@ -95,8 +95,7 @@ impl VIRT16550AUartInner {
     }
 
     /// Writes all buffered chars
-    fn flush(&self) {
-    }
+    fn flush(&self) {}
 
     /// Receive char
     fn read_char_converting(
@@ -195,7 +194,9 @@ impl console::interface::Read for VIRT16550AUart {
     /// Upon a read error ¿ will be printed
     fn read_char(&self) -> char {
         self.inner.lock(|inner| {
-            inner.read_char_converting(BlockingMode::Blocking).unwrap_or('¿')
+            inner
+                .read_char_converting(BlockingMode::Blocking)
+                .unwrap_or('¿')
         })
     }
 

@@ -100,18 +100,17 @@ macro_rules! println {
     })
 }
 
-
- /// Logs without a newline.
- #[macro_export]
- #[cfg(feature = "debug")]
- macro_rules! log {
+/// Logs without a newline.
+#[macro_export]
+#[cfg(feature = "debug")]
+macro_rules! log {
      ($($arg:tt)*) => ($crate::_print(format_args!($($arg)*)));
  }
 
- /// Logs with a newline.
- #[macro_export]
- #[cfg(feature = "debug")]
- macro_rules! logln {
+/// Logs with a newline.
+#[macro_export]
+#[cfg(feature = "debug")]
+macro_rules! logln {
      () => {
          $crate::print!("\r\n")
      };
@@ -121,17 +120,17 @@ macro_rules! println {
      })
  }
 
- /// Logs without a newline.
- #[macro_export]
- #[cfg(not(feature = "debug"))]
- macro_rules! log {
+/// Logs without a newline.
+#[macro_export]
+#[cfg(not(feature = "debug"))]
+macro_rules! log {
      ($($arg:tt)*) => {format_args!($($arg)*)};
  }
 
- /// Logs with a newline.
- #[macro_export]
- #[cfg(not(feature = "debug"))]
- macro_rules! logln {
+/// Logs with a newline.
+#[macro_export]
+#[cfg(not(feature = "debug"))]
+macro_rules! logln {
      () => {};
      ($($arg:tt)*) => {{format_args!($($arg)*)}};
  }

@@ -42,16 +42,18 @@ fn panic(info: &PanicInfo) -> ! {
         _ => ("???", 0, 0),
     };
 
-    println!("\n\nXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX PANIC XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-     println!(
-         "LOCATION:\n\tFILE: '{}'\n\tLINE: {}\n\tCOLUMN: \
-          {}\n\tMESSAGE: '{}'",
-         location,
-         line,
-         column,
-         info.message(),
-     );
-     println!("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+    println!(
+        "\n\nXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX PANIC \
+         XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    );
+    println!(
+        "LOCATION:\n\tFILE: '{}'\n\tLINE: {}\n\tCOLUMN: {}\n\tMESSAGE: '{}'",
+        location,
+        line,
+        column,
+        info.message(),
+    );
+    println!("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
 
     cpu::wait_forever()
 }

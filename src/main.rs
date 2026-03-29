@@ -50,9 +50,7 @@ extern "C" fn loader_init() {
     };
     // println! usable from here
 
-    unsafe {
-        Allocator::init()
-    };
+    unsafe { Allocator::init() };
 
     // Transition from unsafe to safe
     loader_main()

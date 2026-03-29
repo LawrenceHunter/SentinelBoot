@@ -362,8 +362,7 @@ fn hash_kernel() -> [u8; 32] {
 
     let mut byte_result: [u8; 32] = [0; 32];
     for i in 0..result.len() {
-        byte_result[4 * i..][..4]
-            .copy_from_slice(&result[i].to_le_bytes());
+        byte_result[4 * i..][..4].copy_from_slice(&result[i].to_le_bytes());
     }
     byte_result
 }

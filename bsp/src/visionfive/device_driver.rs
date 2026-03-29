@@ -5,7 +5,7 @@
 
 use crate::memory::map::mmio;
 use core::sync::atomic::{AtomicBool, Ordering};
-use driver::{driver_manager, DeviceDriverDescriptor, DW8250Uart};
+use driver::{driver_manager, DW8250Uart, DeviceDriverDescriptor};
 
 //--------------------------------------------------------------------------------------------------
 // Global instances
@@ -49,7 +49,7 @@ pub unsafe fn init() -> Result<(), &'static str> {
 
     match driver_uart() {
         Ok(_) => {}
-        Err(_) => return Err("UART Initialisation fail!")
+        Err(_) => return Err("UART Initialisation fail!"),
     }
 
     INIT_DONE.store(true, Ordering::Relaxed);

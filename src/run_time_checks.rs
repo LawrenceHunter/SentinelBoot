@@ -1,15 +1,29 @@
 // Copyright (c) 2023-2024 Lawrence Hunter <lawrence.hunter@outlook.com>
 
+use alloc::{format, vec::Vec};
 use console::{logln, print};
-use alloc::{vec::Vec, format};
 use global_allocator::Allocator;
 
 pub fn simple_alloc_check() {
-    assert!(Allocator::get_alloc_count() == 0, "{}", format!("Expected no allocations got {}.", Allocator::get_alloc_count()));
+    assert!(
+        Allocator::get_alloc_count() == 0,
+        "{}",
+        format!(
+            "Expected no allocations got {}.",
+            Allocator::get_alloc_count()
+        )
+    );
     {
         let mut x: Vec<u8> = Vec::new();
         x.push(0);
-        assert!(Allocator::get_alloc_count() == 8, "{}", format!("Expected Vector initialisation of 8 bytes got {}.", Allocator::get_alloc_count()));
+        assert!(
+            Allocator::get_alloc_count() == 8,
+            "{}",
+            format!(
+                "Expected Vector initialisation of 8 bytes got {}.",
+                Allocator::get_alloc_count()
+            )
+        );
 
         for i in 1..8 {
             x.push(i);
@@ -18,26 +32,62 @@ pub fn simple_alloc_check() {
         }
 
         x.push(8);
-        assert!(Allocator::get_alloc_count() == 16, "{}", format!("Expected Vector reallocation of 8 to 16 bytes got {}.", Allocator::get_alloc_count()));
+        assert!(
+            Allocator::get_alloc_count() == 16,
+            "{}",
+            format!(
+                "Expected Vector reallocation of 8 to 16 bytes got {}.",
+                Allocator::get_alloc_count()
+            )
+        );
 
         for i in 9..16 {
             x.push(i);
         }
-        assert!(x == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], "{}", format!("x did not match expected '[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]' got {:?}.", x));
+        assert!(
+            x == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+            "{}",
+            format!(
+                "x did not match expected '[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, \
+                 11, 12, 13, 14, 15]' got {:?}.",
+                x
+            )
+        );
     }
-    assert!(Allocator::get_alloc_count() == 0, "{}", format!("Vector out of scope expected no allocations got {}.", Allocator::get_alloc_count()));
+    assert!(
+        Allocator::get_alloc_count() == 0,
+        "{}",
+        format!(
+            "Vector out of scope expected no allocations got {}.",
+            Allocator::get_alloc_count()
+        )
+    );
     logln!("ADDRESSES ALLOCATED: {}", Allocator::get_alloc_count());
 }
 
 pub fn dual_alloc_check() {
-    assert!(Allocator::get_alloc_count() == 0, "{}", format!("Expected no allocations got {}.", Allocator::get_alloc_count()));
+    assert!(
+        Allocator::get_alloc_count() == 0,
+        "{}",
+        format!(
+            "Expected no allocations got {}.",
+            Allocator::get_alloc_count()
+        )
+    );
     {
         let mut x: Vec<u8> = Vec::new();
         let mut y: Vec<u8> = Vec::new();
         x.push(0);
         y.push(u8::MAX);
 
-        assert!(Allocator::get_alloc_count() == 16, "{}", format!("Expected Vector initialisation of 16 bytes got {}.", Allocator::get_alloc_count()));
+        assert!(
+            Allocator::get_alloc_count() == 16,
+            "{}",
+            format!(
+                "Expected Vector initialisation of 16 bytes got {}.",
+                Allocator::get_alloc_count()
+            )
+        );
 
         for i in 1..8 {
             x.push(i);
@@ -47,32 +97,101 @@ pub fn dual_alloc_check() {
             logln!("Vector: {:?}", y);
         }
 
-        assert!(x == [0, 1, 2, 3, 4, 5, 6, 7], "{}", format!("x did not match expected '[0, 1, 2, 3, 4, 5, 6, 7]' got {:?}.", x));
-        assert!(y == [255, 254, 253, 252, 251, 250, 249, 248], "{}", format!("y did not match expected '[255, 254, 253, 252, 251, 250, 249, 248]' got {:?}.", y));
+        assert!(
+            x == [0, 1, 2, 3, 4, 5, 6, 7],
+            "{}",
+            format!(
+                "x did not match expected '[0, 1, 2, 3, 4, 5, 6, 7]' got {:?}.",
+                x
+            )
+        );
+        assert!(
+            y == [255, 254, 253, 252, 251, 250, 249, 248],
+            "{}",
+            format!(
+                "y did not match expected '[255, 254, 253, 252, 251, 250, \
+                 249, 248]' got {:?}.",
+                y
+            )
+        );
         // ! ALLOCATING 120 BYTES
         x.push(8);
         logln!("Vector: {:?}", x);
         y.push(u8::MAX - 8);
         logln!("Vector: {:?}", y);
-        assert!(Allocator::get_alloc_count() == 32, "{}", format!("Expected Vector reallocation of 16 to 32 bytes got {}.", Allocator::get_alloc_count()));
-        assert!(x == [0, 1, 2, 3, 4, 5, 6, 7, 8], "{}", format!("x did not match expected '[0, 1, 2, 3, 4, 5, 6, 7, 8]' got {:?}.", x));
-        assert!(y == [255, 254, 253, 252, 251, 250, 249, 248, 247], "{}", format!("y did not match expected '[255, 254, 253, 252, 251, 250, 249, 248, 247]' got {:?}.", y));
+        assert!(
+            Allocator::get_alloc_count() == 32,
+            "{}",
+            format!(
+                "Expected Vector reallocation of 16 to 32 bytes got {}.",
+                Allocator::get_alloc_count()
+            )
+        );
+        assert!(
+            x == [0, 1, 2, 3, 4, 5, 6, 7, 8],
+            "{}",
+            format!(
+                "x did not match expected '[0, 1, 2, 3, 4, 5, 6, 7, 8]' got \
+                 {:?}.",
+                x
+            )
+        );
+        assert!(
+            y == [255, 254, 253, 252, 251, 250, 249, 248, 247],
+            "{}",
+            format!(
+                "y did not match expected '[255, 254, 253, 252, 251, 250, \
+                 249, 248, 247]' got {:?}.",
+                y
+            )
+        );
 
         for i in 9..16 {
             x.push(i);
             y.push(u8::MAX - i);
         }
-        assert!(x == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], "{}", format!("x did not match expected '[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]' got {:?}.", x));
-        assert!(y == [255, 254, 253, 252, 251, 250, 249, 248, 247, 246, 245, 244, 243, 242, 241, 240], "{}",
-            format!("y did not match expected '[255, 254, 253, 252, 251, 250, 249, 248, 247, 246, 245, 244, 243, 242, 241, 240]' got {:?}.", y));
-
+        assert!(
+            x == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+            "{}",
+            format!(
+                "x did not match expected '[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, \
+                 11, 12, 13, 14, 15]' got {:?}.",
+                x
+            )
+        );
+        assert!(
+            y == [
+                255, 254, 253, 252, 251, 250, 249, 248, 247, 246, 245, 244,
+                243, 242, 241, 240
+            ],
+            "{}",
+            format!(
+                "y did not match expected '[255, 254, 253, 252, 251, 250, \
+                 249, 248, 247, 246, 245, 244, 243, 242, 241, 240]' got {:?}.",
+                y
+            )
+        );
     }
-    assert!(Allocator::get_alloc_count() == 0, "{}", format!("Vector out of scope expected no allocations got {}.", Allocator::get_alloc_count()));
+    assert!(
+        Allocator::get_alloc_count() == 0,
+        "{}",
+        format!(
+            "Vector out of scope expected no allocations got {}.",
+            Allocator::get_alloc_count()
+        )
+    );
     logln!("ADDRESSES ALLOCATED: {}", Allocator::get_alloc_count());
 }
 
 pub fn quad_alloc_check() {
-    assert!(Allocator::get_alloc_count() == 0, "{}", format!("Expected no allocations got {}.", Allocator::get_alloc_count()));
+    assert!(
+        Allocator::get_alloc_count() == 0,
+        "{}",
+        format!(
+            "Expected no allocations got {}.",
+            Allocator::get_alloc_count()
+        )
+    );
     {
         let mut a: Vec<u8> = Vec::new();
         let mut b: Vec<u8> = Vec::new();
@@ -83,7 +202,14 @@ pub fn quad_alloc_check() {
         c.push(32);
         d.push(48);
 
-        assert!(Allocator::get_alloc_count() == 32, "{}", format!("Expected Vector initialisation of 32 bytes got {}.", Allocator::get_alloc_count()));
+        assert!(
+            Allocator::get_alloc_count() == 32,
+            "{}",
+            format!(
+                "Expected Vector initialisation of 32 bytes got {}.",
+                Allocator::get_alloc_count()
+            )
+        );
 
         for i in 1..8 {
             a.push(i);
@@ -103,7 +229,14 @@ pub fn quad_alloc_check() {
         b.push(8 + 16);
         c.push(8 + 32);
         d.push(8 + 48);
-        assert!(Allocator::get_alloc_count() == 64, "{}", format!("Expected Vector reallocation of 32 to 64 bytes got {}.", Allocator::get_alloc_count()));
+        assert!(
+            Allocator::get_alloc_count() == 64,
+            "{}",
+            format!(
+                "Expected Vector reallocation of 32 to 64 bytes got {}.",
+                Allocator::get_alloc_count()
+            )
+        );
 
         for i in 1..9 {
             assert!(a.as_slice()[i as usize] == (i));
@@ -126,11 +259,25 @@ pub fn quad_alloc_check() {
             assert!(d.as_slice()[i as usize] == (i + 48));
         }
     }
-    assert!(Allocator::get_alloc_count() == 0, "{}", format!("Vector out of scope expected no allocations got {}.", Allocator::get_alloc_count()));
+    assert!(
+        Allocator::get_alloc_count() == 0,
+        "{}",
+        format!(
+            "Vector out of scope expected no allocations got {}.",
+            Allocator::get_alloc_count()
+        )
+    );
 }
 
 pub fn large_alloc_check() {
-    assert!(Allocator::get_alloc_count() == 0, "{}", format!("Expected no allocations got {}.", Allocator::get_alloc_count()));
+    assert!(
+        Allocator::get_alloc_count() == 0,
+        "{}",
+        format!(
+            "Expected no allocations got {}.",
+            Allocator::get_alloc_count()
+        )
+    );
     {
         let mut x: Vec<usize> = Vec::new();
 
@@ -139,12 +286,22 @@ pub fn large_alloc_check() {
         }
 
         for i in 0..1000 {
-            assert!(x.as_slice()[i] == i, "{}", format!("Expected {} got {}.\nx: {:?}", i, x.as_slice()[i], x));
+            assert!(
+                x.as_slice()[i] == i,
+                "{}",
+                format!("Expected {} got {}.\nx: {:?}", i, x.as_slice()[i], x)
+            );
         }
     }
-    assert!(Allocator::get_alloc_count() == 0, "{}", format!("Vector out of scope expected no allocations got {}.", Allocator::get_alloc_count()));
+    assert!(
+        Allocator::get_alloc_count() == 0,
+        "{}",
+        format!(
+            "Vector out of scope expected no allocations got {}.",
+            Allocator::get_alloc_count()
+        )
+    );
 }
-
 
 pub fn suite() {
     print!("SIMPLE ALLOC: ");

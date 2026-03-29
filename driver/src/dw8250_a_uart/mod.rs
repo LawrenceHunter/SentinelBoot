@@ -7,7 +7,8 @@ pub use riscv64::nop;
 use synchronisation::interface::Mutex;
 use tock_registers::{
     interfaces::{Readable, Writeable},
-    register_bitfields, register_structs,
+    register_bitfields,
+    register_structs,
     registers::{Aliased, ReadWrite, WriteOnly},
 };
 
@@ -318,7 +319,9 @@ impl console::interface::Read for DW8250Uart {
     /// Upon a read error ¿ will be printed
     fn read_char(&self) -> char {
         self.inner.lock(|inner| {
-            inner.read_char_converting(BlockingMode::Blocking).unwrap_or('¿')
+            inner
+                .read_char_converting(BlockingMode::Blocking)
+                .unwrap_or('¿')
         })
     }
 

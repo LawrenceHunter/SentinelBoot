@@ -2,17 +2,18 @@
 // Copyright (c) 2023-2024 Lawrence Hunter <lawrence.hunter@outlook.com>
 
 //! Unmatched UART driver.
+use crate::unmatched_uart::RBR::RFIFOE;
+use crate::unmatched_uart::TBR::TFIFOF;
 use core::fmt;
 pub use riscv64::nop;
 use synchronisation::interface::Mutex;
+use tock_registers::interfaces::ReadWriteable;
 use tock_registers::{
     interfaces::{Readable, Writeable},
-    register_bitfields, register_structs,
+    register_bitfields,
+    register_structs,
     registers::{ReadOnly, ReadWrite},
 };
-use tock_registers::interfaces::ReadWriteable;
-use crate::unmatched_uart::RBR::RFIFOE;
-use crate::unmatched_uart::TBR::TFIFOF;
 
 //--------------------------------------------------------------------------------------------------
 // Private Definitions
@@ -153,13 +154,17 @@ impl UnmatchedUartInner {
         self.flush();
 
         // Enable transmission with one stop bit
-        self.registers.TCR.write(TCR::TE::Enabled + TCR::NSTPB::OneBit);
+        self.registers
+            .TCR
+            .write(TCR::TE::Enabled + TCR::NSTPB::OneBit);
 
         // Enable receiving with one stop bit
         self.registers.RCR.write(RCR::RE::Enabled);
 
         // Disable watermark interrupts
-        self.registers.IER.write(IER::RWIE::Disabled + IER::TWIE::Disabled);
+        self.registers
+            .IER
+            .write(IER::RWIE::Disabled + IER::TWIE::Disabled);
     }
 
     /// Send a char
@@ -275,7 +280,9 @@ impl console::interface::Read for UnmatchedUart {
     /// Upon a read error ¿ will be printed
     fn read_char(&self) -> char {
         self.inner.lock(|inner| {
-            inner.read_char_converting(BlockingMode::Blocking).unwrap_or('¿')
+            inner
+                .read_char_converting(BlockingMode::Blocking)
+                .unwrap_or('¿')
         })
     }
 

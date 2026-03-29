@@ -13,7 +13,8 @@ use driver::{driver_manager, DeviceDriverDescriptor, UnmatchedUart};
 
 /// Instantiation of Unmatched UART
 /// Safe as the MMIO is known for this board satisfying the safety warning
-static UNMATCHED_UART: UnmatchedUart = unsafe { UnmatchedUart::new(mmio::UNMATCHED_UART_START) };
+static UNMATCHED_UART: UnmatchedUart =
+    unsafe { UnmatchedUart::new(mmio::UNMATCHED_UART_START) };
 
 //--------------------------------------------------------------------------------------------------
 // Private Code
@@ -48,7 +49,7 @@ pub unsafe fn init() -> Result<(), &'static str> {
 
     match driver_uart() {
         Ok(_) => {}
-        Err(_) => return Err("UART Initialisation fail!")
+        Err(_) => return Err("UART Initialisation fail!"),
     }
 
     INIT_DONE.store(true, Ordering::Relaxed);
