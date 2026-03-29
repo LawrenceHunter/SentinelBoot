@@ -3,10 +3,7 @@
 
 //! Global Allocator
 #![no_std]
-#![feature(format_args_nl)]
 #![feature(alloc_error_handler)]
-#![feature(strict_provenance)]
-#![feature(allocator_api)]
 
 use console::logln;
 use core::alloc::*;

@@ -20,6 +20,7 @@ RUN mkdir qemu_bin
 
 RUN git clone https://github.com/qemu/qemu.git && \
     cd qemu && \
+    git checkout v8.2.2 && \
     ./configure --target-list=riscv64-softmmu \
         --prefix=/src/qemu_bin && \
     make -j$(nproc) && \

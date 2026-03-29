@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Stephen Marz <sgm@utk.edu>
+/* Copyright (c) 2019 Stephen Marz <sgm@utk.edu> */
 /*
  virt.lds
  Linker script for outputting to RISC-V QEMU "virt" machine.

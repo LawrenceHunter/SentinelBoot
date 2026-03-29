@@ -3,8 +3,6 @@
 
 //! System console.
 #![no_std]
-#![feature(format_args_nl)]
-#![feature(trait_alias)]
 
 mod null_console;
 use synchronisation::{self, NullLock};
@@ -98,7 +96,7 @@ macro_rules! println {
     };
     ($($arg:tt)*) => ({
         $crate::print!("\r");
-        $crate::_print(format_args_nl!($($arg)*));
+        $crate::_print(format_args!($($arg)*));
     })
 }
 
@@ -119,7 +117,7 @@ macro_rules! println {
      };
      ($($arg:tt)*) => ({
          $crate::print!("\r");
-         $crate::_print(format_args_nl!($($arg)*));
+         $crate::_print(format_args!($($arg)*));
      })
  }
 
@@ -127,7 +125,7 @@ macro_rules! println {
  #[macro_export]
  #[cfg(not(feature = "debug"))]
  macro_rules! log {
-     ($($arg:tt)*) => {format_args_nl!($($arg)*)};
+     ($($arg:tt)*) => {format_args!($($arg)*)};
  }
 
  /// Logs with a newline.
@@ -135,5 +133,5 @@ macro_rules! println {
  #[cfg(not(feature = "debug"))]
  macro_rules! logln {
      () => {};
-     ($($arg:tt)*) => {{format_args_nl!($($arg)*)}};
+     ($($arg:tt)*) => {{format_args!($($arg)*)}};
  }

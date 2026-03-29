@@ -3,7 +3,6 @@
 
 //! Device driver.
 #![no_std]
-#![feature(format_args_nl)]
 
 #[cfg(feature = "qemu")]
 mod virt16550_a_uart;
